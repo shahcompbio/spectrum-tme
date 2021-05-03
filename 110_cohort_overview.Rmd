@@ -1,0 +1,741 @@
+---
+output:
+  bookdown::html_document2:
+    fig_caption: yes
+editor_options:
+  chunk_output_type: inline
+---
+
+# Cohort overview
+
+```{r}
+library(tidyverse)
+library(gdata)
+library(knitr)
+library(stringr)
+library(data.table)
+library(openxlsx)
+library(gtable)
+library(cowplot)
+library(grid)
+library(ComplexHeatmap)
+library(viridis)
+library(RColorBrewer)
+
+theme_spectrum <- function(...) {
+  theme_cowplot(font_size = 12, ...) %+replace%
+    theme(strip.background = element_blank(),
+          plot.background = element_blank(),
+          plot.title = element_text(face = "plain"))
+}
+theme_set(theme_spectrum())
+
+source("src/plot_inventory_heatmap.R")
+source("src/plot_oncoprint_heatmap.R")
+```
+
+```{r}
+colors <- yaml::read_yaml("/work/shah/vazquezi/projects/spectrum/resources/annotation/colors.yaml") %>% 
+  lapply(function(x) purrr::map_depth(x, purrr::vec_depth(x)-2, unlist))
+```
+
+## Load data
+
+```{r}
+# Load database
+db <- readr::read_rds("/work/shah/vazquezi/projects/spectrum/results/db/v1/database/outputs/tme_db/db/SPECTRUM.rds")
+```
+
+```{r}
+# Define confirmed HGS patients
+hgsoc_patients <- db$gyn_diagnosis %>%
+  filter(gyn_diagnosis_histology == "HGS") %>%
+  pull(patient_id)
+
+# Define patients on clinical trials
+protocol_patients <- db$consents %>%
+  filter(patient_consent_irb == "17-182") %>%
+  pull(patient_id)
+
+included_patients <- db$patients %>%
+  filter(patient_inclusion_exclusion=="Included") %>%
+  filter(patient_cohort_version___2=="Checked") %>%
+  filter(patient_id %in% hgsoc_patients) %>%
+  filter(!patient_id %in% protocol_patients) %>%
+  pull(patient_id)
+
+# Define patients included in the study with scRNA data
+scrna_patients <- db$sequencing_scrna %>%
+  filter(patient_id %in% included_patients) %>%
+  filter(therapy == "pre-Rx") %>%
+  filter(platform == "10x 3' GE") %>%
+  pull(patient_id) %>%
+  unique
+```
+
+## Overview
+
+```{r}
+diagram_png <- ggdraw() + 
+  draw_image("figures/110_cohort_overview/110_cohort_diagram.png", scale = 1.0)
+
+diagram_png
+```
+
+## MSK IMPACT data
+
+```{r}
+# Load all IMPACT data
+samples <- readr::read_tsv("/work/shah/vazquezi/projects/dmp-2021/mskimpact/data_clinical_sample.txt", comment = "#")
+
+# Clean up column names
+names(samples) <- tolower(names(samples))
+
+# Add custom IMPACT annotations
+samples <- samples %>% 
+  dplyr::rename("impact_dmp_sample_id" = "sample_id", "impact_dmp_patient_id" = "patient_id") %>%
+  dplyr::left_join(db$sequencing_msk_impact_custom, by = c("impact_dmp_sample_id", "impact_dmp_patient_id"))
+
+samples
+```
+
+
+```{r}
+# Load gene annotations
+cancer_gene_census <- readr::read_tsv("/work/shah/vazquezi/projects/spectrum/resources/annotation/cancer_gene_census.tsv")
+genes <- yaml::read_yaml("/work/shah/vazquezi/projects/spectrum/resources/annotation/cancer_gene_disease_specific.yaml")
+```
+
+## SNVs and indels
+
+```{r}
+# Load SNV/indel data
+snv <- readr::read_tsv("/work/shah/vazquezi/projects/dmp-2021/mskimpact/data_mutations_extended.txt", comment = "#")
+
+# Clean up column names
+names(snv) <- tolower(names(snv))
+
+# Remove duplicated columns
+snv <- snv[, !duplicated(colnames(snv))]
+
+# Filter samples and variants
+snv <- snv %>% 
+  # Add custom IMPACT annotations
+  dplyr::rename("impact_dmp_sample_id" = "tumor_sample_barcode") %>%
+  dplyr::left_join(samples, by = "impact_dmp_sample_id") %>%
+  # Keep included patients
+  filter(patient_id %in% included_patients) %>%
+  # Rename germline/somatic status
+  mutate(
+    mutation_status = str_to_sentence(mutation_status),
+    mutation_status=recode(mutation_status, `Germline`="Germline", `Somatic`=""),
+    variant_type_short=recode(variant_type, `SNP`="MUT", `DNP`="MUT", `TNP`="MUT", `ONP`="MUT", `INS`="MUT", `DEL`="MUT"),
+    variant_classification_short=recode(variant_classification, 
+      `Missense_Mutation`="Missense_Mutation",
+      `Nonsense_Mutation`="Truncating_Mutation", 
+      `Frame_Shift_Ins`="Truncating_Mutation", 
+      `Frame_Shift_Del`="Truncating_Mutation", 
+      `In_Frame_Ins`="In_Frame_Mutation", 
+      `In_Frame_Del`="In_Frame_Mutation", 
+      `Splice_Site`="Truncating_Mutation", 
+      `Nonstop_Mutation`="Unknown",
+      `Splice_Region`="Unknown",
+      "5'Flank"="Unknown",
+      "3'Flank"="Unknown",
+      "5'UTR"="Unknown",
+      "Silent"="Unknown",
+      "Translation_Start_Site"="Unknown",
+      "Intron"="Unknown")
+    )
+ 
+snv
+```
+
+```{r}
+# Load CNA data
+cna <- readr::read_tsv("/work/shah/vazquezi/projects/dmp-2021/mskimpact/data_CNA.txt")
+
+# Pivot wide to long
+cna <- cna %>% pivot_longer(-c("Hugo_Symbol"), names_to = "sample_id", values_to = "copy_number")
+
+# Clean up column names
+names(cna) <- tolower(names(cna))
+
+# Filter samples and variants
+cna <- cna %>% 
+  # Add custom IMPACT annotations
+  dplyr::rename("impact_dmp_sample_id" = "sample_id") %>%
+  dplyr::left_join(samples, by = "impact_dmp_sample_id") %>%
+  # Keep included patients
+  filter(patient_id %in% included_patients) %>%
+  # Convert to factor
+  mutate(patient_id = factor(patient_id, levels = included_patients)) %>%
+  # Add cancer gene annotation
+  dplyr::left_join(cancer_gene_census %>% dplyr::select('Gene Symbol', 'Role in Cancer'), by = c('hugo_symbol' = 'Gene Symbol')) %>%
+  mutate(cna_type = case_when(copy_number > 0 ~ "AMP", copy_number < 0 ~ "HOMDEL"))
+
+cna
+```
+
+```{r}
+# Load fusion data
+fusions <- readr::read_tsv("/work/shah/vazquezi/projects/dmp-2021/mskimpact/data_fusions.txt")
+
+# Clean up column names
+names(fusions) <- tolower(names(fusions))
+
+# Filter samples and variants
+fusions <- fusions %>% 
+  # Add custom IMPACT annotations
+  dplyr::rename("impact_dmp_sample_id" = "tumor_sample_barcode") %>%
+  dplyr::left_join(samples, by = "impact_dmp_sample_id") %>%
+  # Keep included patients
+  filter(patient_id %in% included_patients) %>%
+  # Convert to factor
+  mutate(patient_id = factor(patient_id, levels = included_patients)) %>%
+  mutate(fusion_type = "Fusion")
+
+fusions
+```
+
+```{r}
+
+snv_tbl <- snv %>%
+  complete(patient_id, nesting(hugo_symbol))
+
+cna_tbl <- cna %>%
+  complete(patient_id, nesting(hugo_symbol))
+
+fusions_tbl <- fusions %>%
+  complete(patient_id, nesting(hugo_symbol))
+
+snv_cna_fusions_tbl <- bind_rows(snv_tbl, cna_tbl, fusions_tbl) %>%
+  unite("type", c("variant_type_short","variant_classification_short","cna_type","fusion_type","mutation_status"), sep=",", na.rm = TRUE, remove = FALSE)
+
+```
+
+## Data inventory
+
+### Inventory table
+
+```{r}
+# Remove scRNA samples from unidentified sites
+db$sequencing_scrna <- db$sequencing_scrna %>% 
+  filter(tumor_type != "Unknown") %>%
+  filter(therapy == "pre-Rx")
+
+# Remove H&E samples that are not adjacent or site-matched slides
+db$he_slide <- db$he_slide %>% 
+  filter(is_adjacent == TRUE) %>%
+  filter(therapy == "pre-Rx")
+
+# Remove mpIF samples that have not been delivered
+db$mpif_slide <- db$mpif_slide %>% 
+  filter(submission_status == "Delivered") %>%
+  filter(therapy == "pre-Rx")
+
+# Remove normal WGS samples and failed samples
+db$sequencing_bulk_dna <- db$sequencing_bulk_dna %>% 
+  filter(tumor_type %in% c("Primary","Metastasis")) %>% 
+  filter(qc_status == "Pass")
+
+# Remove normal IMPACT samples and remove duplicates
+db$sequencing_msk_impact_custom <- db$sequencing_msk_impact_custom %>% 
+  left_join(samples %>% dplyr::select(impact_dmp_sample_id, tumor_purity)) %>%
+  filter(impact_gene_panel == "IMPACT") %>%
+  group_by(impact_dmp_patient_id) %>%
+  top_n(1, tumor_purity) %>%
+  ungroup
+
+# Remove Myriad samples not yet delivered
+db$sequencing_myriad <- db$sequencing_myriad %>% 
+  filter(status == "Delivered")
+
+# Remove duplicates
+db$mutational_signatures <- db$mutational_signatures %>% 
+  left_join(samples %>% dplyr::select(impact_dmp_sample_id, tumor_purity)) %>%
+  group_by(impact_dmp_patient_id) %>%
+  top_n(1, tumor_purity) %>%
+  ungroup
+
+patients <- db$patients %>%
+  dplyr::select(patient_id, patient_age) %>%
+  mutate(patient_id = as.character(patient_id))
+
+gyn_diagnosis <- db$gyn_diagnosis %>%
+  mutate(gyn_diagnosis_chemo_intent_description = factor(gyn_diagnosis_chemo_intent_description, levels = c('Primary', 'NACT/IDS'))) %>%
+  mutate(patient_id = as.character(patient_id))
+```
+
+```{r merge_sample_inventory}
+inventory <- plyr::join_all(
+  list(db$sequencing_scrna, db$sequencing_bulk_dna, db$sequencing_myriad, db$sequencing_msk_impact_custom, db$he_slide, db$mpif_slide),
+  by = c('technique', 'project', 'patient_id', 'tumor_site', 'therapy'), 
+  type = "full", 
+  match = "all"
+  )
+# readr::write_tsv(inventory, path="tables/110_data_inventory.tsv")
+
+inventory <- inventory %>% mutate(
+    tumor_type = ordered(tumor_type, levels = names(colors$tumor_type)),
+    tumor_supersite = ordered(tumor_supersite, levels = names(colors$tumor_supersite)),
+    therapy = ordered(therapy, levels = names(colors$therapy))
+    )
+
+inventory
+```
+
+```{r}
+mylist <- inventory %>% 
+  # dplyr::recode(technique, scrna = `scRNA`, bulk_dna = `Bulk WGS`, myriad = `Myriad`, impact = `MSK-IMPACT`, he_slide = `H&E`, mpif_slide = `mpIF`) %>%
+  split(.$technique)
+
+wb <- createWorkbook()
+lapply(seq_along(mylist), function(i){
+  addWorksheet(wb=wb, sheetName = names(mylist[i]))
+  writeData(wb, sheet = i, mylist[[i]][-length(mylist[[i]])])
+})
+
+saveWorkbook(wb, "tables/sample_metadata.xlsx", overwrite = TRUE)
+```
+
+### Sample table
+
+```{r}
+sample_inventory <- get_sample_inventory(inventory, unique = FALSE)
+
+# readr::write_tsv(sample_inventory, file=snakemake@output$sample_inventory)
+
+data <- sample_inventory %>%
+  group_by(patient_id, tumor_type, tumor_supersite, therapy, is_site_matched) %>%
+  summarise_at(vars(scrna, bulk_dna, myriad, impact, he_slide, mpif_slide), list(sum)) %>%
+  ungroup()
+
+data <- data %>% 
+  dplyr::left_join(db$mutational_signatures, by = 'patient_id') %>%
+  # filter(!is.na(consensus_signature)) %>%
+  mutate(
+    progression = patient_id %in% db$relapses$patient_id,
+    patient_id = str_remove_all(patient_id, "SPECTRUM-OV-"),
+    consensus_signature = ordered(consensus_signature, levels = names(colors$consensus_signature)),
+    consensus_signature_short = ordered(consensus_signature_short, levels = names(colors$consensus_signature_short))
+    ) %>%
+  dplyr::rename(`scRNA` = scrna, `Bulk WGS` = bulk_dna, `Myriad` = myriad, `MSK-IMPACT` = impact, `H&E` = he_slide, `mpIF` = mpif_slide)
+
+# mat <- mat > 0
+```
+
+### Patient table {.tabset}
+
+```{r merge_patient_inventory}
+patient_inventory <- sample_inventory %>%
+  group_by(patient_id) %>%
+  summarise(
+    bulk_dna = sum(bulk_dna),
+    impact = sum(impact),
+    scrna = sum(scrna),
+    he_slide = sum(he_slide),
+    mpif_slide = sum(mpif_slide)
+    )
+# readr::write_tsv(patient_inventory, file=snakemake@output$patient_inventory)
+
+patient_inventory
+```
+
+```{r}
+data <- patient_inventory %>% 
+  dplyr::left_join(db$mutational_signatures, by = 'patient_id') %>%
+  mutate(
+    progression = patient_id %in% db$relapses$patient_id,
+    patient_id = str_remove_all(patient_id, "SPECTRUM-OV-"),
+    consensus_signature = ordered(consensus_signature, levels = names(colors$consensus_signature)),
+    consensus_signature_short = ordered(consensus_signature_short, levels = names(colors$consensus_signature_short))
+    ) %>%
+  dplyr::rename(`scRNA` = scrna, `Bulk WGS` = bulk_dna, `MSK-IMPACT` = impact, `H&E` = he_slide, `mpIF` = mpif_slide)
+
+top_annotation <- data
+
+left_annotation <- data
+
+mat <- data %>%
+    dplyr::select(`scRNA`, `H&E`, `mpIF`, `Bulk WGS`, `MSK-IMPACT`) %>%
+    as.matrix() %>% t()
+```
+
+
+#### OncoPrint (main)
+
+```{r, fig.width = 8, fig.height = 4.25}
+
+snv_cna_fusions_wide_tbl <- snv_cna_fusions_tbl %>%
+  filter(patient_id %in% scrna_patients) %>%
+  transform(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
+  pivot_wider(
+    id_cols = "hugo_symbol",
+    names_from = "patient_id",
+    values_from = "type",
+    values_fn = list(type = ~ str_c(., collapse = ","))
+  ) %>%
+  arrange(hugo_symbol)
+
+included_genes <-
+  c("TP53",
+    "BRCA1",
+    "BRCA2",
+    "ATM",
+    "PALB2",
+    "CDK12",
+    "RB1",
+    "NF1",
+    "MYC",
+    "CCNE1",
+    "KRAS")
+
+oncoprint_main_mat <- snv_cna_fusions_wide_tbl %>%
+  # Only keep genes of interest
+  filter(hugo_symbol %in% genes$hgsoc) %>%
+  # Keep included genes
+  filter(hugo_symbol %in% included_genes) %>%
+  arrange(match(hugo_symbol, included_genes)) %>%
+  column_to_rownames(var = "hugo_symbol") %>%
+  as.matrix
+
+# Top annotation
+top_df <- db$mutational_signatures %>%
+  # distinct(patient_id, .keep_all = TRUE) %>%
+  left_join(patients, by = 'patient_id') %>%
+  left_join(gyn_diagnosis, by = 'patient_id') %>%
+  mutate(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
+  filter(patient_id %in% c("002")) %>%
+  arrange(match(patient_id, colnames(oncoprint_main_mat))) %>%
+  mutate(consensus_signature = ordered(consensus_signature, levels = names(colors$consensus_signature))) %>%
+  dplyr::select(consensus_signature,
+                patient_age,
+                gyn_diagnosis_chemo_intent_description,
+                gyn_diagnosis_figo_stage) %>%
+  as.data.frame
+
+colnames(top_df) <- c("Signature", "Age", "Surgery", "Stage")
+colours <-
+  list(
+    "Signature" = colors$consensus_signature[names(colors$consensus_signature)!="NA"],
+    "Age" = circlize::colorRamp2(seq(30, 90, 20), brewer.pal(4, "RdPu")),
+    "Surgery" = colors$chemo_intent[names(colors$chemo_intent)!="Salvage"],
+    "Stage" = colors$pathology_stage
+  )
+top_annotation <- columnAnnotation(
+  df = top_df,
+  col = colours,
+  # labels = ann$`Mutational signature`,
+  # labels_gp = gpar(col = "white", fontsize = 10),
+  annotation_width = unit(c(1, 4), "cm"),
+  show_legend = c(TRUE),
+  show_annotation_name = TRUE,
+  annotation_name_side = "left",
+  annotation_name_gp = list(fontsize = 10),
+  simple_anno_size = unit(0.35, "cm"),
+  gap = unit(1, "mm")
+)
+
+# Right annotation
+right_annotation = rowAnnotation(
+  # "# alterations" = anno_oncoprint_barplot(
+  row_barplot = anno_oncoprint_barplot(
+    c("MUT", "AMP", "HOMDEL", "Fusion"),
+    # only MUT, AMP, HOMDEL and Fusion
+    border = FALSE,
+    bar_width = 0.6,
+    height = unit(4, "cm"),
+    # show_fraction = TRUE,
+    axis_param = list(side = "bottom", labels_rot = 90)
+  ),
+  name = "# alterations\nper gene",
+  show_annotation_name = TRUE,
+  annotation_name_gp = list(fontsize = 8)
+)
+
+# ht_opt(
+#     legend_title_gp = gpar(fontsize = 8, fontface = "plain")
+#     # legend_labels_gp = gpar(fontsize = 8), 
+#     # heatmap_column_names_gp = gpar(fontsize = 8),
+#     # heatmap_column_title_gp = gpar(fontsize = 10),
+#     # heatmap_row_title_gp = gpar(fontsize = 8)
+# )
+
+oncoprint_main_ht <-
+  plot_oncoprint_heatmap(
+    mat = oncoprint_main_mat,
+    top_annotation = top_annotation,
+    bottom_annotation = bottom_annotation,
+    right_annotation = right_annotation,
+    column_split = top_df$Signature
+  )
+
+oncoprint_main_lgd_list <- plot_oncoprint_legend()
+
+ComplexHeatmap::draw(
+  oncoprint_main_ht,
+  merge_legends = TRUE,
+  heatmap_legend_side = "bottom",
+  annotation_legend_side = "bottom",
+  heatmap_legend_list = oncoprint_main_lgd_list
+)
+
+rownames(oncoprint_main_ht@matrix)
+
+colnames(oncoprint_main_ht@matrix)
+
+pdf("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.pdf", width = 13.5, height = 4.4)
+print(oncoprint_supp_ht)
+dev.off()
+
+png("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.png", width = 13.5, height = 4.4, res = 300)
+print(oncoprint_supp_ht)
+dev.off()
+
+```
+
+#### OncoPrint (supplement)
+
+```{r, fig.width = 13.5, fig.height = 4.4}
+
+snv_cna_fusions_wide_tbl <- snv_cna_fusions_tbl %>%
+  filter(patient_id %in% included_patients) %>%
+  transform(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
+  pivot_wider(
+    id_cols = "hugo_symbol",
+    names_from = "patient_id",
+    values_from = "type",
+    values_fn = list(type = ~ str_c(., collapse = ","))
+  ) %>%
+  arrange(hugo_symbol)
+
+included_genes <-
+  c("TP53",
+    "BRCA1",
+    "BRCA2",
+    "ATM",
+    "PALB2",
+    "CDK12",
+    "RB1",
+    "NF1",
+    "MYC",
+    "CCNE1",
+    "KRAS")
+
+# Oncoprint matrix
+oncoprint_supp_mat <- snv_cna_fusions_wide_tbl %>%
+  # Only keep genes of interest
+  filter(hugo_symbol %in% genes$hgsoc) %>%
+  # Keep included genes
+  filter(hugo_symbol %in% included_genes) %>%
+  arrange(match(hugo_symbol, included_genes)) %>%
+  column_to_rownames(var = "hugo_symbol") %>%
+  as.matrix
+
+# Top annotation
+top_df <- db$mutational_signatures %>%
+  # distinct(patient_id, .keep_all = TRUE) %>%
+  left_join(patients, by = 'patient_id') %>%
+  left_join(gyn_diagnosis, by = 'patient_id') %>%
+  transform(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
+  filter(patient_id %in% colnames(oncoprint_supp_mat)) %>%
+  arrange(match(patient_id, colnames(oncoprint_supp_mat))) %>%
+  mutate(consensus_signature = ordered(consensus_signature, levels = names(colors$consensus_signature))) %>%
+  dplyr::select(consensus_signature,
+                patient_age,
+                gyn_diagnosis_chemo_intent_description,
+                gyn_diagnosis_figo_stage) %>%
+  as.data.frame
+
+colnames(top_df) <- c("Signature", "Age", "Surgery", "Stage")
+colours <-
+  list(
+    "Signature" = colors$consensus_signature[names(colors$consensus_signature) !=
+                                               "NA"],
+    "Age" = circlize::colorRamp2(seq(30, 90, 20), brewer.pal(4, "PuRd")),
+    "Surgery" = colors$chemo_intent[names(colors$chemo_intent) != "Salvage"],
+    "Stage" = colors$pathology_stage
+  )
+top_annotation <- columnAnnotation(
+  df = top_df,
+  col = colours,
+  # labels = ann$`Mutational signature`,
+  # labels_gp = gpar(col = "white", fontsize = 10),
+  annotation_width = unit(c(1, 4), "cm"),
+  show_legend = c(TRUE),
+  show_annotation_name = TRUE,
+  annotation_name_side = "left",
+  annotation_name_gp = list(fontsize = 10),
+  simple_anno_size = unit(0.35, "cm"),
+  gap = unit(1, "mm")
+)
+
+# Right annotation
+right_annotation = rowAnnotation(
+  "# alterations\nper gene" = anno_oncoprint_barplot(
+    c("MUT", "AMP", "HOMDEL", "Fusion"),
+    border = FALSE,
+    bar_width = 0.6,
+    height = unit(4, "cm"),
+    axis_param = list(side = "bottom", labels_rot = 90)
+  ),
+  annotation_name_gp = list(fontsize = 8)
+)
+
+oncoprint_supp_ht <-
+  plot_oncoprint_heatmap(
+    mat = oncoprint_supp_mat,
+    top_annotation = top_annotation,
+    bottom_annotation = bottom_annotation,
+    right_annotation = right_annotation,
+    column_split = top_df$Signature
+  )
+
+oncoprint_supp_lgd_list <- plot_oncoprint_legend()
+
+oncoprint_supp_ht <- ComplexHeatmap::draw(
+  oncoprint_supp_ht,
+  merge_legends = TRUE,
+  heatmap_legend_side = "bottom",
+  annotation_legend_side = "bottom",
+  heatmap_legend_list = oncoprint_supp_lgd_list
+)
+
+# rownames(oncoprint_supp_ht@matrix)
+# 
+# colnames(oncoprint_supp_ht@matrix)
+
+pdf("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients.pdf", width = 13.5, height = 4.4)
+print(oncoprint_supp_ht)
+dev.off()
+
+png("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients.png", width = 13.5, height = 4.4, res = 300)
+print(oncoprint_supp_ht)
+dev.off()
+
+```
+
+## Composite figure
+
+```{r}
+
+data <- inventory %>%
+  filter(patient_id %in% scrna_patients) %>%
+  filter((therapy == "pre-Rx") | (therapy == "post-Rx" & technique == "bulk_dna")) %>%
+  get_sample_inventory(., unique = TRUE) %>% 
+  dplyr::left_join(patients, by = 'patient_id') %>%
+  dplyr::left_join(db$mutational_signatures, by = 'patient_id') %>%
+  dplyr::left_join(gyn_diagnosis, by = 'patient_id') %>%
+  mutate(
+    patient_id = str_remove_all(patient_id, "SPECTRUM-OV-"),
+    # technique = ordered(technique, levels = c("scrna", "he_slide", "mpif_slide", "bulk_dna", "impact")),
+    tumor_supersite = ordered(tumor_supersite, levels = names(colors$tumor_supersite)),
+    consensus_signature = ordered(consensus_signature, levels = names(colors$consensus_signature)),
+    consensus_signature_short = ordered(consensus_signature_short, levels = names(colors$consensus_signature_short))
+    ) %>%
+  dplyr::select(patient_id, patient_age, gyn_diagnosis_chemo_intent_description, gyn_diagnosis_figo_stage, tumor_supersite, consensus_signature, scrna, he_slide, mpif_slide, bulk_dna, impact) %>%
+  dplyr::rename(`scRNA` = scrna, `H&E` = he_slide, `mpIF` = mpif_slide, `Bulk WGS` = bulk_dna, `MSK-IMPACT` = impact) %>%
+  arrange(tumor_supersite) %>%
+  pivot_wider(names_from = "tumor_supersite", values_from = c(`scRNA`, `H&E`, `mpIF`, `Bulk WGS`, `MSK-IMPACT`), values_fn = sum, values_fill = 0) %>%
+  mutate(`Bulk WGS_Other` = rowSums(dplyr::select(.,starts_with("Bulk WGS")))) %>%
+  mutate(`MSK-IMPACT_Other` = rowSums(dplyr::select(.,starts_with("MSK-IMPACT")))) %>%
+  dplyr::select(c("patient_id", "patient_age", "gyn_diagnosis_chemo_intent_description", "gyn_diagnosis_figo_stage", "consensus_signature", contains(c("scRNA", "mpIF", "H&E")), "Bulk WGS_Other", "MSK-IMPACT_Other")) %>%
+  dplyr::select(-c("H&E_Ascites","H&E_Other","mpIF_Ascites"))
+
+inventory_mat <- data %>%
+    dplyr::rename(`Bulk WGS_Other` = `Bulk WGS_Other`, `MSK-IMPACT_Other` = `MSK-IMPACT_Other`) %>%
+    dplyr::select(c("patient_id", contains(c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT")))) %>%
+    column_to_rownames(var = "patient_id") %>%
+    as.matrix() %>% t()
+
+inventory_mat <- inventory_mat[rowSums(inventory_mat)>0,colnames(oncoprint_main_mat)]
+
+bottom_annotation <- data
+
+left_annotation <- inventory_mat %>%
+  rownames() %>%
+  as_tibble() %>%
+  tidyr::separate(value, c("technique", "tumor_supersite"), sep = "_") %>%
+  mutate(
+    technique = ordered(technique, levels = c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT")),
+    tumor_supersite = ordered(tumor_supersite, levels = names(colors$tumor_supersite))
+    )
+
+```
+
+```{r patient_heatmap_vignette, fig.width=10, fig.height=4.5, results="asis"}
+
+inventory_ht <-
+  plot_inventory_heatmap(
+    inventory_mat,
+    bottom_annotation,
+    left_annotation,
+    row_split = "technique",
+    column_split = "consensus_signature",
+    column_order = colnames(oncoprint_main_mat)
+  )
+
+ComplexHeatmap::draw(inventory_ht,
+                     merge_legend = TRUE,
+                     annotation_legend_side = "right")
+
+```
+
+```{r, fig.width = 9, fig.height = 8.5}
+
+ht_list <- oncoprint_main_ht %v% inventory_ht 
+
+column_order = unlist(column_order(oncoprint_main_ht))
+
+cohort_ht <- ComplexHeatmap::draw(
+  ht_list, 
+  merge_legends = TRUE, 
+  heatmap_legend_side = "bottom",
+  annotation_legend_side = "bottom",
+  heatmap_legend_list = oncoprint_main_lgd_list,
+  column_title = "Patient",
+  column_title_side = "bottom",
+  column_title_gp = gpar(fontsize = 10),
+  main_heatmap = 1, 
+  auto_adjust = FALSE)
+  # column_split = column_split_shared,
+  # column_order = column_order)#, column_split = ann)
+
+
+pdf("figures/110_cohort_overview/110_cohort_overview.pdf", width = 9, height = 8.5)
+print(cohort_ht)
+dev.off()
+
+png("figures/110_cohort_overview/110_cohort_overview.png", width = 9, height = 8.5, res = 300)
+print(cohort_ht)
+dev.off()
+
+```
+
+```{r, fig.width = 10, fig.height = 4}
+
+composite <-
+  cowplot::plot_grid(diagram_png, 
+                     # gtable_matrix("hm_gtbl", matrix(list(cohort_ht)), unit(1, "null"), unit(1, "null")),
+                     grid.grabExpr(cohort_ht, width = 3, height = 7),
+                     rel_widths = c(3, 2),
+                     labels = c("A", "B"))
+
+composite
+
+pdf("figures/110_cohort_overview/110_composite.pdf", width = 10, height = 4)
+composite
+dev.off()
+
+png("figures/110_cohort_overview/110_composite.png", width = 10, height = 4, res = 300)
+print(cohort_ht)
+dev.off()
+
+```
+
+## Session
+
+```{r}
+sessionInfo()
+```
