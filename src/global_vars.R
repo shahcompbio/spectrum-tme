@@ -49,7 +49,7 @@ add_umap_coord <- function(gg_obj) {
 markers_v7 <- yaml::read_yaml("resources/annotation/hgsc_v7_major.yaml")
 
 helper_markers <- function(x) dplyr::select(unnest(enframe(x, "subtype", "gene"), cols = gene), gene, subtype)
-markers_v7_super <- lapply(yaml::read_yaml("resources/hgsc_v7_super.yaml"), helper_markers)
+markers_v7_super <- lapply(yaml::read_yaml("resources/annotation/hgsc_v7_super.yaml"), helper_markers)
 
 ## load color code --------------------------------
 
