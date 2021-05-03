@@ -1,9 +1,9 @@
-col <- c(
-  "DEL" = "#374b88", "AMP" = "#c83934",
-  "MUT" = "#adadaa", "SNP" = "#008000", "INS" = "pink", "ONP" = "white", "DNP" = "white", "HOMDEL" = "#374b88",
-  "Germline" = "white", "Somatic" = "black", "Fusion" = "#6e3171", "Unknown" = "grey",
-  "Missense_Mutation" = "#6a9492", "Truncating_Mutation" = "#724b86", "In_Frame_Mutation" = "#b3653a"
-)
+# col <- c(
+#   "DEL" = "#374b88", "AMP" = "#c83934",
+#   "MUT" = "#adadaa", "SNP" = "#008000", "INS" = "pink", "ONP" = "white", "DNP" = "white", "HOMDEL" = "#374b88",
+#   "Germline" = "white", "Somatic" = "black", "Fusion" = "#6e3171", "Unknown" = "grey",
+#   "Missense_Mutation" = "#6a9492", "Truncating_Mutation" = "#724b86", "In_Frame_Mutation" = "#b3653a"
+# )
 
 alter_fun <- list(
   background = function(x, y, w, h) {
@@ -13,77 +13,77 @@ alter_fun <- list(
   # big blue
   DEL = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h-unit(0.5, "mm"), 
-              gp = gpar(fill = col["DEL"], col = NA))
+              gp = gpar(fill = clrs$mutation["DEL"], col = NA))
   },
   # big red
   AMP = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h-unit(0.5, "mm"), 
-              gp = gpar(fill = col["AMP"], col = NA))
+              gp = gpar(fill = clrs$mutation["AMP"], col = NA))
   },
   # small green
   MUT = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h*0.33, 
-              gp = gpar(fill = col["MUT"], col = NA))
+              gp = gpar(fill = clrs$mutation["MUT"], col = NA))
   },
   # small green
   SNP = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h*0.33, 
-              gp = gpar(fill = col["SNP"], col = NA))
+              gp = gpar(fill = clrs$mutation["SNP"], col = NA))
   },
   # small green
   INS = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h*0.33, 
-              gp = gpar(fill = col["INS"], col = NA))
+              gp = gpar(fill = clrs$mutation["INS"], col = NA))
   },
   # small green
   ONP = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h*0.33, 
-              gp = gpar(fill = col["ONP"], col = NA))
+              gp = gpar(fill = clrs$mutation["ONP"], col = NA))
   },
   # small green
   DNP = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h*0.33, 
-              gp = gpar(fill = col["DNP"], col = NA))
+              gp = gpar(fill = clrs$mutation["DNP"], col = NA))
   },
   # small green
   HOMDEL = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h-unit(0.5, "mm"), 
-              gp = gpar(fill = col["HOMDEL"], col = NA))
+              gp = gpar(fill = clrs$mutation["HOMDEL"], col = NA))
   },
   # medium purple
   Fusion = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h-unit(0.5, "mm"), 
-              gp = gpar(fill = col["Fusion"], col = NA))
+              gp = gpar(fill = clrs$mutation["Fusion"], col = NA))
   },
   # small green
   Unknown = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h*0.33, 
-              gp = gpar(fill = col["Unknown"], col = NA))
+              gp = gpar(fill = clrs$mutation["Unknown"], col = NA))
   },
   # small green
   Missense_Mutation = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h-unit(0.5, "mm"), 
-              gp = gpar(fill = col["MUT"], col = NA))
+              gp = gpar(fill = clrs$mutation["MUT"], col = NA))
     grid.rect(x, y, w-unit(0.5, "mm"), h*0.33,
-              gp = gpar(fill = col["Missense_Mutation"], col = NA))
+              gp = gpar(fill = clrs$mutation["Missense_Mutation"], col = NA))
   },
   # small green
   Truncating_Mutation = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h-unit(0.5, "mm"), 
-              gp = gpar(fill = col["MUT"], col = NA))
+              gp = gpar(fill = clrs$mutation["MUT"], col = NA))
     grid.rect(x, y, w-unit(0.5, "mm"), h*0.33, 
-              gp = gpar(fill = col["Truncating_Mutation"], col = NA))
+              gp = gpar(fill = clrs$mutation["Truncating_Mutation"], col = NA))
   },
   # small green
   In_Frame_Mutation = function(x, y, w, h) {
     grid.rect(x, y, w-unit(0.5, "mm"), h-unit(0.5, "mm"), 
-              gp = gpar(fill = col["MUT"], col = NA))
+              gp = gpar(fill = clrs$mutation["MUT"], col = NA))
     grid.rect(x, y, w-unit(0.5, "mm"), h*0.33, 
-              gp = gpar(fill = col["In_Frame_Mutation"], col = NA))
+              gp = gpar(fill = clrs$mutation["In_Frame_Mutation"], col = NA))
   },
   # small white
   Germline = function(x, y, w, h) {
-    grid.segments(x - w*0.5, y, x + w*0.5, y, gp = gpar(col = col["Germline"], lwd = 2))
+    grid.segments(x - w*0.5, y, x + w*0.5, y, gp = gpar(col = clrs$mutation["Germline"], lwd = 2))
   },
   # crossed lines
   Somatic = function(x, y, w, h) {
@@ -96,14 +96,14 @@ heatmap_legend_alteration_param <- list(
   title = "Alterations",
   at = c("AMP","HOMDEL","MUT","Fusion"), 
   labels = c("Amplification","Deep deletion","Mutation","Fusion"),
-  col_fun = col[c("AMP","HOMDEL","MUT","Fusion")]
+  col_fun = clrs$mutation[c("AMP","HOMDEL","MUT","Fusion")]
 )
 
 heatmap_legend_mutation_type_param <- list(
   title = "Mutation type",
   at = c("Germline","Somatic","Missense_Mutation","Truncating_Mutation","In_Frame_Mutation"), 
   labels = c("Germline","Somatic","Missense","Truncating","Inframe"),
-  col_fun = col[c("Germline","Somatic","Missense_Mutation","Truncating_Mutation","In_Frame_Mutation")], 
+  col_fun = clrs$mutation[c("Germline","Somatic","Missense_Mutation","Truncating_Mutation","In_Frame_Mutation")], 
   lwd = c(2, 4, 4, 4, 4)
 )
 
@@ -167,7 +167,7 @@ plot_oncoprint_heatmap <-
       top_annotation = top_annotation,
       right_annotation = right_annotation,
       alter_fun = alter_fun,
-      col = col,
+      col = clrs$mutation,
       row_split = row_split,
       column_split = column_split,
       cluster_row_slices = FALSE,
@@ -206,7 +206,7 @@ plot_oncoprint_legend <-
                   type = "lines", 
                   legend_gp = gpar(col = heatmap_legend_mutation_type_param$col_fun, 
                                    lwd = heatmap_legend_mutation_type_param$lwd), 
-                  background = col["MUT"])
+                  background = clrs$mutation["MUT"])
     
     oncoprint_lgd_list = packLegend(lgd1, lgd2, direction = "horizontal")
     
