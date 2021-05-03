@@ -8,6 +8,14 @@ editor_options:
 
 # Cohort overview
 
+```{r setup, include=FALSE}
+# Global knit options
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+# Global chunk options
+knitr::opts_chunk$set(echo=FALSE, tidy=TRUE, warning=FALSE, message=FALSE)
+```
+
 ```{r}
 library(tidyverse)
 library(gdata)
@@ -21,14 +29,6 @@ library(grid)
 library(ComplexHeatmap)
 library(viridis)
 library(RColorBrewer)
-
-theme_spectrum <- function(...) {
-  theme_cowplot(font_size = 12, ...) %+replace%
-    theme(strip.background = element_blank(),
-          plot.background = element_blank(),
-          plot.title = element_text(face = "plain"))
-}
-theme_set(theme_spectrum())
 
 source("src/global_vars.R")
 source("src/plot_inventory_heatmap.R")
@@ -242,13 +242,6 @@ db$sequencing_msk_impact_custom <- db$sequencing_msk_impact_custom %>%
 db$sequencing_myriad <- db$sequencing_myriad %>% 
   filter(status == "Delivered")
 
-# Remove duplicates
-db$mutational_signatures <- db$mutational_signatures %>% 
-  left_join(samples %>% dplyr::select(impact_dmp_sample_id, tumor_purity)) %>%
-  group_by(impact_dmp_patient_id) %>%
-  top_n(1, tumor_purity) %>%
-  ungroup
-
 patients <- db$patients %>%
   dplyr::select(patient_id, patient_age) %>%
   mutate(patient_id = as.character(patient_id))
@@ -259,8 +252,18 @@ gyn_diagnosis <- db$gyn_diagnosis %>%
 ```
 
 ```{r merge_sample_inventory}
+inventory_list <-
+  list(
+    "scRNA" = db$sequencing_scrna,
+    "H&E" = db$he_slide,
+    "mpIF"= db$mpif_slide,
+    "Bulk WGS" = db$sequencing_bulk_dna,
+    "Myriad" = db$sequencing_myriad,
+    "MSK-IMPACT" = db$sequencing_msk_impact_custom
+  )
+
 inventory <- plyr::join_all(
-  list(db$sequencing_scrna, db$sequencing_bulk_dna, db$sequencing_myriad, db$sequencing_msk_impact_custom, db$he_slide, db$mpif_slide),
+  inventory_list,
   by = c('technique', 'project', 'patient_id', 'tumor_site', 'therapy'), 
   type = "full", 
   match = "all"
@@ -277,14 +280,10 @@ inventory
 ```
 
 ```{r}
-mylist <- inventory %>% 
-  # dplyr::recode(technique, scrna = `scRNA`, bulk_dna = `Bulk WGS`, myriad = `Myriad`, impact = `MSK-IMPACT`, he_slide = `H&E`, mpif_slide = `mpIF`) %>%
-  split(.$technique)
-
 wb <- createWorkbook()
-lapply(seq_along(mylist), function(i){
-  addWorksheet(wb=wb, sheetName = names(mylist[i]))
-  writeData(wb, sheet = i, mylist[[i]][-length(mylist[[i]])])
+lapply(seq_along(inventory_list), function(i){
+  addWorksheet(wb=wb, sheetName = names(inventory_list[i]))
+  writeData(wb, sheet = i, inventory_list[[i]][-length(inventory_list[[i]])])
 })
 
 saveWorkbook(wb, "tables/sample_metadata.xlsx", overwrite = TRUE)
@@ -304,7 +303,6 @@ data <- sample_inventory %>%
 
 data <- data %>% 
   dplyr::left_join(db$mutational_signatures, by = 'patient_id') %>%
-  # filter(!is.na(consensus_signature)) %>%
   mutate(
     progression = patient_id %in% db$relapses$patient_id,
     patient_id = str_remove_all(patient_id, "SPECTRUM-OV-"),
@@ -393,11 +391,10 @@ oncoprint_main_mat <- snv_cna_fusions_wide_tbl %>%
 
 # Top annotation
 top_df <- db$mutational_signatures %>%
-  # distinct(patient_id, .keep_all = TRUE) %>%
+  filter(patient_id %in% scrna_patients) %>%
   left_join(patients, by = 'patient_id') %>%
   left_join(gyn_diagnosis, by = 'patient_id') %>%
   mutate(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
-  filter(patient_id %in% c("002")) %>%
   arrange(match(patient_id, colnames(oncoprint_main_mat))) %>%
   mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>%
   dplyr::select(consensus_signature,
@@ -477,11 +474,11 @@ rownames(oncoprint_main_ht@matrix)
 colnames(oncoprint_main_ht@matrix)
 
 pdf("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.pdf", width = 13.5, height = 4.4)
-print(oncoprint_supp_ht)
+print(oncoprint_main_ht)
 dev.off()
 
 png("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.png", width = 13.5, height = 4.4, res = 300)
-print(oncoprint_supp_ht)
+print(oncoprint_main_ht)
 dev.off()
 
 ```
@@ -526,7 +523,7 @@ oncoprint_supp_mat <- snv_cna_fusions_wide_tbl %>%
 
 # Top annotation
 top_df <- db$mutational_signatures %>%
-  # distinct(patient_id, .keep_all = TRUE) %>%
+  filter(patient_id %in% included_patients) %>%
   left_join(patients, by = 'patient_id') %>%
   left_join(gyn_diagnosis, by = 'patient_id') %>%
   transform(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
@@ -583,6 +580,9 @@ oncoprint_supp_ht <-
     column_split = top_df$Signature
   )
 
+print(nrow(oncoprint_supp_ht@matrix))
+print(ncol(oncoprint_supp_ht@matrix))
+
 oncoprint_supp_lgd_list <- plot_oncoprint_legend()
 
 oncoprint_supp_ht <- ComplexHeatmap::draw(
@@ -592,10 +592,6 @@ oncoprint_supp_ht <- ComplexHeatmap::draw(
   annotation_legend_side = "bottom",
   heatmap_legend_list = oncoprint_supp_lgd_list
 )
-
-# rownames(oncoprint_supp_ht@matrix)
-# 
-# colnames(oncoprint_supp_ht@matrix)
 
 pdf("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients.pdf", width = 13.5, height = 4.4)
 print(oncoprint_supp_ht)

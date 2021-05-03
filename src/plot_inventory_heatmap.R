@@ -58,13 +58,13 @@ plot_inventory_heatmap <-
            left_annotation,
            column_order,
            row_split = "technique",
-           column_split = "consensus_signature" ,
+           column_split = "consensus_signature",
            column_split_shared = NULL) {
-    patient_id_col = colors$patient_id
-    tumor_supersite_col = list("Site" = colors$tumor_supersite[names(colors$tumor_supersite)!="Unknown"])
-    signature_col = list("Mutational\nsignature" = colors$consensus_signature[names(colors$consensus_signature)!="NA"])
-    chemo_intent_col = list("Setting" = colors$chemo_intent)
-    pathology_stage_col = list("Stage" = colors$pathology_stage)
+    patient_id_col = clrs$patient_id
+    tumor_supersite_col = list("Site" = clrs$tumor_supersite[names(clrs$tumor_supersite)!="Unknown"])
+    signature_col = list("Mutational\nsignature" = clrs$consensus_signature[names(clrs$consensus_signature)!="NA"])
+    chemo_intent_col = list("Setting" = clrs$chemo_intent)
+    pathology_stage_col = list("Stage" = clrs$pathology_stage)
     age_col_fun = circlize::colorRamp2(seq(30, 90, 20), brewer.pal(4, "YlOrRd"))
     
     row_split = left_annotation[[row_split]]
@@ -114,10 +114,9 @@ plot_inventory_heatmap <-
       df = bottom_df,
       col = list(
         "Age" = age_col_fun,
-        "Setting" = colors$chemo_intent[names(colors$chemo_intent) != "Salvage"],
-        "Stage" = colors$pathology_stage,
-        "Signature" = colors$consensus_signature[names(colors$consensus_signature) !=
-                                                   "NA"]
+        "Setting" = clrs$chemo_intent[names(clrs$chemo_intent) != "Salvage"],
+        "Stage" = clrs$pathology_stage,
+        "Signature" = clrs$consensus_signature[names(clrs$consensus_signature) != "NA"]
       ),
       show_annotation_name = TRUE,
       annotation_name_side = "left",
@@ -135,8 +134,7 @@ plot_inventory_heatmap <-
     
     left_annotation <- ComplexHeatmap::rowAnnotation(
       df = left_df,
-      col = list("Site" = colors$tumor_supersite[names(colors$tumor_supersite) !=
-                                                   "Unknown"]),
+      col = list("Site" = clrs$tumor_supersite[names(clrs$tumor_supersite) != "Unknown"]),
       show_annotation_name = TRUE,
       annotation_name_side = "bottom",
       annotation_name_gp = list(fontsize = 10),
@@ -176,7 +174,8 @@ plot_inventory_heatmap <-
       show_row_names = FALSE,
       show_column_names = TRUE,
       border = FALSE,
-      # top_annotation = top_annotation, bottom_annotation = bottom_annotation,
+      # top_annotation = top_annotation,
+      # bottom_annotation = bottom_annotation,
       left_annotation = left_annotation,
       right_annotation = right_annotation,
       row_order = rownames(inventory_mat),
