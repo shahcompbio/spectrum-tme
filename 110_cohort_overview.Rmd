@@ -30,21 +30,12 @@ theme_spectrum <- function(...) {
 }
 theme_set(theme_spectrum())
 
+source("src/global_vars.R")
 source("src/plot_inventory_heatmap.R")
 source("src/plot_oncoprint_heatmap.R")
 ```
 
-```{r}
-colors <- yaml::read_yaml("/work/shah/vazquezi/projects/spectrum/resources/annotation/colors.yaml") %>% 
-  lapply(function(x) purrr::map_depth(x, purrr::vec_depth(x)-2, unlist))
-```
-
 ## Load data
-
-```{r}
-# Load database
-db <- readr::read_rds("/work/shah/vazquezi/projects/spectrum/results/db/v1/database/outputs/tme_db/db/SPECTRUM.rds")
-```
 
 ```{r}
 # Define confirmed HGS patients
@@ -277,9 +268,9 @@ inventory <- plyr::join_all(
 # readr::write_tsv(inventory, path="tables/110_data_inventory.tsv")
 
 inventory <- inventory %>% mutate(
-    tumor_type = ordered(tumor_type, levels = names(colors$tumor_type)),
-    tumor_supersite = ordered(tumor_supersite, levels = names(colors$tumor_supersite)),
-    therapy = ordered(therapy, levels = names(colors$therapy))
+    tumor_type = ordered(tumor_type, levels = names(clrs$tumor_type)),
+    tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite)),
+    therapy = ordered(therapy, levels = names(clrs$therapy))
     )
 
 inventory
@@ -317,8 +308,8 @@ data <- data %>%
   mutate(
     progression = patient_id %in% db$relapses$patient_id,
     patient_id = str_remove_all(patient_id, "SPECTRUM-OV-"),
-    consensus_signature = ordered(consensus_signature, levels = names(colors$consensus_signature)),
-    consensus_signature_short = ordered(consensus_signature_short, levels = names(colors$consensus_signature_short))
+    consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)),
+    consensus_signature_short = ordered(consensus_signature_short, levels = names(clrs$consensus_signature_short))
     ) %>%
   dplyr::rename(`scRNA` = scrna, `Bulk WGS` = bulk_dna, `Myriad` = myriad, `MSK-IMPACT` = impact, `H&E` = he_slide, `mpIF` = mpif_slide)
 
@@ -348,8 +339,8 @@ data <- patient_inventory %>%
   mutate(
     progression = patient_id %in% db$relapses$patient_id,
     patient_id = str_remove_all(patient_id, "SPECTRUM-OV-"),
-    consensus_signature = ordered(consensus_signature, levels = names(colors$consensus_signature)),
-    consensus_signature_short = ordered(consensus_signature_short, levels = names(colors$consensus_signature_short))
+    consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)),
+    consensus_signature_short = ordered(consensus_signature_short, levels = names(clrs$consensus_signature_short))
     ) %>%
   dplyr::rename(`scRNA` = scrna, `Bulk WGS` = bulk_dna, `MSK-IMPACT` = impact, `H&E` = he_slide, `mpIF` = mpif_slide)
 
@@ -408,7 +399,7 @@ top_df <- db$mutational_signatures %>%
   mutate(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
   filter(patient_id %in% c("002")) %>%
   arrange(match(patient_id, colnames(oncoprint_main_mat))) %>%
-  mutate(consensus_signature = ordered(consensus_signature, levels = names(colors$consensus_signature))) %>%
+  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>%
   dplyr::select(consensus_signature,
                 patient_age,
                 gyn_diagnosis_chemo_intent_description,
@@ -418,10 +409,10 @@ top_df <- db$mutational_signatures %>%
 colnames(top_df) <- c("Signature", "Age", "Surgery", "Stage")
 colours <-
   list(
-    "Signature" = colors$consensus_signature[names(colors$consensus_signature)!="NA"],
+    "Signature" = clrs$consensus_signature[names(clrs$consensus_signature)!="NA"],
     "Age" = circlize::colorRamp2(seq(30, 90, 20), brewer.pal(4, "RdPu")),
-    "Surgery" = colors$chemo_intent[names(colors$chemo_intent)!="Salvage"],
-    "Stage" = colors$pathology_stage
+    "Surgery" = clrs$chemo_intent[names(clrs$chemo_intent)!="Salvage"],
+    "Stage" = clrs$pathology_stage
   )
 top_annotation <- columnAnnotation(
   df = top_df,
@@ -541,7 +532,7 @@ top_df <- db$mutational_signatures %>%
   transform(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
   filter(patient_id %in% colnames(oncoprint_supp_mat)) %>%
   arrange(match(patient_id, colnames(oncoprint_supp_mat))) %>%
-  mutate(consensus_signature = ordered(consensus_signature, levels = names(colors$consensus_signature))) %>%
+  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>%
   dplyr::select(consensus_signature,
                 patient_age,
                 gyn_diagnosis_chemo_intent_description,
@@ -551,11 +542,11 @@ top_df <- db$mutational_signatures %>%
 colnames(top_df) <- c("Signature", "Age", "Surgery", "Stage")
 colours <-
   list(
-    "Signature" = colors$consensus_signature[names(colors$consensus_signature) !=
+    "Signature" = clrs$consensus_signature[names(clrs$consensus_signature) !=
                                                "NA"],
     "Age" = circlize::colorRamp2(seq(30, 90, 20), brewer.pal(4, "PuRd")),
-    "Surgery" = colors$chemo_intent[names(colors$chemo_intent) != "Salvage"],
-    "Stage" = colors$pathology_stage
+    "Surgery" = clrs$chemo_intent[names(clrs$chemo_intent) != "Salvage"],
+    "Stage" = clrs$pathology_stage
   )
 top_annotation <- columnAnnotation(
   df = top_df,
@@ -630,9 +621,9 @@ data <- inventory %>%
   mutate(
     patient_id = str_remove_all(patient_id, "SPECTRUM-OV-"),
     # technique = ordered(technique, levels = c("scrna", "he_slide", "mpif_slide", "bulk_dna", "impact")),
-    tumor_supersite = ordered(tumor_supersite, levels = names(colors$tumor_supersite)),
-    consensus_signature = ordered(consensus_signature, levels = names(colors$consensus_signature)),
-    consensus_signature_short = ordered(consensus_signature_short, levels = names(colors$consensus_signature_short))
+    tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite)),
+    consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)),
+    consensus_signature_short = ordered(consensus_signature_short, levels = names(clrs$consensus_signature_short))
     ) %>%
   dplyr::select(patient_id, patient_age, gyn_diagnosis_chemo_intent_description, gyn_diagnosis_figo_stage, tumor_supersite, consensus_signature, scrna, he_slide, mpif_slide, bulk_dna, impact) %>%
   dplyr::rename(`scRNA` = scrna, `H&E` = he_slide, `mpIF` = mpif_slide, `Bulk WGS` = bulk_dna, `MSK-IMPACT` = impact) %>%
@@ -659,7 +650,7 @@ left_annotation <- inventory_mat %>%
   tidyr::separate(value, c("technique", "tumor_supersite"), sep = "_") %>%
   mutate(
     technique = ordered(technique, levels = c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT")),
-    tumor_supersite = ordered(tumor_supersite, levels = names(colors$tumor_supersite))
+    tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))
     )
 
 ```
