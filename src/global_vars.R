@@ -119,17 +119,17 @@ mpif_slide_meta_tbl <- db$mpif_slide %>%
 
 ## load H&E meta data -------------------------------
 
-hne_meta_tbl <- db$he_slide %>%
-  mutate(sample_id = image_hid) %>%
-  mutate(patient_id_short = str_remove_all(patient_id, "SPECTRUM-OV-"),
-         tumor_supersite = str_replace_all(tumor_supersite, "Upper Quadrant", "UQ")) %>% 
-  mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
-                                 "Other", tumor_supersite)) %>% 
-  mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>% 
-  filter(patient_id %in% included_patients,
-         therapy == "pre-Rx") %>% 
-  left_join(db$mutational_signatures, by = "patient_id") %>%
-  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)))
+# hne_meta_tbl <- db$he_slide %>%
+#   mutate(sample_id = image_hid) %>%
+#   mutate(patient_id_short = str_remove_all(patient_id, "SPECTRUM-OV-"),
+#          tumor_supersite = str_replace_all(tumor_supersite, "Upper Quadrant", "UQ")) %>% 
+#   mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
+#                                  "Other", tumor_supersite)) %>% 
+#   mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>% 
+#   filter(patient_id %in% included_patients,
+#          therapy == "pre-Rx") %>% 
+#   left_join(db$mutational_signatures, by = "patient_id") %>%
+#   mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)))
 
 ## load WGS meta data -------------------------------
 
