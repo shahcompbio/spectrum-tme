@@ -19,7 +19,6 @@ knitr::opts_chunk$set(echo=FALSE, tidy=TRUE, warning=FALSE, message=FALSE)
 ```{r}
 library(tidyverse)
 library(gdata)
-library(knitr)
 library(stringr)
 library(data.table)
 library(openxlsx)
