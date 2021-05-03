@@ -1,0 +1,14 @@
+T.super: 
+  - "T.cell"
+B.super:
+  - "B.cell"
+  - "Plasma.cell"
+Myeloid.super:
+  - "Monocyte"
+  - "Dendritic.cell"
+  - "Mast.cell"
+Fibroblast.super:
+  - "Endothelial.cell"
+  - "Fibroblast"
+Ovarian.cancer.cell.super: 
+  - "Ovarian.cancer.cell"

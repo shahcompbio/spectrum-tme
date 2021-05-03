@@ -1,0 +1,530 @@
+consensus_signature:
+  HRD-Dup: "#5890c0"
+  HRD-Del: "#62a766"
+  HRD: "#4ac4b9"
+  FBI: "#833216"
+  TD: "#d1352d"
+  Undetermined: "#7f7f7f" # grey50
+  NA: "#cccccc" # grey80
+consensus_signature_short:
+  HRD: "#5890c0" # "#5D9C93"
+  HRP: "#833216" # "#AA3422"
+  Undetermined: "#7f7f7f" # grey50
+  NA: "#cccccc" # grey80
+myriad_signature:
+  HRD: "#5890c0"
+  HRP: "#833216"
+  Undetermined: "#7f7f7f" # grey50
+  NA: "#cccccc" # grey80
+driver:
+  BRCA1: "#5890c0"
+  BRCA2: "#62a766"
+  ATM: "#4ac4b9"
+  ATR: "#4ac4b9"
+  BRIP1: "#4ac4b9"
+  PALB2: "#4ac4b9"
+  CCNE1: "#833216"
+  CDK12: "#d1352d"
+  MYC: "#7f7f7f"
+  Not altered: "#7f7f7f" # grey50
+  All: "#cccccc" # grey80
+  NA: "#cccccc" # grey80
+hr_status:
+  HRD: "#5890c0"
+  HRP: "#833216"
+  Undetermined: "#7f7f7f" # grey50
+  NA: "#cccccc" # grey80
+cell_type:
+  T.cell: "#33a02c"
+  B.cell: "#1f78b4"
+  Plasma.cell: "#a6cee3"
+  Monocyte: "#ff7f00"
+  Myeloid.cell: "#ff7f00"
+  Dendritic.cell: "#b15928"
+  Mast.cell: "#c4a731"
+  Endothelial.cell: "#cab2d6"
+  Fibroblast: "#6a3d9a"
+  Ovarian.cancer.cell: "#e31a1c"
+  # CD8+: "#33a02c"
+  # CD68+: "#ff7f00"
+  # panCK+: "#e31a1c"
+  Other: "#b3b3b3"
+  # Unknown: "grey90"
+  # Lymphocyte: "#33a02c"
+# cell_type:
+#   B.cell: "#1f78b4"
+#   Plasma.cell: "#a6cee3"
+#   T.cell: "#33a02c"
+#   Monocyte: "#ff7f00"
+#   Dendritic.cell: "#b15928"
+#   Mast.cell: "#c4a731"
+#   Endothelial.cell: "#cab2d6"
+#   Fibroblast: "#6a3d9a"
+#   Ovarian.cancer.cell: "#e31a1c"
+#   Other: "#b3b3b3" # grey70
+tumor_megasite:
+  Adnexa: "#ff0000"
+  Ascites: "#56B4E9"
+  Other: "#56B4E9"
+tumor_supersite:
+  Adnexa: "#ff0000"
+  Ascites: "#E69F00" # palette_OkabeIto[1]
+  Bowel: "#56B4E9" # palette_OkabeIto[2]
+  Omentum: "#0072B2" # palette_OkabeIto[3]
+  Peritoneum: "#F0E442" # palette_OkabeIto[4]
+  Upper Quadrant: "#009E73" # palette_OkabeIto[5]
+  UQ: "#009E73" # palette_OkabeIto[5]
+  Other: "#999999" # grey60
+  Unknown: "#999999" # grey60
+tumor_site:
+  Left Adnexa: "#ff0000"
+  Right Adnexa: "#ff0000"
+  Ascites: "#E69F00" # palette_OkabeIto[1]
+  Bowel: "#56B4E9" # palette_OkabeIto[2]
+  Omentum: "#0072B2" # palette_OkabeIto[3]
+  Pelvic Peritoneum: "#F0E442" # palette_OkabeIto[4]
+  Left Upper Quadrant: "#009E73" # palette_OkabeIto[5]
+  Right Upper Quadrant: "#009E73" # palette_OkabeIto[5]
+  Other: "#999999" # grey60
+  Unknown: "#999999" # grey60
+tumor_type:
+  Primary: "#ff0000"
+  Metastasis: "#56B4E9" # palette_OkabeIto[2]
+  Unknown: "#999999" # grey60
+patient_id: 
+  SPECTRUM-OV-002: "#ee2f00"
+  SPECTRUM-OV-003: "#ee2f24"
+  SPECTRUM-OV-004: "#ef3e24" ######### updated in v7
+  SPECTRUM-OV-007: "#f04e23"
+  SPECTRUM-OV-008: "#f37120"
+  SPECTRUM-OV-009: "#f7951e"
+  SPECTRUM-OV-014: "#feba11"
+  SPECTRUM-OV-022: "#fbe10c"
+  SPECTRUM-OV-024: "#efea17"
+  SPECTRUM-OV-025: "#d1dd25"
+  SPECTRUM-OV-026: "#b3d234"
+  SPECTRUM-OV-031: "#9aca3b"
+  SPECTRUM-OV-036: "#84c440"
+  SPECTRUM-OV-037: "#75c043"
+  SPECTRUM-OV-041: "#75c000"
+  SPECTRUM-OV-042: "#6dbe00"
+  SPECTRUM-OV-045: "#6dbe45"
+  SPECTRUM-OV-046: "#6fbe45" ######### updated in v7
+  SPECTRUM-OV-049: "#71bf44"
+  SPECTRUM-OV-050: "#70c166"
+  SPECTRUM-OV-051: "#6fc48c"
+  SPECTRUM-OV-052: "#6fc7ae"
+  SPECTRUM-OV-053: "#6fcbcd"
+  SPECTRUM-OV-054: "#64cbe5"
+  SPECTRUM-OV-065: "#35c5f3"
+  SPECTRUM-OV-067: "#4499d4"
+  SPECTRUM-OV-068: "#3e76ba"
+  SPECTRUM-OV-070: "#3d63ae"
+  SPECTRUM-OV-071: "#3c58a7"
+  SPECTRUM-OV-075: "#3954a5"
+  SPECTRUM-OV-077: "#3d54a5"
+  SPECTRUM-OV-080: "#4953a4"
+  SPECTRUM-OV-081: "#5d52a3"
+  SPECTRUM-OV-082: "#7052a2"
+  SPECTRUM-OV-083: "#8651a1"
+  SPECTRUM-OV-085: "#9c509f"
+  SPECTRUM-OV-089: "#b4519f"
+  SPECTRUM-OV-090: "#c74c9c"
+  SPECTRUM-OV-105: "#dd4198"
+  SPECTRUM-OV-107: "#ec1890"
+  SPECTRUM-OV-110: "#ec1472"
+  SPECTRUM-OV-112: "#ed1b50"
+  SPECTRUM-OV-115: "#ed1e2e"
+  SPECTRUM-OV-116: "#cd0000" ######### updated in v7
+  SPECTRUM-OV-118: "#b00000" ######### updated in v7
+cluster_label:
+  T.super:
+    CD4.T.naive: "#ff8a8a"
+    # CD4.T.FOS: "#ff0000"
+    CD4.T.CXCL13: "#891417"
+    # CD4.T.ISG: "#ff0000"
+    CD4.T.reg: "#ad2572"
+    CD4.Th17: "#7f54f3"
+    CD8.T.cytotoxic: "#43a047"
+    # CD8.T.FOS: "#00897b"
+    CD8.T.CXCL13: "#8bc34a"
+    CD8.T.ISG: "#ff2e99"
+    NK.CD56: "#4FC3F7"
+    NK.cytotoxic: "#00ACC1"
+    # Stressed.T.NK: "#4a4549"
+    Cycling.T.NK: "#FF8F00"
+    # MT.high.T.NK: "#4a4549"
+  B.super:
+    Plasma.IgG.IGKC: "#8ed8ee"
+    Plasma.IgG.IGKV1-5: "#77a1cd"
+    Plasma.IgG.IGLL5: "#3285bc"
+    Plasma.IgA.IGLC3: "#7e52aa"
+    GC.B: "#91cf67"
+    Mature.B: "#1a5928"
+    Mature.B.TCL1A: "#ff2e99"
+    Cycling.B: "#FF8F00"
+    Cycling.Plasma: "#d9ad7c"
+  Myeloid.super:
+    cDC1: "#ab1500"
+    cDC2: "#ff2500"
+    mDC: "#ff2e99"
+    pDC: "#eb9999"
+    Mast.cell: "#d65e00"
+    # Neutrophil: "#ded372"
+    M1.S100A8: "#77a1cd"
+    # M1.S100A9: "#3285bc"
+    # M1.CDKN1C: "#8ed8ee"
+    M2.CXCL10: "#47eeb8"
+    M2.SELENOP: "#91cf67"
+    M2.MARCO: "#3d9f4b"
+    M2.ECM.1: "#a550bd"
+    M2.ECM.2: "#dd66ff"
+    # M.stressed: "#5fcaa9"
+    Clearing.M: "#46ccff"
+    Cycling.M: "#FF8F00"
+  Endothelial.super:
+    Arterial.EC: "#9c0a00"
+    Venous.EC: "#110080"
+    Microvascular.EC: "#660080"
+    CD36.EC: "#b42dd6"
+    Migrating.EC: "#cf7cbe"
+    Lymphatic.EC: "#a37800"
+    Quiescent.EC: "#8c6168"
+    Cycling.EC: "#FF8F00"
+  Fibroblast.super:
+    Early.CAF.1: "#e057f7" ######### updated in v7
+    Early.CAF.2: "#9e00b9" ######### updated in v7
+    Activated.CAF.ISG: "#7E57C2"
+    Activated.CAF.TGFb: "#6C3483"
+    Activated.CAF.IGF1: "#3500cf"
+    Angiogenic.CAF: "#C62828"
+    Mesothelial.CAF.IL1: "#E91E63"
+    Cycling.CAF: "#FF8F00"
+    Pericyte: "#009688"
+  Ovarian.cancer.super:
+    Cancer.cell.1: "#ab1500"
+    Cancer.cell.2: "#ff2500"
+    Cancer.cell.3: "#ff2e99"
+    Cancer.cell.4: "#ccdac0"
+    Cancer.cell.5: "#64b796"
+    Cancer.cell.6: "#316600"
+    Cycling.cancer.cell.1: "#ff9803"
+    Cycling.cancer.cell.2: "#ffc98d"
+    Ciliated.cell.1: "#03c9fc"
+    Ciliated.cell.2: "#c3c4e0"
+    # Ciliated.cell.3: "#0272b1"
+cluster_label_sub:
+  T.super:
+    # CD4.T.naive: "#ff8a8a"
+    # CD4.T.CXCL13: "#891417"
+    # CD4.T.ISG: "#ff0000"
+    # CD4.T.reg: "#ad2572"
+    # CD4.Th17: "#7f54f3"
+    # CD8.T.cytotoxic: "#43a047"
+    # CD8.T.CXCL13: "#8bc34a"
+    # CD8.T.ISG: "#ff2e99"
+    # NK.CD56: "#4FC3F7"
+    # NK.cytotoxic: "#00ACC1"
+    # Cycling.T.NK: "#FF8F00"
+    CD4.T.naive.centr.mem.1: "#995858" ######### updated in v7
+    CD4.T.naive.centr.mem.2: "#ffc2c2" ######### updated in v7
+    CD4.T.effector.memory: "#ff6b6b"
+    CD4.T.dysfunc.early: "#ff0000"
+    CD4.T.dysfunc.late.1: "#b30000"
+    CD4.T.dysfunc.late.2: "#660000"
+    CD4.T.ISG: "#ff006e"
+    CD4.T.reg.1: "#eec2ff"
+    CD4.T.reg.2: "#ba00ff"
+    CD4.T.reg.3: "#64008a"
+    CD4.T.reg.ISG: "#5c4295"
+    CD4.Th17.1: "#ffbe00"
+    CD4.Th17.2: "#b68800"
+    CD4.Th17.3: "#e48b00" ######### updated in v7
+    CD8.T.naive.centr.mem: "#52ff52"
+    CD8.T.effector.memory: "#27af27"
+    CD8.T.cytotoxic: "#005c00"
+    CD8.T.dysfunc.early: "#b9cf8c"
+    CD8.T.dysfunc.late: "#659400"
+    CD8.T.dysfunc.ISG: "#99e300" ######### updated in v7
+    CD8.T.ISG.early: "#324a00" ######### updated in v7
+    CD8.T.ISG.late: "#000000" ######### updated in v7
+    gd.T.cell: "#817100"
+    NK.cytotoxic.GZMH: "#00016b"
+    NK.cytotoxic.SPON2.1: "#4848ff"
+    NK.cytotoxic.SPON2.2: "#b3b3ff"
+    NK.reg.IGFBP2: "#005c58"
+    NK.reg.CD56: "#00b8b0"
+    NK.reg.CCL3: "#00fff5"
+    NK.reg.KRT81.KRT86.1: "#008fb6" ######### updated in v7
+    NK.reg.KRT81.KRT86.2: "#4cd1f5" ######### updated in v7
+    NK.reg.ISG: "#05d5aa"
+    NK.reg.CRTAM: "#007a61"
+    Cycling.CD4.T: "#d58805"
+    Cycling.CD8.T.1: "#7c4f03"
+    Cycling.CD8.T.2: "#e9c17d"
+    Cycling.CD8.T.3: "#d5bc05"
+    Cycling.CD8.T.4: "#eee49b"
+    Cycling.NK.1: "#6f6203"
+    Cycling.NK.2: "#8c9900"
+    Cycling.NK.3: "#d7e53e"
+expression_module:
+  CD8.T.Dysfunctional: "#8BC34A"
+  CD8.T.Double.positive: "grey30"
+  CD8.T.Naive: "#43A047"
+  CD8.T.Cytotoxic: "#00897B"
+  CD8.T.Double.negative: "grey80"
+therapy:
+  pre-Rx: "#CCABD8"
+  post-Rx: "#8474A1"
+is_site_matched:
+  TRUE: "grey80"
+  FALSE: "grey30"
+til_flow_category:
+  Low: "Yellow"
+  Medium: "Orange"
+  High: "Red"
+til_hne_category:
+  Low: "Yellow"
+  Medium: "Orange"
+  High: "Red"
+hla_loh:
+  None: "grey80"
+  Any: "cyan"
+cell_type_hne:
+  Lymphocyte: "#33a02c"
+  Other: "#b3b3b3"
+region_hne:
+  Tumor: "#e31a1c"
+  Stroma: "#6a3d9a"
+  Necrosis: "#333333"
+  Arteries: "#9c0a00"
+  Veins: "#110080"
+  Adipocytes: "#fcf4a3"
+  Glass: "#b3b3b3"
+region_if:
+  Tumor: "#e31a1c"
+  Stroma: "#6a3d9a"
+  Glass: "#b3b3b3"
+region_mpif:
+  Tumor: "#e31a1c"
+  Stroma: "#6a3d9a"
+  Ignore*: "#b3b3b3"
+clone_id:
+  1: "#FF0000"
+  2: "#005EB5"
+  3: "#009D00"
+  4: "#FF008C"
+  5: "#FFCC00"
+  6: "#FF9000"
+  7: "#B90088"
+  8: "#00B4D7"
+  9: "#69D800"
+  10: "#20239E"
+  11: "#FF5E00"
+  12: "#71008C"
+  13: "#B8EE00"
+  14: "#00A9A9"
+  15: "#F2FC00"
+treatment_generic_name:
+  # Carboplatin: "#9c0a00"
+  # Doxorubicin Liposomal: "#110080"
+  # Olaparib: "#660080"
+  # Paclitaxel: "#b42dd6"
+  # Paclitaxel Protein-Bound: "#cf7cbe"
+  Carboplatin: "#4FC3F7"
+  Doxorubicin Liposomal: "#00ACC1"
+  Olaparib: "#00897B"
+  Paclitaxel: "#43A047"
+  Paclitaxel Protein-Bound: "#8BC34A"
+markers_if:
+  cGAS: "#d1352d"
+  ENPP1: "#62a766"
+  STING: "#ff9000"
+  CD8: "#833216"
+  DAPI: "#5890c0"
+nucleus_type:
+  Primary.nuclei: "#5890c0"
+  Micronuclei: "#d1352d"
+markers_mpif:
+  CD68: "#d1352d"
+  TOX: "#62a766"
+  PD1: "#ff9000"
+  PDL1: "#833216"
+  CD8: "#5890c0"
+  panCK: "#5890c0"
+  DAPI: "#5890c0"
+cell_type_mpif:
+  Ovarian.cancer.cell: "#e31a1c"
+  CD8.T.cell: "#33a02c"
+  Monocyte: "#ff7f00"
+  Other: "#b3b3b3"
+  Unknown: "#999999"
+cell_state_mpif:
+  # CD8.T.dysfunctional: "#8BC34A"
+  panCK+: "#e31a1c"
+  panCK-: "#999999"
+  CD8+: "#33a02c"
+  CD8-: "#999999"
+  CD68+: "#ff7f00"
+  CD68-: "#999999"
+  PD1+: "#8ED8EE"
+  PD1-: "#999999"
+  PDL1+: "#3285BC"
+  PDL1-: "#999999"
+  TOX+: "#8BC34A"
+  TOX-: "#999999"
+cell_phenotype_mpif:
+  panCK+PDL1-: "#e31a1c"
+  panCK+PDL1+: "#f18c8d"
+  CD8+PD1-TOX-: "#33a02c"
+  CD8+PD1+TOX-: "#6da02c"
+  # CD8+PD1-TOX+: "#2ca05f"
+  CD8+PD1+TOX+: "#95cfaf"
+  CD68+PDL1-: "#ff7f00"
+  # CD68+PD1+: "#3285bc"
+  CD68+PDL1+: "#ded372"
+  Other: "#b3b3b3"
+  Unknown: "#999999"
+  # CD4.T.naive: "#43A047"
+  # CD4.T.dysfunctional: "#8BC34A"
+  # CD4.T.reg: "#C0CA33"
+cell_phenotype_short_mpif:
+  panCK+: "#e31a1c"
+  panCK+PDL1+: "#f18c8d"
+  CD8+: "#33a02c"
+  CD8+PD1+: "#6da02c"
+  # CD8+TOX+: "#2ca05f"
+  CD8+PD1+TOX+: "#95cfaf"
+  CD68+: "#ff7f00"
+  CD68+PD1+: "#3285bc"
+  CD68+PDL1+: "#ded372"
+  Other: "#b3b3b3"
+  Unknown: "#999999"
+  # CD4.T.naive: "#43A047"
+  # CD4.T.dysfunctional: "#8BC34A"
+  # CD4.T.reg: "#C0CA33"
+cell_type_pair_mpif:
+  panCK+:CD8+: "#e31a1c"
+  panCK+:CD68+: "#e31a1c"
+  CD8+:CD68+: "#e31a1c"
+cell_phenotype_pair_mpif:
+  # panCK+:CD8+: "#e31a1c"
+  # panCK+:CD68+: "#e31a1c"
+  # CD8+:CD68+: "#e31a1c"
+  panCK+PDL1-:CD68+PDL1+: "#f18c8d"
+  panCK+PDL1-:CD68+PDL1-: "#f18c8d"
+  panCK+PDL1+:CD68+PDL1+: "#f18c8d"
+  panCK+PDL1+:CD68+PDL1-: "#f18c8d"
+  CD8+PD1+TOX-:panCK+PDL1+: "#f18c8d"
+  CD8+PD1+TOX-:panCK+PDL1-: "#f18c8d"
+  CD8+PD1+TOX+:panCK+PDL1+: "#f18c8d"
+  CD8+PD1+TOX+:panCK+PDL1-: "#f18c8d"
+  CD8+PD1+TOX-:CD68+PDL1+: "#f18c8d"
+  CD8+PD1+TOX-:CD68+PDL1-: "#f18c8d"
+  CD8+PD1+TOX+:CD68+PDL1+: "#f18c8d"
+  CD8+PD1+TOX+:CD68+PDL1-: "#f18c8d"
+cell_state_if:
+  cGAS+: "#e31a1c"
+  cGAS-: "#999999"
+  ENPP1+: "#ff7f00"
+  ENPP1-: "#999999"
+  CD8+: "#33a02c"
+  CD8-: "#999999"
+  STING+: "#6a3d9a"
+  STING-: "#999999"
+cell_phenotype_if:
+  cGAS+: "#e31a1c"
+  ENPP1+: "#ff7f00"
+  CD8+: "#33a02c"
+  STING+: "#6a3d9a"
+  DAPI: "#0072B2"
+  Other: "#b3b3b3"
+  Unknown: "#999999"
+channel_if:
+  cGAS: "#e31a1c"
+  ENPP1: "#ff7f00"
+  CD8: "#33a02c"
+  STING: "#6a3d9a"
+  DAPI: "#0072B2"
+  Other: "#b3b3b3"
+  Unknown: "#999999"
+# cell_phenotype_if:
+#   cGAS+ENPP1-: "#e31a1c"
+#   cGAS-ENPP1+: "#33a02c"
+#   cGAS+ENPP1+: "#8ED8EE"
+#   cGAS-ENPP1-: "#999999"
+#   CD8+STING+: "#902327"
+#   CD8+STING-: "#33a02c"
+#   CD8-STING+: "#ff7f00"
+#   CD8-STING-: "#999999"
+cell_phenotype_pair_if:
+  cGAS+:ENPP1+: "#e31a1c"
+  cGAS+:Other: "#e31a1c"
+  ENPP1+:Other: "#e31a1c"
+  CD8+:STING+: "#e31a1c"
+  CD8+:Other: "#e31a1c"
+  STING+:Other: "#e31a1c"
+clone_specificity:
+  Private: "#e31a1c"
+  Shared: "#6a3d9a"
+copy_number:
+  0: "#3182BD"
+  1: "#9ECAE1"
+  2: "#CCCCCC"
+  3: "#FDCC8A"
+  4: "#FC8D59"
+  5: "#E34A33"
+  6: "#B30000"
+  7: "#980043"
+  8: "#DD1C77"
+  9: "#DF65B0"
+  10: "#C994C7"
+  # 11+: "#D4B9DA"
+rearrangement_type:
+  duplication: "#3182BD"
+  deletion: "#9ECAE1"
+  inversion: "#CCCCCC"
+  translocation: "#FDCC8A"
+ploidy:
+  Haploid: "red"
+  Diploid: "#CCABD8"
+  Triploid: "blue"
+  Tetraploid: "blue"
+  Polyploid: "#8474A1"
+cn_state:
+  Gain: "#ff0000"
+  Loss: "#0072B2"
+ascn_state_short:
+  Balanced: "#3182BD"
+  Imbalanced: "#9ECAE1"
+  LOH: "#CCCCCC"
+ascn_state:
+  A-Gained: "#53AFC0"
+  A-Hom: "#025767"
+  A-LOH: "#025767"
+  B-Gained: "#FF9E41"
+  B-Hom: "#A75200"
+  B-LOH: "#9ECAE1"
+  Balanced: "#999999"
+pathology_stage:
+  IIB: "#f1eef6" #
+  # III: "#C7E9B4"
+  IIIA1ii: "#d0d1e6" #
+  IIIA2: "#a6bddb" #
+  IIIB: "#74a9cf"
+  IIIC: "#3690c0"
+  IVA: "#0570b0"
+  IVB: "#034e7b"
+chemo_intent:
+  Primary: "#66c2a4"
+  NACT/IDS: "#2ca25f"
+  Salvage: "#006d2c"
+model:
+  Well-mixed: "#C7E9B4"
+  3D flat front: "#7FCDBB"
+  3D rough front: "#41B6C4"
+consensusOV: 
+  Immunoreactive: "#ff9502"
+  Mesenchymal: "#4682b4"
+  Proliferative: "#e31a1c"
+  Differentiated: "#016400"
