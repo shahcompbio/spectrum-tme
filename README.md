@@ -8,7 +8,7 @@ This repository contains supporting material for the manuscript:
 
 The source code contains RMarkdown notebooks to reproduce the manuscript figures.
 
-The figures can be rendered into an interactive HTML document running `sh build.sh`. The live version is hosted at (https://shahcompbio.github.io/spectrum-tme/index.html)[https://shahcompbio.github.io/spectrum-tme/index.html].
+The figures can be rendered into an interactive HTML document running `sh build.sh`. The live version is hosted at [https://shahcompbio.github.io/spectrum-tme/index.html](https://shahcompbio.github.io/spectrum-tme/index.html).
 
 | Figures | Notebook |
 | ------- | -------- |
