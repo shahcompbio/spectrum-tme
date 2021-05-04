@@ -2,5 +2,7 @@ book_filename: "spectrum-tme"
 language:
   ui:
     chapter_name: "Section "
+output_dir: "docs"
+new_session: yes
 delete_merged_file: true
-rmd_files: ["index.Rmd", "notebooks/110_cohort_overview.Rmd", "notebooks/310_mutational_signatures.Rmd"]
+rmd_files: ["index.Rmd", "110_cohort_overview.Rmd", "310_mutational_signatures.Rmd"]
