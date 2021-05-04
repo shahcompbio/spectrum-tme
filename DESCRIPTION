@@ -28,5 +28,4 @@ Imports:
     Rcpp,
     ggrepel,
     grid
-Remotes:
-    rstudio/bookdown
+Remotes: rstudio/bookdown
