@@ -23,6 +23,7 @@ Imports:
     cowplot,
     ape,
     RColorBrewer,
+    viridis,
     ggtree,
     ggplot2,
     S4Vectors,
