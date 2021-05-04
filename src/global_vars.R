@@ -77,6 +77,15 @@ included_patients <- db$patients %>%
   dplyr::filter(!patient_id %in% protocol_patients) %>%
   dplyr::pull(patient_id)
 
+## load mutational signatures ----------------------
+
+signature_tbl <- db$mutational_signatures %>%
+  dplyr::select(patient_id, consensus_signature) %>% 
+  # bind_rows(tibble(patient_id = unique(sort(scrna_meta_tbl$patient_id[!(scrna_meta_tbl$patient_id %in% .$patient_id)])), consensus_signature = "Undetermined")) %>% 
+  mutate(consensus_signature = ifelse(is.na(consensus_signature), "Undetermined", consensus_signature)) %>% 
+  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>% 
+  arrange(patient_id)
+
 ## load scRNA meta data -----------------------------
 
 scrna_meta_tbl <- db$sequencing_scrna %>% 
@@ -89,18 +98,8 @@ scrna_meta_tbl <- db$sequencing_scrna %>%
          tumor_supersite = str_replace_all(tumor_supersite, "Upper Quadrant", "UQ")) %>% 
   mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
                                  "Other", tumor_supersite)) %>% 
-  mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite)))
-
-## load mutational signatures ----------------------
-
-signature_tbl <- db$mutational_signatures %>%
-  dplyr::select(patient_id, consensus_signature) %>% 
-  bind_rows(tibble(patient_id = unique(sort(scrna_meta_tbl$patient_id[!(scrna_meta_tbl$patient_id %in% .$patient_id)])), consensus_signature = "Undetermined")) %>% 
-  mutate(consensus_signature = ifelse(is.na(consensus_signature), "Undetermined", consensus_signature)) %>% 
-  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>% 
-  arrange(patient_id)
-
-scrna_meta_tbl <- left_join(scrna_meta_tbl, db$mutational_signatures, by = "patient_id")
+  mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>%
+  left_join(db$mutational_signatures, by = "patient_id")
 
 ## load mpIF meta data -------------------------------
 
