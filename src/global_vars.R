@@ -81,8 +81,6 @@ included_patients <- db$patients %>%
 
 signature_tbl <- db$mutational_signatures %>%
   dplyr::select(patient_id, consensus_signature) %>% 
-  # bind_rows(tibble(patient_id = unique(sort(scrna_meta_tbl$patient_id[!(scrna_meta_tbl$patient_id %in% .$patient_id)])), consensus_signature = "Undetermined")) %>% 
-  mutate(consensus_signature = ifelse(is.na(consensus_signature), "Undetermined", consensus_signature)) %>% 
   mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>% 
   arrange(patient_id)
 
