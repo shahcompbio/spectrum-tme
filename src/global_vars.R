@@ -80,11 +80,8 @@ included_patients <- db$patients %>%
 ## load mutational signatures ----------------------
 
 signature_tbl <- db$mutational_signatures %>%
+  dplyr::select(patient_id, consensus_signature) %>% 
   mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>% 
-  mutate(consensus_signature_short = ordered(consensus_signature_short, levels = names(clrs$hr_status))) %>% 
-  mutate(BRCA_gene_status = ordered(BRCA_gene_status, levels = names(clrs$BRCA_gene_status))) %>% 
-  mutate(BRCA_mutation_status = ordered(BRCA_mutation_status, levels = names(clrs$BRCA_mutation_status))) %>% 
-  mutate(BRCA_gene_mutation_status = ordered(BRCA_gene_mutation_status, levels = names(clrs$BRCA_gene_mutation_status))) %>% 
   arrange(patient_id)
 
 ## load scRNA meta data -----------------------------
@@ -114,22 +111,20 @@ mpif_slide_meta_tbl <- db$mpif_slide %>%
   mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>% 
   filter(patient_id %in% included_patients,
          therapy == "pre-Rx") %>% 
-  left_join(db$mutational_signatures, by = "patient_id") %>%
-  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)))
+  left_join(signature_tbl, by = "patient_id")
 
 ## load H&E meta data -------------------------------
 
 hne_meta_tbl <- db$he_slide %>%
   mutate(sample_id = image_hid) %>%
   mutate(patient_id_short = str_remove_all(patient_id, "SPECTRUM-OV-"),
-         tumor_supersite = str_replace_all(tumor_supersite, "Upper Quadrant", "UQ")) %>% 
+         tumor_supersite = str_replace_all(tumor_supersite, "Upper Quadrant", "UQ")) %>%
   mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
-                                 "Other", tumor_supersite)) %>% 
-  mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>% 
+                                 "Other", tumor_supersite)) %>%
+  mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>%
   filter(patient_id %in% included_patients,
-         therapy == "pre-Rx") %>% 
-  left_join(db$mutational_signatures, by = "patient_id") %>%
-  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)))
+         therapy == "pre-Rx") %>%
+  left_join(signature_tbl, by = "patient_id")
 
 ## load WGS meta data -------------------------------
 
@@ -140,8 +135,7 @@ bulk_dna_meta_tbl <- db$sequencing_bulk_dna %>%
                                  "Other", tumor_supersite)) %>% 
   mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>% 
   filter(patient_id %in% included_patients) %>% 
-  left_join(db$mutational_signatures, by = "patient_id") %>%
-  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)))
+  left_join(signature_tbl, by = "patient_id")
 
 ## cell type sort fraction -------------------------
 
