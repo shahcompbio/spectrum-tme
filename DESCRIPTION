@@ -9,6 +9,7 @@ Depends:
 biocViews:
 Imports: 
     data.table,
+    tidyverse,
     magrittr,
     dplyr,
     tidyr,
