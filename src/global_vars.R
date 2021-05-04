@@ -97,7 +97,7 @@ scrna_meta_tbl <- db$sequencing_scrna %>%
   mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
                                  "Other", tumor_supersite)) %>% 
   mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>%
-  left_join(db$mutational_signatures, by = "patient_id")
+  left_join(signature_tbl, by = "patient_id")
 
 ## load mpIF meta data -------------------------------
 
