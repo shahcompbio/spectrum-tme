@@ -558,3 +558,7 @@ mutation:
   Missense_Mutation: "#6a9492"
   Truncating_Mutation: "#724b86"
   In_Frame_Mutation: "#b3653a"
+Phase:
+  G1: "#94b6d2"
+  S: "#dc4040"
+  G2M: "#7aa77f"

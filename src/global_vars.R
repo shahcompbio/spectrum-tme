@@ -19,7 +19,18 @@ remove_yaxis <- theme(axis.title.y = element_blank(),
                       axis.ticks.y = element_blank(),
                       axis.line.y = element_blank())
 
-remove_guides <- guides(color = F, fill = F, shape = F, alpha = F)
+remove_guides <- guides(color = F, fill = F, shape = F, alpha = F, size = F)
+
+
+## ggsave wrapper suppressing dingbats symbols 
+## for adobe illustrator compatibility
+ggsave_nodb <- function(filename, plot = last_plot(), device = NULL, path = NULL, 
+                        scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"), 
+                        dpi = 300, limitsize = TRUE, useDingbats = FALSE, ...) {
+  ggsave(filename = filename, plot = plot, device = device, path = path, 
+         scale = scale, width = width, height = height, units = units, 
+         dpi = dpi, limitsize = limitsize, useDingbats = useDingbats, ...)
+}
 
 
 ## umap helpers --------------------------------------
