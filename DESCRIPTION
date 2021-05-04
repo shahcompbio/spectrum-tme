@@ -9,12 +9,12 @@ Depends:
 biocViews:
 Imports: 
     data.table,
-    tidyverse,
     magrittr,
     dplyr,
     tidyr,
     openxlsx,
     dbscan,
+    gdata,
     gtools,
     forcats,
     ComplexHeatmap,
