@@ -148,6 +148,17 @@ bulk_dna_meta_tbl <- db$sequencing_bulk_dna %>%
   filter(patient_id %in% included_patients) %>% 
   left_join(signature_tbl, by = "patient_id")
 
+## load MSK-IMPACT meta data ------------------------
+
+impact_meta_tbl <- db$sequencing_msk_impact_custom %>%
+  mutate(patient_id_short = str_remove_all(patient_id, "SPECTRUM-OV-"),
+         tumor_supersite = str_replace_all(tumor_supersite, "Upper Quadrant", "UQ")) %>% 
+  mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
+                                 "Other", tumor_supersite)) %>% 
+  mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>% 
+  filter(patient_id %in% included_patients) %>% 
+  left_join(signature_tbl, by = "patient_id")
+
 ## cell type sort fraction -------------------------
 
 cell_type_super_lookup <- c(
