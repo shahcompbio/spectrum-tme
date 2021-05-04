@@ -1,0 +1,32 @@
+Package: spectrum-tme
+Type: Book
+Title: Immune cell phenotypes of ovarian cancer are determined by distinct mutational processes
+Version: 0.0.1
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 3.5.0)
+biocViews:
+Imports: 
+    data.table,
+    magrittr,
+    dplyr,
+    tidyr,
+    openxlsx,
+    dbscan,
+    gtools,
+    forcats,
+    ComplexHeatmap,
+    GenomicRanges,
+    cowplot,
+    ape,
+    RColorBrewer,
+    ggtree,
+    ggplot2,
+    S4Vectors,
+    scales,
+    Rcpp,
+    ggrepel,
+    grid
+Remotes:
+    rstudio/bookdown
