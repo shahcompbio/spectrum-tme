@@ -1,5 +1,4 @@
 # Don't push local rendered files in master branch
-docs/
 libs/
 **/*.bib
 **/*.html
