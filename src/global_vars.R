@@ -80,9 +80,11 @@ included_patients <- db$patients %>%
 ## load mutational signatures ----------------------
 
 signature_tbl <- db$mutational_signatures %>%
-  dplyr::select(patient_id, consensus_signature) %>% 
   mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>% 
   mutate(consensus_signature_short = ordered(consensus_signature_short, levels = names(clrs$hr_status))) %>% 
+  mutate(BRCA_gene_status = ordered(BRCA_gene_status, levels = names(clrs$BRCA_gene_status))) %>% 
+  mutate(BRCA_mutation_status = ordered(BRCA_mutation_status, levels = names(clrs$BRCA_mutation_status))) %>% 
+  mutate(BRCA_gene_mutation_status = ordered(BRCA_gene_mutation_status, levels = names(clrs$BRCA_gene_mutation_status))) %>% 
   arrange(patient_id)
 
 ## load scRNA meta data -----------------------------

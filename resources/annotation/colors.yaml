@@ -34,6 +34,20 @@ hr_status:
   HRP: "#833216"
   Undetermined: "#7f7f7f" # grey50
   NA: "#cccccc" # grey80
+BRCA_gene_status:
+  BRCA1: "#5890c0"
+  BRCA2: "#62a766"
+  NA: "#cccccc" # grey80
+BRCA_mutation_status:
+  Germline: "#5890c0"
+  Somatic: "#62a766"
+  NA: "#cccccc" # grey80
+BRCA_gene_mutation_status:
+  gBRCA1: "#5890c0"
+  gBRCA2: "#62a766"
+  sBRCA1: "#5890c0"
+  sBRCA2: "#62a766"
+  NA: "#cccccc" # grey80
 cell_type:
   T.cell: "#33a02c"
   B.cell: "#1f78b4"
