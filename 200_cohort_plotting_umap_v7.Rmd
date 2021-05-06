@@ -3,7 +3,8 @@ title: "MSK SPECTRUM data freeze: major cell type embeddings"
 author: "Florian Uhlitz"
 date: "`r Sys.Date()`"
 output: 
-  html_document: 
+  bookdown::html_document2:
+    fig_caption: yes
     df_print: kable
     number_sections: yes
     toc: yes
@@ -720,8 +721,22 @@ custom_guide <- guide_legend(override.aes = list(size = 4, alpha = 1),
 
 mutsig_legend <- cowplot::get_legend(umap_mutsig + theme(legend.title=element_text()) + labs(color = "Mutational\nsignature") + guides(color = custom_guide))
 consOV_legend <- cowplot::get_legend(umap_consOV + theme(legend.title=element_text()) + labs(color = "TCGA subtype") + guides(color = custom_guide))
-cell_type_legend <- cowplot::get_legend(umap_cell_type + theme(legend.title=element_text(), legend.text = element_text(size = 14, margin = ggplot2::margin(0, 10, 0, 0), color = "black")) + labs(color = "Cell type") + guides(color = custom_guide))
+cell_type_legend <- cowplot::get_legend(umap_cell_type + theme(legend.title=element_text(), legend.text = element_text(size = 14, margin = ggplot2::margin(0, 10, 0, 0), color = "black")) + labs(color = "Cell type scRNA") + guides(color = custom_guide))
 site_legend <- cowplot::get_legend(umap_site + theme(legend.title=element_text()) + labs(color = "Site") + guides(color = custom_guide))
+
+umap_legend_theme <- theme(
+  legend.position = c(0, 1),
+  legend.justification = c("left", "top"),
+  legend.box.just = "left",
+  legend.margin = ggplot2::margin(1, 1, 1, 1),
+  #panel.border = element_rect(linetype = 1, color = "black", size = 1),
+  legend.text = element_text(size = 14, margin = ggplot2::margin(0, 10, 0, 0)),
+  legend.spacing.x = unit(0, "npc")
+)
+
+mpif_legend <- cowplot::get_legend(ggplot(data.frame(x=ordered(names(clrs$cell_type_mpif), levels = names(clrs$cell_type_mpif)),y=names(clrs$cell_type_mpif)))+geom_point(aes(x,y,color = x)) + scale_color_manual(values = clrs$cell_type_mpif) + guides(color = custom_guide) + labs(color = "Cell type mpIF") + umap_legend_theme)
+
+hne_legend <- cowplot::get_legend(ggplot(tibble(x=ordered(names(clrs$cell_type_hne), levels = names(clrs$cell_type_hne)),y=names(clrs$cell_type_hne)))+geom_point(aes(x,y,color = x)) + scale_color_manual(values = clrs$cell_type_hne) + guides(color = custom_guide) + labs(color = "Cell type H&E") + umap_legend_theme)
 
 figS1_panel <- ggdraw() +
   # draw_plot(add_umap_coord(umap_mutsig + guides(color = F) + labs(title = "Mutational signature")), width = 0.24, height = 0.48, x = 0.01, y = 0.5) +
@@ -731,9 +746,11 @@ figS1_panel <- ggdraw() +
   draw_plot(add_umap_coord(umap_phase), width = 0.24, height = 0.48, x = 0.25, y = 0) +
   draw_plot(qc_plot, width = 0.5, height = 0.48, x = 0.5, y = 0.5) +
   draw_grob(mutsig_legend, x = 0.55, y = 0.48, hjust = 0, vjust = 1) +
-  draw_grob(consOV_legend, x = 0.55, y = 0.22, hjust = 0, vjust = 1) +
-  draw_grob(cell_type_legend, x = 0.7, y = 0.48, hjust = 0, vjust = 1) +
-  draw_grob(site_legend, x = 0.85, y = 0.48, hjust = 0, vjust = 1) +
+  draw_grob(consOV_legend, x = 0.55, y = 0.21, hjust = 0, vjust = 1) +
+  draw_grob(site_legend, x = 0.7, y = 0.48, hjust = 0, vjust = 1) +
+  draw_grob(cell_type_legend, x = 0.85, y = 0.48, hjust = 0, vjust = 1) +
+  draw_grob(mpif_legend, x = 0.7, y = 0.21, hjust = 0, vjust = 1) +
+  draw_grob(hne_legend, x = 0.85, y = 0.16, hjust = 0, vjust = 1) +
   draw_label("A", x = 0.01, y = 0.98, fontface = "bold", size = 22) +
   draw_label("B", x = 0.52, y = 0.98, fontface = "bold", size = 22) +
   draw_label("C", x = 0.52, y = 0.48, fontface = "bold", size = 22)
