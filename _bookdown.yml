@@ -5,4 +5,4 @@ language:
 output_dir: "docs"
 new_session: yes
 delete_merged_file: true
-rmd_files: ["index.Rmd", "110_cohort_overview.Rmd", "310_mutational_signatures.Rmd"]
+rmd_files: ["index.Rmd", "110_cohort_overview.Rmd", "200_cohort_plotting_umap_v7.Rmd",  "310_mutational_signatures.Rmd"]
