@@ -5,7 +5,13 @@ author:
   - Florian Uhlitz
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
-output: bookdown::gitbook
+output:
+  bookdown::html_document2:
+    includes:
+      in_header: header.html
+  bookdown::gitbook:
+    includes:
+      in_header: header.html
 documentclass: book
 # bibliography: [book.bib, packages.bib]
 biblio-style: apalike
