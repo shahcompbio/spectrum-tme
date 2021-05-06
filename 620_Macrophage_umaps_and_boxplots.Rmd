@@ -1,0 +1,445 @@
+---
+title: "MSK SPECTRUM freeze Macrophages"
+author: "Florian Uhlitz"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+params: 
+  cell_type_super: "Myeloid.super"
+  cell_type_major: ["Myeloid.cell", "Dendritic.cell", "Mast.cell"]
+  cell_sort: "CD45+"
+  louvain_resolution: 0.3
+  louvain_cluster: "RNA_snn_res.0.3"
+  pcut: 0.05
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+```
+
+```{r chunk_010}
+
+library(magrittr)
+library(tidyverse)
+library(Seurat)
+library(readxl)
+library(cowplot)
+library(colorblindr)
+library(viridis)
+library(ComplexHeatmap)
+library(grid)
+library(ggpubr)
+
+coi <- params$cell_type_super
+cell_sort <- params$cell_sort
+cell_type_major <- params$cell_type_major
+louvain_resolution <- params$louvain_resolution
+louvain_cluster <- params$louvain_cluster
+pcut <- params$pcut
+
+```
+
+```{r chunk_020}
+
+## load global vars: 
+source("src/global_vars.R")
+
+# scrna_meta_tbl
+# clrs
+# markers_v7
+# markers_v7_super
+# cell_type_super_lookup
+
+```
+
+```{r chunk_030}
+
+seu_obj_ml <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Myeloid.super_processed_filtered_annotated.rds")
+
+seu_obj_mp <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Macrophages_processed.rds")
+
+seu_obj_dc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/DCs_processed.rds")
+
+seu_obj_cc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds")
+
+seu_obj_tc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/T.super_processed_filtered_annotated.rds")
+
+
+gois_mp <- c("S100A8", "S100A9", "CXCL10", "CD274", "C1QC", "FN1", "MARCO", "SELENOP")
+gois_dc <- grep("^IRF", rownames(seu_obj_dc), value = T)
+gois <- c(gois_mp, gois_dc)
+
+seu_obj_dc <- AddModuleScore(seu_obj_dc, list(IRF.genes.module = c("IRF1", "IRF7", "IRF8", "IRF9")), name = "IRF.genes.module")
+seu_obj_dc$IRF.genes.module <- seu_obj_dc$IRF.genes.module1
+seu_obj_dc$IRF.genes.module1 <- NULL
+
+module_names <- grep("pathway|CD8|module", colnames(seu_obj_dc@meta.data), value = T)
+
+module_names_sub <- c("MARCO", "CXCL10", "CD274", "JAK.STAT.pathway")
+
+module_names_dc <- c("Interferon.regulators.module", "IRF.genes.module", "IRF1", "IRF7", "IRF8", "IRF9")
+
+myfeatures <- c("cell_id", "umapharmony_1", "umapharmony_2", "sample", "cell_type", "cluster_label", "Phase")
+
+my_subtypes <- names(clrs$cluster_label[[coi]])
+
+plot_data <- as_tibble(FetchData(seu_obj_mp, c(myfeatures, module_names, gois))) %>%
+  gather(key, value, -c(1:length(myfeatures))) %>% 
+  left_join(scrna_meta_tbl, by = "sample") %>%
+  mutate(cell_type_super = cell_type_super_lookup[cell_type]) %>%
+  mutate(sort_short_x = ifelse(sort_short == "U" & cell_type_super == "Immune",
+                               "CD45+", ifelse(sort_short == "U" & cell_type_super == "Stromal", "CD45-", sort_short))) %>% 
+  mutate(cluster_label = ordered(cluster_label, levels = my_subtypes),
+         goi_expressed = value > 0) %>% 
+  group_by(sample, key) %>% 
+  mutate(n = length(sample)) %>% 
+  mutate(pct.expr = sum(goi_expressed)/n*100) %>% 
+  ungroup
+
+plot_data_uniq <- distinct(plot_data, cell_id, .keep_all = T)
+
+plot_data_dc <- as_tibble(FetchData(seu_obj_dc, c(myfeatures, module_names, gois))) %>%
+  gather(key, value, -c(1:length(myfeatures))) %>% 
+  left_join(scrna_meta_tbl, by = "sample") %>%
+  mutate(cell_type_super = cell_type_super_lookup[cell_type]) %>%
+  mutate(sort_short_x = ifelse(sort_short == "U" & cell_type_super == "Immune",
+                               "CD45+", ifelse(sort_short == "U" & cell_type_super == "Stromal", "CD45-", sort_short))) %>% 
+  mutate(cluster_label = ordered(cluster_label, levels = my_subtypes),
+         goi_expressed = value > 0) %>% 
+  group_by(sample, key) %>% 
+  mutate(n = length(sample)) %>% 
+  mutate(pct.expr = sum(goi_expressed)/n*100) %>% 
+  ungroup
+
+plot_data_uniq_dc <- distinct(plot_data_dc, cell_id, .keep_all = T)
+
+
+```
+
+
+# Macrophage umap 
+
+```{r chunk_120, fig.width=8, fig.height=4}
+
+dc_plot_cluster <- ggplot(plot_data_uniq) +
+  ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2, color = cluster_label), 
+                           size = 0.01, alpha = 1, raster.dpi = 150) +
+  # theme_void() +
+  scale_color_manual(values = clrs$cluster_label[[coi]]) +
+  guides(color = guide_legend(override.aes = list(size = 3, alpha = 1))) +
+  theme(aspect.ratio = 1,
+        axis.line = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) + 
+  labs(color = "Cluster")
+
+plot_data_gois <- plot_data %>% 
+  filter(key %in% gois_mp) %>% 
+  mutate(key = ordered(key, levels = gois_mp)) %>% 
+  mutate(value = ifelse(value > 5, 5, value))
+
+dc_plot_genes <- ggplot() +
+  ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2), 
+                           size = 0.1, alpha = 1, color = "grey80", raster.dpi = 75,
+                           data = filter(plot_data_gois, value == 0)) +
+  ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2, color = value), 
+                           size = 0.1, alpha = 1, raster.dpi = 75,
+                           data = filter(plot_data_gois, value > 0)) +
+  facet_wrap(~key, nrow = 2) + 
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_blank()) +  
+  scale_color_gradientn(colors = viridis(9), breaks = c(0, 5), 
+                        labels = c("low", "high")) +
+  theme(aspect.ratio = 1) +
+  labs(color = "Expression")
+
+dc_plot_genes
+ggsave("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_gois_umap.pdf", dc_plot_genes, width = 8, height = 4)
+ggsave("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_gois_umap.png", dc_plot_genes, width = 8, height = 4)
+
+```
+
+# boxplots
+
+## macrophages
+
+```{r chunk_140, fig.width=6.5, fig.height=3.5}
+
+mutsig_boxplot_data <- plot_data %>%
+  filter(key %in% module_names_sub) %>%
+  filter(!(consensus_signature %in% c("Undetermined", "HRD"))) %>%
+  filter(tumor_supersite != "Ascites") %>%
+  mutate(key = str_replace_all(key, "JAK.STAT.pathway", "JAK/STAT\npathway"))
+
+mutsig_boxplot_data_stats <- mutsig_boxplot_data %>%
+  group_by(sample, key) %>%
+  mutate(value = mean(value),
+         pct.expr = mean(pct.expr)) %>%
+  distinct(sample, key, .keep_all = T)
+
+mutsig_boxplot <- mutsig_boxplot_data %>%
+  filter(key != "JAK/STAT\npathway") %>%
+  ggplot(aes(consensus_signature, pct.expr)) +
+  geom_violin(aes(consensus_signature, pct.expr, fill = consensus_signature), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+  geom_boxplot(aes(consensus_signature, pct.expr, color = consensus_signature),
+               width = 0.5, size = 0.75, outlier.shape = NA) +
+  geom_boxplot(aes(consensus_signature, pct.expr, fill = consensus_signature),
+               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+  # geom_boxplot(aes(consensus_signature, pct.expr, color = consensus_signature),
+  #              fill = "white") +
+  stat_compare_means(ref.group = ".all.",
+                     data = filter(mutsig_boxplot_data_stats,
+                                   key != "JAK/STAT\npathway"),
+                     label = "p.signif", label.y = 85, hide.ns = T) +
+  stat_compare_means(label.y = 95, label.x = 1.5, label.sep = "\n\n",
+                     data = filter(mutsig_boxplot_data_stats,
+                                   key != "JAK/STAT\npathway")) +
+  facet_wrap(~key, ncol = 5) +
+  scale_color_manual(values = clrs$consensus_signature) +
+  scale_fill_manual(values = clrs$consensus_signature) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.x = element_blank()) +
+  # coord_cartesian(ylim = c(-1, 2)) +
+  labs(y = "% Pos. Macrophages", color = "Mutational\nsignature",
+       fill = "Mutational\nsignature")
+
+mutsig_boxplot_jakstat <- mutsig_boxplot_data %>%
+  filter(key == "JAK/STAT\npathway") %>%
+  ggplot(aes(consensus_signature, value)) +
+  geom_violin(aes(consensus_signature, value, fill = consensus_signature), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+  geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
+               width = 0.5, size = 0.75, outlier.shape = NA) +
+  geom_boxplot(aes(consensus_signature, value, fill = consensus_signature),
+               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+  # geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
+  #              fill = "white") +
+  stat_compare_means(ref.group = ".all.",
+                     data = filter(mutsig_boxplot_data_stats,
+                                   key == "JAK/STAT\npathway"),
+                     label = "p.signif", label.y = 4.2, hide.ns = T) +
+  stat_compare_means(label.y = 4.8, label.x = 1.5, label.sep = "\n\n",
+                     data = filter(mutsig_boxplot_data_stats,
+                                   key == "JAK/STAT\npathway")) +
+  facet_wrap(~key, ncol = 5) +
+  scale_color_manual(values = clrs$consensus_signature) +
+  scale_fill_manual(values = clrs$consensus_signature) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.x = element_blank()) +
+  coord_cartesian(ylim = c(-1, 5)) +
+  labs(y = "PROGENy score", color = "Mutational\nsignature",
+       fill = "Mutational\nsignature")
+
+mutsig_boxplot_grid <- plot_grid(
+  mutsig_boxplot + guides(color = F, fill = F),
+  mutsig_boxplot_jakstat + guides(color = F, fill = F),
+  nrow = 1, rel_widths = c(0.72, 0.28))
+
+mutsig_boxplot_grid
+ggsave("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots.pdf", mutsig_boxplot_grid, width = 6.5, height = 3.5)
+
+```
+
+## DCs
+
+```{r chunk_145, fig.width=7.5, fig.height=3.5}
+
+mutsig_boxplot_data_dc <- plot_data_dc %>%
+  filter(key %in% module_names_dc) %>%
+  filter(!(consensus_signature %in% c("Undetermined", "HRD"))) %>%
+  filter(tumor_supersite != "Ascites") %>%
+  mutate(key = str_replace_all(key, "Interferon.regulators.module", "IFN\nregulators"),
+         key = str_replace_all(key, "IRF.genes.module", "All IRFs"))
+
+mutsig_boxplot_data_stats_dc <- mutsig_boxplot_data_dc %>%
+  group_by(sample, key) %>%
+  mutate(value = mean(value),
+         pct.expr = mean(pct.expr)) %>%
+  distinct(sample, key, .keep_all = T)
+
+mutsig_boxplot_dc <- mutsig_boxplot_data_dc %>%
+  filter(key %in% gois_dc, key %in% module_names_dc) %>%
+  ggplot(aes(consensus_signature, pct.expr)) +
+  geom_violin(aes(consensus_signature, pct.expr, fill = consensus_signature), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+  geom_boxplot(aes(consensus_signature, pct.expr, color = consensus_signature),
+               width = 0.5, size = 0.75, outlier.shape = NA) +
+  geom_boxplot(aes(consensus_signature, pct.expr, fill = consensus_signature),
+               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+  # geom_boxplot(aes(consensus_signature, pct.expr, color = consensus_signature),
+  #              fill = "white") +
+  stat_compare_means(ref.group = ".all.",
+                     data = filter(mutsig_boxplot_data_stats_dc,
+                                   key %in% gois_dc, key %in% module_names_dc),
+                     label = "p.signif", label.y = 85, hide.ns = T) +
+  stat_compare_means(label.y = 95, label.x = 1.5, label.sep = "\n\n",
+                     data = filter(mutsig_boxplot_data_stats_dc,
+                                   key %in% gois_dc, key %in% module_names_dc)) +
+  facet_wrap(~key, ncol = 5) +
+  scale_color_manual(values = clrs$consensus_signature) +
+  scale_fill_manual(values = clrs$consensus_signature) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.x = element_blank()) +
+  # coord_cartesian(ylim = c(-1, 2)) +
+  labs(y = "% Pos. DCs", color = "Mutational\nsignature",
+       fill = "Mutational\nsignature")
+
+mutsig_boxplot_ifnreg <- mutsig_boxplot_data_dc %>%
+  filter(key == "IFN\nregulators") %>%
+  ggplot(aes(consensus_signature, value)) +
+  geom_violin(aes(consensus_signature, value, fill = consensus_signature), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+  geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
+               width = 0.5, size = 0.75, outlier.shape = NA) +
+  geom_boxplot(aes(consensus_signature, value, fill = consensus_signature),
+               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+  # geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
+  #              fill = "white") +
+  stat_compare_means(ref.group = ".all.",
+                     data = filter(mutsig_boxplot_data_stats_dc,
+                                   key == "IFN\nregulators"),
+                     label = "p.signif", label.y = 1.4, hide.ns = T) +
+  stat_compare_means(label.y = 1.9, label.x = 1.5, label.sep = "\n\n",
+                     data = filter(mutsig_boxplot_data_stats_dc,
+                                   key == "IFN\nregulators")) +
+  facet_wrap(~key, ncol = 5) +
+  scale_color_manual(values = clrs$consensus_signature) +
+  scale_fill_manual(values = clrs$consensus_signature) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.x = element_blank()) +
+  coord_cartesian(ylim = c(-1, 2)) +
+  labs(y = "Module score", color = "Mutational\nsignature",
+       fill = "Mutational\nsignature")
+
+mutsig_boxplot_grid_dc <- plot_grid(
+  mutsig_boxplot_dc + NoLegend(),
+  mutsig_boxplot_ifnreg + NoLegend(),
+  nrow = 1, rel_widths = c(0.75, 0.25))
+
+mutsig_boxplot_grid_dc
+
+ggsave("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots.pdf", mutsig_boxplot_grid_dc, width = 7.5, height = 3.5)
+
+```
+
+```{r chunk_150, fig.width=6, fig.height=4}
+
+patient_boxplot_wrapper <- function(xkey) {
+
+  xkey <- enquo(xkey)
+
+  patient_lvls <- plot_data %>%
+    mutate(key = !!xkey) %>%
+    group_by(patient_id_short) %>%
+    summarise(median = median(value)) %>%
+    ungroup() %>%
+    arrange(median) %>%
+    pull(patient_id_short)
+
+  plot_data %>%
+    mutate(patient_id_short = ordered(patient_id_short, levels = patient_lvls)) %>%
+    ggplot() +
+    geom_violin(aes(patient_id_short, !!xkey, fill = consensus_signature),
+                color = "white") +
+    # geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
+    #              width = 0.2, size = 2) +
+    geom_boxplot(aes(patient_id_short, !!xkey, fill = consensus_signature),
+                 color = "white", width = 0.2, outlier.shape = NA) +
+    scale_color_manual(values = clrs$consensus_signature) +
+    scale_fill_manual(values = clrs$consensus_signature) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          axis.title.x = element_blank()) +
+    labs(y = "Module score", color = "Mutational\nsignature", title = xkey)
+}
+
+# patient_boxplot_list <- lapply(module_names_sub, patient_boxplot_wrapper) %>%
+#   setNames(module_names_sub)
+
+```
+
+## correlation
+
+```{r chunk_170, fig.width=8, fig.height=3.25}
+
+plot_data_y <- FetchData(seu_obj_cc, c("sample", "cell_type", "JAK.STAT.pathway")) %>%
+  bind_rows(FetchData(seu_obj_tc, c("sample", "cell_type", "JAK.STAT.pathway"))) %>% 
+  bind_rows(FetchData(seu_obj_mp, c("sample", "cell_type", "JAK.STAT.pathway"))) %>% 
+  as_tibble() %>% 
+  gather(key_y, value, -sample, -cell_type) %>%
+  left_join(scrna_meta_tbl, by = "sample") %>%
+  filter((sort_short == "CD45+" & cell_type %in% c("T.cell", "Monocyte")) | (sort_short == "CD45-" & cell_type == "Ovarian.cancer.cell")) %>% 
+  group_by(sample, cell_type, key_y, patient_id_short, tumor_supersite, consensus_signature) %>%
+  summarise(mean_value_y = mean(value)) %>%
+  ungroup %>%
+  mutate(sample = str_remove_all(sample, "_CD45N|_CD45P"))
+
+plot_data_cor <- mutsig_boxplot_data_stats_dc %>% 
+  select(sample, key_x = key, value) %>% 
+  left_join(scrna_meta_tbl, by = "sample") %>%
+  filter(sort_short == "CD45+") %>%
+  group_by(sample, key_x) %>%
+  summarise(mean_value_x = mean(value)) %>%
+  ungroup %>%
+  mutate(sample = str_remove_all(sample, "_CD45N|_CD45P")) %>%
+  inner_join(plot_data_y, by = "sample")
+ 
+cor_plot1 <- plot_data_cor %>%
+  filter(key_x == "IFN\nregulators", key_y == "JAK.STAT.pathway") %>%
+  mutate(cell_type = case_when(cell_type == "Ovarian.cancer.cell" ~ "Ov cancer cells",
+                               cell_type == "T.cell" ~ "T cells",
+                               cell_type == "Monocyte" ~ "Macrophages",
+                               T ~ "NA")) %>% 
+  mutate(cell_type = ordered(cell_type, levels = c("Ov cancer cells", "T cells", "Macrophages"))) %>% 
+  ggplot() +
+  geom_point(aes(mean_value_x, mean_value_y, color = consensus_signature)) +
+  geom_smooth(aes(mean_value_x, mean_value_y), method = "lm", se = T,
+              linetype = 2, size = 0.5, color = "black") +
+  stat_cor(aes(mean_value_x, mean_value_y),
+           method = "spearman", color = "black") +
+  scale_color_manual(values = clrs$consensus_signature) +
+  facet_grid(~cell_type) + 
+  labs(y = "JAK/STAT pathway",
+       x = "IFN regulators module score\n(Dendritic cells)",
+       color = "Mutational\nsignature")
+# 
+# cor_plot2 <- {cor_plot1 + 
+#     labs(y = "JAK-STAT score\n(CD8+ T cells)", 
+#          x = "JAK-STAT score\n(cancer cells)",
+#          color = "Mutational\nsignature")
+# } %+%
+#   filter(plot_data_cor, key_tc == "JAK.STAT.pathway", 
+#          key_cc == "JAK.STAT.pathway")
+# 
+# cor_plot_grid <- plot_grid(cor_plot1 + guides(color = F), cor_plot2,
+#                            align = "hv", axis = "x", 
+#                            rel_widths = c(0.4, 0.6))
+# 
+# cor_plot_grid
+# 
+
+cor_plot1
+ggsave("figures/620_Macrophage_umaps_and_boxplots/005_DC_cancer_cell_correlation.pdf", cor_plot1, width = 8, height = 3.25)
+
+
+```
+
+
+# session info
+
+```{r chunk_999}
+
+devtools::session_info()
+
+```
+
+

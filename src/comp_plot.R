@@ -6,6 +6,26 @@ remove_xaxis <- theme(axis.text.x = element_blank(),
 
 remove_guides <- guides(color = F, fill = F, shape = F, alpha = F)
 
+pstar <- function(pvalue, ns = F, max = 3) {
+  if(is.na(pvalue)) {
+    result <- "" 
+  } else {
+    if(pvalue >= 0.05 & ns) result <- "n.s."
+    if(pvalue >= 0.05 & ns == F) result <- ""
+    if(pvalue < 0.05) result <- "*"
+    if(pvalue < 0.01) result <- "**"
+    if(pvalue < 0.001) result <- "***"
+    if(pvalue < 0.0001) result <- "****"
+    if(pvalue < 0.00001) result <- "*****"
+    if(str_detect(result, "\\*") & nchar(result) > max) result <- paste0(rep("*", max), collapse = "")
+  }
+  return(result)
+}
+
+pstars <- function(pvalues, ns = F, max = 3) {
+  sapply(pvalues, pstar, ns, max)
+}
+
 ## rank a comp tbl by a certain rank_column and rank_value
 rank_by <- function(comp_tbl, rank_column = cell_type, rank_value = "T cell", fill_column = cell_type, super_type = NULL, super_type_sub = NULL) {
   rank_column <- enquo(rank_column)
@@ -16,7 +36,8 @@ rank_by <- function(comp_tbl, rank_column = cell_type, rank_value = "T cell", fi
     ungroup %>% 
     arrange(!!rank_column != rank_value, desc(nrel_total)) %>% 
     mutate(!!fill_column := ordered(!!fill_column, levels = rev(unique(!!fill_column)))) %>% 
-    mutate(sample_id_lvl = ordered(sample_id, levels = rev(unique(sample_id))))
+    mutate(sample_id_lvl = ordered(sample_id, levels = rev(unique(sample_id))),
+           alpha_highlight = ifelse(!!rank_column == rank_value, T, F))
   comp_rank <- comp_lvl %>% 
     distinct(!!rank_column, sample_id_lvl, .keep_all = T) %>% 
     group_by(!!rank_column) %>% 
@@ -47,6 +68,7 @@ rank_by <- function(comp_tbl, rank_column = cell_type, rank_value = "T cell", fi
 }
 
 # rank_by(comp_list$Ovarian.cancer.cell, cluster_label, "Cancer.cell.5", cluster_label, super_type = "Ovarian.cancer.super") %>% View
+# rank_by(filter(comp_tbl_sample, sort_short_x == "CD45+"), cell_type, "T cell", cell_type) %>% View
 
 wilcoxon_wrapper <- function(comp_tbl_rank, rank_column, rank_value, 
                              test_var, test_value) {
@@ -66,35 +88,72 @@ wilcoxon_test <- function(comp_tbl_rank, rank_column, rank_value, test_var, pcut
   rank_column <- enquo(rank_column)
   comp_tbl_rank <- distinct(comp_tbl_rank, sample_id_lvl, .keep_all = T)
   all_values <- unique(pull(comp_tbl_rank, !!test_var))
-  lapply(all_values, function(x) wilcoxon_wrapper(comp_tbl_rank, !!rank_column, rank_value, !!test_var, x)) %>% 
+  test_tbl <- lapply(all_values, function(x) wilcoxon_wrapper(comp_tbl_rank, !!rank_column, rank_value, !!test_var, x)) %>% 
     setNames(all_values) %>% 
     unlist %>% 
     enframe(as_label(test_var), "pval") %>% 
     mutate(pval_kruskal = tryCatch(
       {kruskal.test(pull(comp_tbl_rank, sample_id_lvl), 
-                    pull(comp_tbl_rank, !!test_var), 
-                    data = comp_tbl_rank)$p.value}, 
+                   pull(comp_tbl_rank, !!test_var), 
+                   data = comp_tbl_rank)$p.value}, 
       error = function(e) NA)) %>% 
-    mutate(fdr = p.adjust(pval, method = "BH"),
-           pstar = ifelse(pval < pcut, "*", ""))
+    mutate(pscore = -log10(pval),
+           qval = p.adjust(pval, method = "BH"),
+           qscore = -log10(qval),
+           qscore_sig = ifelse(qscore < -log10(0.05), 0, qscore),
+           pstar = pstars(qval))
+  median_rank_tbl <- comp_tbl_rank %>% 
+    group_by(!!test_var) %>% 
+    summarise(median_rank = median(sample_id_rank)) %>% 
+    ungroup()
+  test_tbl <- test_tbl %>% 
+    left_join(median_rank_tbl, by = as_label(test_var))
+  return(test_tbl)
 }
 
+## generate table for multiple wilcoxon and kruskal tests
+wilcoxon_tests <- function(comp_tbl, rank_column, rank_values, test_var, super_type = NULL, super_type_sub = NULL) {
+  rank_column <- enquo(rank_column)
+  test_var <- enquo(test_var)
+
+  lapply(rank_values, function(x) {
+    comp_tbl_rank <- rank_by(comp_tbl, rank_column = !!rank_column, rank_value = x, fill_column = !!rank_column, super_type = super_type, super_type_sub = super_type_sub)
+    wilcoxon_test(comp_tbl_rank, !!rank_column, x, !!test_var, pcut = 0.01) %>% 
+      mutate(!!rank_column := x)
+  }) %>% 
+    bind_rows()
+}
+
+# wilcoxon_tests(filter(comp_tbl_sample, sort_short_x == "CD45+"), cell_type, c("T cell", "B cell"), tumor_supersite)
+
+# test_tbl <- bind_rows(wilcoxon_tests(filter(comp_tbl_sample, sort_short_x == "CD45+"), cell_type, c("T cell", "B cell", "Plasma cell", "Mast cell", "Dendritic cell"), consensus_signature),
+#                       wilcoxon_tests(filter(comp_tbl_sample, sort_short_x == "CD45-"), cell_type, c("Ov cancer cell", "Fibroblast", "Endothelial cell"), consensus_signature))
+# 
+# ggplot(test_tbl) +
+#   geom_point(aes(cell_type, consensus_signature, color = median_rank, size = qscore_sig)) +
+#   scale_size_continuous(breaks = c(1,2,4,8), limits = c(1,8)) +
+#   #scale_color_gradient2(high = "red", low = "#67A9CF", limits = c(min(test_tbl$median_rank), max(test_tbl$median_rank))) +
+#   scale_color_gradientn(colors = c("steelblue", "white", "red"), values = scales::rescale(c(min(test_tbl$median_rank), 0, max(test_tbl$median_rank)))) +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
 ## composition bar plots
-plot_comp_bar <- function(comp_tbl_rank, x, y, fill, nmax = 10000, facet = F, super_type = NULL, super_type_sub = NULL) {
+plot_comp_bar <- function(comp_tbl_rank, x, y, fill, nmax = 10000, facet = F, super_type = NULL, super_type_sub = NULL, highlight = F) {
   x <- enquo(x)
   y <- enquo(y)
   fill <- enquo(fill)
   facet <- enquo(facet)
   if (as_label(y) == "nrel") ylab <- paste0("% cells")
   if (as_label(y) == "n") ylab <- paste0("# cells")
-  p <- ggplot(comp_tbl_rank, aes(!!x, !!y, fill = !!fill)) +
+  p <- ggplot(comp_tbl_rank, aes(!!x, !!y, fill = !!fill, alpha = alpha_highlight), color = NULL) +
     geom_bar(stat = "identity", position = position_stack(), width = 1) +
     coord_cartesian(clip = "off", expand = F) + 
+    scale_alpha_manual(values = c(1, 1)) + 
     theme(axis.title.y = element_text(margin = margin(0, -1, 0, 1, unit = "npc")),
           strip.text.y = element_blank(),
           strip.background.y = element_blank(),
           plot.margin = grid::unit(c(0.04, 0.01, 0.02, 0.01), "npc")) +
     remove_xaxis + 
+    guides(alpha = F) + 
     labs(x = "",
          y = ylab)
     if (!is.na(as_label(facet)) != F) p <- p + facet_grid(cols = vars(!!facet), space = "free_x", scales = "free_x")
@@ -116,6 +175,8 @@ plot_comp_bar <- function(comp_tbl_rank, x, y, fill, nmax = 10000, facet = F, su
     theme(panel.grid.major.y = element_line(linetype = 1, color = "grey90", size = 0.5),
           plot.title = element_text(face = "plain", size = 14,
                                     hjust = 0.5, vjust = 0.5))
+  if (highlight) p <- p +
+    scale_alpha_manual(values = c(0.2, 1))
   return(p)
   
 }
@@ -123,6 +184,10 @@ plot_comp_bar <- function(comp_tbl_rank, x, y, fill, nmax = 10000, facet = F, su
 # plot_comp_bar(rank_by(filter(comp_tbl_sample, sort_short_x == "CD45+"),
 #                       cell_type, "T cell", cell_type),
 #               sample_id_lvl, n, cell_type, facet = sort_short_x)
+# plot_comp_bar(rank_by(filter(comp_tbl_sample_sort, sort_short_x == "CD45+"),
+#                       cell_type_naive, "T naive/mem", cluster_label_sub,
+#                       super_type_sub = "T.super"),
+#               sample_id_lvl, nrel, cluster_label_sub, facet = sort_short_x, super_type_sub = "T.super", highlight = T) + NoLegend()
 
 ## composition box rank plots
 plot_comp_box <- function(comp_tbl_rank, x, y, color, rank_column, rank_value, pcut = 0.01, facet = F, tiles_only = F) {
@@ -157,7 +222,8 @@ plot_comp_box <- function(comp_tbl_rank, x, y, color, rank_column, rank_value, p
       geom_boxplot(aes(!!y, !!x, color = !!color),
                    width = 0.35, size = 1, fill = "white", outlier.shape = NA) +
       geom_text(aes(x = !!y, y = 1.05, label = pstar), 
-                data = wilcoxon_tbl, hjust = 0.5, vjust = 1, size = 5, angle = 90) +
+                nudge_x = -0.1, hjust = 0.5, vjust = 0.5, size = 5, angle = 0,
+                data = wilcoxon_tbl) +
       coord_flip(clip = "off", ylim = c(-1.01, 1.01)) +
       scale_y_continuous(expand = c(0, 0), breaks = c(-1, 0, 1)) +
       labs(y = paste0("Scaled rank\n(", str_replace_all(rank_value, "\\.", " "), ")"))
@@ -254,7 +320,7 @@ default_comp_grid_list <- function(
   n_bar = T, nrel_bar = T, mutsig_box = T, site_box = T, vec_plot = T,
   site_tiles = F, mutsig_tiles = F, 
   super_type = NULL, super_type_sub = NULL, nmax = 10000, 
-  facet = sort_short_x, yaxis = T) {
+  facet = sort_short_x, yaxis = T, highlight = F) {
   rank_column <- enquo(rank_column)
   fill_column <- enquo(fill_column)
   facet <- enquo(facet)
@@ -276,7 +342,7 @@ default_comp_grid_list <- function(
     plist$pbar2 <- plot_comp_bar(comp_tbl_rank, sample_id_lvl, nrel, 
                                  !!fill_column, facet = !!facet, 
                                  super_type = super_type,
-                                 super_type_sub = super_type_sub) +
+                                 super_type_sub = super_type_sub, highlight = highlight) +
       remove_guides
   }
   if (mutsig_box) {
