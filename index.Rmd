@@ -26,3 +26,5 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 # Global chunk options
 knitr::opts_chunk$set(echo=FALSE, tidy=TRUE, warning=FALSE, message=FALSE)
 ```
+
+# Introduction
