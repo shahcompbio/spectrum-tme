@@ -5,4 +5,19 @@ language:
 output_dir: "docs"
 new_session: yes
 delete_merged_file: true
+<<<<<<< HEAD
 rmd_files: ["index.Rmd", "110_cohort_overview.Rmd", "200_cohort_plotting_umap_v7.Rmd",  "310_mutational_signatures.Rmd"]
+=======
+rmd_files: [
+  "index.Rmd", 
+  "110_cohort_overview.Rmd", 
+  "200_cohort_plotting_umap_v7.Rmd", 
+  "210_cohort_plotting_composition.Rmd", 
+  "310_mutational_signatures.Rmd",
+  "320_cancer_cell_plotting_umap.Rmd",
+  "510_T_cell_plotting_umap_comp_heatmap.Rmd",
+  "520_T_cell_CD8_diffusion.Rmd",
+  "610_Myeloid_cell_plotting_umap_comp_heatmap.Rmd",
+  "620_Macrophage_umaps_and_boxplots.Rmd"
+]
+>>>>>>> 4f77d2df88afc3eca0035463eea1c2b32b370bd1
