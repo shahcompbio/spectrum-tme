@@ -2,24 +2,20 @@
 title: "MSK SPECTRUM data freeze: major cell type embeddings"
 author: "Florian Uhlitz"
 date: "`r Sys.Date()`"
-output: 
-  html_document: 
-    df_print: kable
-    number_sections: yes
-    toc: yes
-    code_folding: hide
+output:
+  bookdown::html_document2:
+    includes:
+      in_header: header.html
+  bookdown::gitbook:
+    includes:
+      in_header: header.html
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
+# Figure 3 
 
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
-
-```
-
-```{r chunk_010}
+```{r chunk_320_010}
 
 library(magrittr)
 library(tidyverse)
@@ -33,7 +29,7 @@ library(ggpubr)
 
 ```
 
-```{r chunk_020}
+```{r chunk_320_020}
 
 ## load global vars: 
 source("src/global_vars.R")
@@ -46,7 +42,7 @@ source("src/global_vars.R")
 
 ```
 
-```{r chunk_040}
+```{r chunk_320_040}
 
 ## load full seurat objects with expression data
 # seu_obj_tc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v5/T.cell_processed_filtered_sub.rds")
@@ -73,7 +69,7 @@ pois <- paste0(c("JAK.STAT", "NFkB", "TNFa", "TGFb", "Hypoxia"), ".pathway")
 
 ```
 
-```{r chunk_050}
+```{r chunk_320_050}
 
 plot_data <- cbind(cell_id = colnames(seu_obj_cc), FetchData(seu_obj_cc, c("umapharmony_1", "umapharmony_2", "umappca_1", "umappca_2", "RNA_snn_res.0.2", "sample", "cluster_label", gois, grep("pathway", colnames(seu_obj_cc@meta.data), value = T)))) %>% 
   as_tibble() %>% 
@@ -115,7 +111,7 @@ add_umap_coord <- function(gg_obj, x = -0.015, y = -0.015, width = 0.2, height =
 
 ```
 
-```{r chunk_060}
+```{r chunk_320_060}
 
 pt.size <- 0.1
 pt.size2 <- 0.2
@@ -260,13 +256,11 @@ umap_pathways <- plot_data %>%
 
 ```
 
-# cluster compositions
-
-## composition panel
+## cluster compositions
 
 ### Cancer.cell.1, 2, 3
 
-```{r chunk_063, fig.width=6, fig.height=5.5}
+```{r chunk_320_063, fig.width=6, fig.height=5.5}
 
 source("src/comp_plot.R")
 
@@ -338,7 +332,7 @@ pcomp_grid_full_2 <- plot_grid(pcomp_grid_p4, pcomp_grid_p5, ggdraw(),
 
 ```
 
-```{r chunk_064, fig.width=6, fig.height=5.5}
+```{r chunk_320_064, fig.width=6, fig.height=5.5}
 
 pcomp_grid_full_1
 
@@ -348,7 +342,7 @@ ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_comp_plot_1.pdf", pcomp_g
 
 ### Cancer.cell.4, 5, 6
 
-```{r chunk_065, fig.width=6, fig.height=5.5}
+```{r chunk_320_065, fig.width=6, fig.height=5.5}
 
 pcomp_grid_full_2
 ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_comp_plot_2.pdf", pcomp_grid_full_2, width = 6, height = 5.5)
@@ -357,7 +351,7 @@ ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_comp_plot_2.pdf", pcomp_g
 
 ### Cancer.cell.3
 
-```{r chunk_066, fig.width=3, fig.height=5.5}
+```{r chunk_320_066, fig.width=3, fig.height=5.5}
 
 plist3_2 <- default_comp_grid_list(filter(cluster_comp, sort_short_x == "CD45-"),
                                    cluster_label, "Cancer.cell.3", cluster_label,
@@ -376,7 +370,7 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_comp_plot_cluster3.png", pcomp
 
 ## composition test statistics heatmap
 
-```{r chunk_067, fig.width=5, fig.height=5}
+```{r chunk_320_067, fig.width=5, fig.height=5}
 
 test_tbl_mutsig <- wilcoxon_tests(filter(cluster_comp, sort_short_x == "CD45-"), cluster_label, names(clrs$cluster_label$Ovarian.cancer.super), consensus_signature) %>% 
   rename(y_var = consensus_signature) %>% 
@@ -411,9 +405,9 @@ ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_comp_test_stat_heat.pdf",
 
 ```
 
-# UMAP panels
+## UMAP panels
 
-```{r chunk_070, fig.width=20, fig.height=5}
+```{r chunk_320_070, fig.width=20, fig.height=5}
 
 cancer_grid_pca <- ggdraw() +
   draw_plot(add_umap_coord(umap_pca_mutsig), 
@@ -459,7 +453,7 @@ ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_umap_grid.pdf", cancer_gr
 
 ```
 
-```{r chunk_071, fig.width=8, fig.height=4}
+```{r chunk_320_071, fig.width=8, fig.height=4}
 
 umap_genes_grid <- ggdraw() + 
   draw_plot(add_umap_coord(umap_genes + remove_guides), x = 0, y = 0, width = 1, height = 1) +
@@ -471,7 +465,7 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_umap_genes.pdf", umap_genes_gr
 
 ```
 
-```{r chunk_072, fig.width=8, fig.height=4}
+```{r chunk_320_072, fig.width=8, fig.height=4}
 
 umap_pathways_grid <- ggdraw() + 
   draw_plot(add_umap_coord(umap_pathways + remove_guides), x = 0, y = 0, width = 1, height = 1) +
@@ -483,9 +477,9 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_umap_pathways.pdf", umap_pathw
 
 ```
 
-# Cluster marker heatmap
+## Cluster marker heatmap
 
-```{r chunk_075}
+```{r chunk_320_075}
 
 plot_data_markers <- as_tibble(FetchData(seu_obj_cc, c("cluster_label", myfeatures, unique(marker_tbl_top$gene)))) %>% 
   gather(gene, value, -c(1:(length(myfeatures)+1))) %>% 
@@ -502,7 +496,7 @@ plot_data_markers <- as_tibble(FetchData(seu_obj_cc, c("cluster_label", myfeatur
 
 ```
 
-```{r chunk_080, fig.width=3.75, fig.height=5}
+```{r chunk_320_080, fig.width=3.75, fig.height=5}
 
 library(ComplexHeatmap)
 
@@ -583,9 +577,9 @@ ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_cluster_marker_heatmap.pd
 ```
 
 
-# Differential pathway expression in cancer cells
+## Differential pathway expression in cancer cells
 
-```{r chunk_090}
+```{r chunk_320_090}
 
 set.seed(42)
 sampled_cell_ids <- sample(colnames(seu_obj_cc), 10000)
@@ -643,7 +637,7 @@ plot_data_summary_mutsig_sample <- plot_data_pw %>%
 
 ```
 
-```{r chunk_100, fig.width=10, fig.height=5}
+```{r chunk_320_100, fig.width=10, fig.height=5}
 
 common_heat_layers <- list(
   scale_fill_gradient2(low = scales::muted("blue"), high = scales::muted("red"), 
@@ -811,7 +805,7 @@ ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.p
 ```
 
 
-```{r chunk_110, fig.width=6, fig.height=12}
+```{r chunk_320_110, fig.width=6, fig.height=12}
 
 pw_patient_boxplot_wrapper <- function(pw) {
 
@@ -850,9 +844,9 @@ ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot_p
 
 ```
 
-# session info 
+## session info 
 
-```{r chunk_999}
+```{r chunk_320_999}
 
 devtools::session_info()
 
