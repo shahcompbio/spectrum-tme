@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Immune cell phenotypes of ovarian cancer are determined by distinct mutational processes</title>
   <meta name="description" content="Immune cell phenotypes of ovarian cancer are determined by distinct mutational processes" />
-  <meta name="generator" content="bookdown 0.18 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
 
   <meta property="og:title" content="Immune cell phenotypes of ovarian cancer are determined by distinct mutational processes" />
   <meta property="og:type" content="book" />
@@ -25,7 +25,7 @@
 <meta name="author" content="Florian Uhlitz" />
 
 
-<meta name="date" content="2021-05-04" />
+<meta name="date" content="2021-05-06" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -33,7 +33,7 @@
   
   
 
-<link rel="next" href="cohort-overview.html"/>
+<link rel="next" href="figure-2-upper.html"/>
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
@@ -50,6 +50,33 @@
 
 
 
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<script type="text/javascript">
+
+// toggle visibility of R source blocks in R Markdown output
+function toggle_R() {
+  var x = document.getElementsByClassName('r');
+  if (x.length == 0) return;
+  function toggle_vis(o) {
+    var d = o.style.display;
+    o.style.display = (d == 'block' || d == '') ? 'none':'block';
+  }
+
+  for (i = 0; i < x.length; i++) {
+    var y = x[i];
+    if (y.tagName.toLowerCase() === 'pre') toggle_vis(y);
+  }
+
+    var elem = document.getElementById("myButton1");
+    if (elem.value === "Hide Global") elem.value = "Show Global";
+    else elem.value = "Hide Global";
+}
+
+document.write('<input onclick="toggle_R();" type="button" value="Hide Global" id="myButton1" style="position: absolute; top: 10%; right: 2%; z-index: 200"></input>')
+
+</script>
 
 
 
@@ -70,21 +97,91 @@
 <li><a href="./">Immune cell phenotypes of ovarian cancer are determined by distinct mutational processes</a></li>
 
 <li class="divider"></li>
-<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> MSK SPECTRUM</a></li>
-<li class="chapter" data-level="2" data-path="cohort-overview.html"><a href="cohort-overview.html"><i class="fa fa-check"></i><b>2</b> Cohort overview</a><ul>
-<li class="chapter" data-level="2.1" data-path="cohort-overview.html"><a href="cohort-overview.html#load-data"><i class="fa fa-check"></i><b>2.1</b> Load data</a></li>
-<li class="chapter" data-level="2.2" data-path="cohort-overview.html"><a href="cohort-overview.html#overview"><i class="fa fa-check"></i><b>2.2</b> Overview</a></li>
-<li class="chapter" data-level="2.3" data-path="cohort-overview.html"><a href="cohort-overview.html#msk-impact-data"><i class="fa fa-check"></i><b>2.3</b> MSK IMPACT data</a></li>
-<li class="chapter" data-level="2.4" data-path="cohort-overview.html"><a href="cohort-overview.html#snvs-and-indels"><i class="fa fa-check"></i><b>2.4</b> SNVs and indels</a></li>
-<li class="chapter" data-level="2.5" data-path="cohort-overview.html"><a href="cohort-overview.html#data-inventory"><i class="fa fa-check"></i><b>2.5</b> Data inventory</a><ul>
-<li class="chapter" data-level="2.5.1" data-path="cohort-overview.html"><a href="cohort-overview.html#inventory-table"><i class="fa fa-check"></i><b>2.5.1</b> Inventory table</a></li>
-<li class="chapter" data-level="2.5.2" data-path="cohort-overview.html"><a href="cohort-overview.html#sample-table"><i class="fa fa-check"></i><b>2.5.2</b> Sample table</a></li>
-<li class="chapter" data-level="2.5.3" data-path="cohort-overview.html"><a href="cohort-overview.html#patient-table"><i class="fa fa-check"></i><b>2.5.3</b> Patient table</a></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="figure-2-upper.html"><a href="figure-2-upper.html"><i class="fa fa-check"></i><b>2</b> Figure 2 upper</a><ul>
+<li class="chapter" data-level="2.1" data-path="figure-2-upper.html"><a href="figure-2-upper.html#umaps"><i class="fa fa-check"></i><b>2.1</b> UMAPs</a></li>
+<li class="chapter" data-level="2.2" data-path="figure-2-upper.html"><a href="figure-2-upper.html#total-numbers"><i class="fa fa-check"></i><b>2.2</b> total numbers</a></li>
+<li class="chapter" data-level="2.3" data-path="figure-2-upper.html"><a href="figure-2-upper.html#mixing-per-cell-type"><i class="fa fa-check"></i><b>2.3</b> Mixing per cell type</a></li>
+<li class="chapter" data-level="2.4" data-path="figure-2-upper.html"><a href="figure-2-upper.html#pairwise-comparisons"><i class="fa fa-check"></i><b>2.4</b> pairwise comparisons</a></li>
+<li class="chapter" data-level="2.5" data-path="figure-2-upper.html"><a href="figure-2-upper.html#consensusov-summary"><i class="fa fa-check"></i><b>2.5</b> consensusOV summary</a></li>
+<li class="chapter" data-level="2.6" data-path="figure-2-upper.html"><a href="figure-2-upper.html#figure-2-upper-panel-grid"><i class="fa fa-check"></i><b>2.6</b> Figure 2 upper panel grid</a><ul>
+<li class="chapter" data-level="2.6.1" data-path="figure-2-upper.html"><a href="figure-2-upper.html#v7.1"><i class="fa fa-check"></i><b>2.6.1</b> v7.1</a></li>
+<li class="chapter" data-level="2.6.2" data-path="figure-2-upper.html"><a href="figure-2-upper.html#v7.2"><i class="fa fa-check"></i><b>2.6.2</b> v7.2</a></li>
+<li class="chapter" data-level="2.6.3" data-path="figure-2-upper.html"><a href="figure-2-upper.html#v7.3"><i class="fa fa-check"></i><b>2.6.3</b> v7.3</a></li>
 </ul></li>
-<li class="chapter" data-level="2.6" data-path="cohort-overview.html"><a href="cohort-overview.html#composite-figure"><i class="fa fa-check"></i><b>2.6</b> Composite figure</a></li>
-<li class="chapter" data-level="2.7" data-path="cohort-overview.html"><a href="cohort-overview.html#session"><i class="fa fa-check"></i><b>2.7</b> Session</a></li>
+<li class="chapter" data-level="2.7" data-path="figure-2-upper.html"><a href="figure-2-upper.html#s1"><i class="fa fa-check"></i><b>2.7</b> S1</a></li>
+<li class="chapter" data-level="2.8" data-path="figure-2-upper.html"><a href="figure-2-upper.html#session-info"><i class="fa fa-check"></i><b>2.8</b> session info</a></li>
 </ul></li>
-<li class="chapter" data-level="3" data-path="mutational-signatures.html"><a href="mutational-signatures.html"><i class="fa fa-check"></i><b>3</b> Mutational signatures</a></li>
+<li class="chapter" data-level="3" data-path="figure-2-lower.html"><a href="figure-2-lower.html"><i class="fa fa-check"></i><b>3</b> Figure 2 lower</a><ul>
+<li class="chapter" data-level="3.1" data-path="figure-2-lower.html"><a href="figure-2-lower.html#scrna-compositions"><i class="fa fa-check"></i><b>3.1</b> scRNA compositions</a><ul>
+<li class="chapter" data-level="3.1.1" data-path="figure-2-lower.html"><a href="figure-2-lower.html#cell-type"><i class="fa fa-check"></i><b>3.1.1</b> cell type</a></li>
+<li class="chapter" data-level="3.1.2" data-path="figure-2-lower.html"><a href="figure-2-lower.html#tcga"><i class="fa fa-check"></i><b>3.1.2</b> TCGA</a></li>
+<li class="chapter" data-level="3.1.3" data-path="figure-2-lower.html"><a href="figure-2-lower.html#cell-state"><i class="fa fa-check"></i><b>3.1.3</b> cell state</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="figure-2-lower.html"><a href="figure-2-lower.html#mpif-composition"><i class="fa fa-check"></i><b>3.2</b> mpIF composition</a><ul>
+<li class="chapter" data-level="3.2.1" data-path="figure-2-lower.html"><a href="figure-2-lower.html#cell-type-1"><i class="fa fa-check"></i><b>3.2.1</b> cell type</a></li>
+<li class="chapter" data-level="3.2.2" data-path="figure-2-lower.html"><a href="figure-2-lower.html#cell-state-1"><i class="fa fa-check"></i><b>3.2.2</b> cell state</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="figure-2-lower.html"><a href="figure-2-lower.html#mpif-x-scrna-correlation"><i class="fa fa-check"></i><b>3.3</b> mpIF x scRNA correlation</a><ul>
+<li class="chapter" data-level="3.3.1" data-path="figure-2-lower.html"><a href="figure-2-lower.html#cd45-cell-type"><i class="fa fa-check"></i><b>3.3.1</b> CD45+ cell type</a></li>
+<li class="chapter" data-level="3.3.2" data-path="figure-2-lower.html"><a href="figure-2-lower.html#cd45-cell-state"><i class="fa fa-check"></i><b>3.3.2</b> CD45+ cell state</a></li>
+<li class="chapter" data-level="3.3.3" data-path="figure-2-lower.html"><a href="figure-2-lower.html#cd45--cell-type"><i class="fa fa-check"></i><b>3.3.3</b> CD45- cell type</a></li>
+<li class="chapter" data-level="3.3.4" data-path="figure-2-lower.html"><a href="figure-2-lower.html#cd45--cell-state"><i class="fa fa-check"></i><b>3.3.4</b> CD45- cell state</a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="figure-2-lower.html"><a href="figure-2-lower.html#he-composition"><i class="fa fa-check"></i><b>3.4</b> H&amp;E composition</a><ul>
+<li class="chapter" data-level="3.4.1" data-path="figure-2-lower.html"><a href="figure-2-lower.html#cell-type-2"><i class="fa fa-check"></i><b>3.4.1</b> Cell type</a></li>
+</ul></li>
+<li class="chapter" data-level="3.5" data-path="figure-2-lower.html"><a href="figure-2-lower.html#main-text-figure"><i class="fa fa-check"></i><b>3.5</b> Main text figure</a></li>
+<li class="chapter" data-level="3.6" data-path="figure-2-lower.html"><a href="figure-2-lower.html#supplementary-figure"><i class="fa fa-check"></i><b>3.6</b> Supplementary figure</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="figure-3.html"><a href="figure-3.html"><i class="fa fa-check"></i><b>4</b> Figure 3</a><ul>
+<li class="chapter" data-level="4.1" data-path="figure-3.html"><a href="figure-3.html#cluster-compositions"><i class="fa fa-check"></i><b>4.1</b> cluster compositions</a><ul>
+<li class="chapter" data-level="4.1.1" data-path="figure-3.html"><a href="figure-3.html#cancer.cell.1-2-3"><i class="fa fa-check"></i><b>4.1.1</b> Cancer.cell.1, 2, 3</a></li>
+<li class="chapter" data-level="4.1.2" data-path="figure-3.html"><a href="figure-3.html#cancer.cell.4-5-6"><i class="fa fa-check"></i><b>4.1.2</b> Cancer.cell.4, 5, 6</a></li>
+<li class="chapter" data-level="4.1.3" data-path="figure-3.html"><a href="figure-3.html#cancer.cell.3-1"><i class="fa fa-check"></i><b>4.1.3</b> Cancer.cell.3</a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="figure-3.html"><a href="figure-3.html#composition-test-statistics-heatmap"><i class="fa fa-check"></i><b>4.2</b> composition test statistics heatmap</a></li>
+<li class="chapter" data-level="4.3" data-path="figure-3.html"><a href="figure-3.html#umap-panels"><i class="fa fa-check"></i><b>4.3</b> UMAP panels</a></li>
+<li class="chapter" data-level="4.4" data-path="figure-3.html"><a href="figure-3.html#cluster-marker-heatmap"><i class="fa fa-check"></i><b>4.4</b> Cluster marker heatmap</a></li>
+<li class="chapter" data-level="4.5" data-path="figure-3.html"><a href="figure-3.html#differential-pathway-expression-in-cancer-cells"><i class="fa fa-check"></i><b>4.5</b> Differential pathway expression in cancer cells</a></li>
+<li class="chapter" data-level="4.6" data-path="figure-3.html"><a href="figure-3.html#session-info-1"><i class="fa fa-check"></i><b>4.6</b> session info</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="figure-5-upper.html"><a href="figure-5-upper.html"><i class="fa fa-check"></i><b>5</b> Figure 5 upper</a><ul>
+<li class="chapter" data-level="5.1" data-path="figure-5-upper.html"><a href="figure-5-upper.html#umap"><i class="fa fa-check"></i><b>5.1</b> UMAP</a></li>
+<li class="chapter" data-level="5.2" data-path="figure-5-upper.html"><a href="figure-5-upper.html#module-heatmap"><i class="fa fa-check"></i><b>5.2</b> module heatmap</a></li>
+<li class="chapter" data-level="5.3" data-path="figure-5-upper.html"><a href="figure-5-upper.html#marker-heatmap"><i class="fa fa-check"></i><b>5.3</b> marker heatmap</a></li>
+<li class="chapter" data-level="5.4" data-path="figure-5-upper.html"><a href="figure-5-upper.html#composition"><i class="fa fa-check"></i><b>5.4</b> composition</a><ul>
+<li class="chapter" data-level="5.4.1" data-path="figure-5-upper.html"><a href="figure-5-upper.html#per-site"><i class="fa fa-check"></i><b>5.4.1</b> per site</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="figure-5-upper.html"><a href="figure-5-upper.html#session-info-2"><i class="fa fa-check"></i><b>5.5</b> session info</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="figure-5-lower.html"><a href="figure-5-lower.html"><i class="fa fa-check"></i><b>6</b> Figure 5 lower</a><ul>
+<li class="chapter" data-level="6.1" data-path="figure-5-lower.html"><a href="figure-5-lower.html#cd8-t-cell-diffusion-map"><i class="fa fa-check"></i><b>6.1</b> CD8 T cell diffusion map</a></li>
+<li class="chapter" data-level="6.2" data-path="figure-5-lower.html"><a href="figure-5-lower.html#cd8-t-module-curves"><i class="fa fa-check"></i><b>6.2</b> CD8 T module curves</a></li>
+<li class="chapter" data-level="6.3" data-path="figure-5-lower.html"><a href="figure-5-lower.html#boxplots"><i class="fa fa-check"></i><b>6.3</b> boxplots</a></li>
+<li class="chapter" data-level="6.4" data-path="figure-5-lower.html"><a href="figure-5-lower.html#correlation"><i class="fa fa-check"></i><b>6.4</b> correlation</a></li>
+<li class="chapter" data-level="6.5" data-path="figure-5-lower.html"><a href="figure-5-lower.html#composition-1"><i class="fa fa-check"></i><b>6.5</b> composition</a><ul>
+<li class="chapter" data-level="6.5.1" data-path="figure-5-lower.html"><a href="figure-5-lower.html#scrna"><i class="fa fa-check"></i><b>6.5.1</b> scRNA</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="figure-5-lower.html"><a href="figure-5-lower.html#session-info-3"><i class="fa fa-check"></i><b>6.6</b> session info</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="figure-6-upper.html"><a href="figure-6-upper.html"><i class="fa fa-check"></i><b>7</b> Figure 6 upper</a><ul>
+<li class="chapter" data-level="7.1" data-path="figure-6-upper.html"><a href="figure-6-upper.html#umap-1"><i class="fa fa-check"></i><b>7.1</b> UMAP</a></li>
+<li class="chapter" data-level="7.2" data-path="figure-6-upper.html"><a href="figure-6-upper.html#marker-heatmap-1"><i class="fa fa-check"></i><b>7.2</b> marker heatmap</a></li>
+<li class="chapter" data-level="7.3" data-path="figure-6-upper.html"><a href="figure-6-upper.html#composition-2"><i class="fa fa-check"></i><b>7.3</b> composition</a><ul>
+<li class="chapter" data-level="7.3.1" data-path="figure-6-upper.html"><a href="figure-6-upper.html#per-site-1"><i class="fa fa-check"></i><b>7.3.1</b> per site</a></li>
+</ul></li>
+<li class="chapter" data-level="7.4" data-path="figure-6-upper.html"><a href="figure-6-upper.html#session-info-4"><i class="fa fa-check"></i><b>7.4</b> session info</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="figure-6-lower.html"><a href="figure-6-lower.html"><i class="fa fa-check"></i><b>8</b> Figure 6 lower</a><ul>
+<li class="chapter" data-level="8.1" data-path="figure-6-lower.html"><a href="figure-6-lower.html#macrophage-umap"><i class="fa fa-check"></i><b>8.1</b> Macrophage umap</a></li>
+<li class="chapter" data-level="8.2" data-path="figure-6-lower.html"><a href="figure-6-lower.html#boxplots-1"><i class="fa fa-check"></i><b>8.2</b> boxplots</a><ul>
+<li class="chapter" data-level="8.2.1" data-path="figure-6-lower.html"><a href="figure-6-lower.html#macrophages"><i class="fa fa-check"></i><b>8.2.1</b> macrophages</a></li>
+<li class="chapter" data-level="8.2.2" data-path="figure-6-lower.html"><a href="figure-6-lower.html#dcs"><i class="fa fa-check"></i><b>8.2.2</b> DCs</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="figure-6-lower.html"><a href="figure-6-lower.html#correlation-1"><i class="fa fa-check"></i><b>8.3</b> correlation</a></li>
+<li class="chapter" data-level="8.4" data-path="figure-6-lower.html"><a href="figure-6-lower.html#session-info-5"><i class="fa fa-check"></i><b>8.4</b> session info</a></li>
+</ul></li>
 <li class="divider"></li>
 <li><a href="https://componcmsk.org/msk-spectrum" target="blank">MSK SPECTRUM</a></li>
 
@@ -109,10 +206,10 @@
 <h1 class="title">Immune cell phenotypes of ovarian cancer are determined by distinct mutational processes</h1>
 <p class="author"><em>Ignacio Vazquez-Garcia</em></p>
 <p class="author"><em>Florian Uhlitz</em></p>
-<p class="date"><em>2021-05-04</em></p>
+<p class="date" style="margin-top: 1.5em;"><em>2021-05-06</em></p>
 </div>
-<div id="msk-spectrum" class="section level1">
-<h1><span class="header-section-number">Section 1</span> MSK SPECTRUM</h1>
+<div id="introduction" class="section level1">
+<h1><span class="header-section-number">Section 1</span> Introduction</h1>
 
 </div>
             </section>
@@ -121,7 +218,7 @@
         </div>
       </div>
 
-<a href="cohort-overview.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="figure-2-upper.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
@@ -144,6 +241,7 @@ gitbook.start({
 "weibo": false,
 "instapaper": false,
 "vk": false,
+"whatsapp": false,
 "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
 },
 "fontsettings": {

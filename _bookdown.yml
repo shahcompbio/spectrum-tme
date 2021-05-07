@@ -9,7 +9,7 @@ rmd_files: [
   "index.Rmd", 
   #"110_cohort_overview.Rmd", 
   "200_cohort_plotting_umap_v7.Rmd", 
-  #"210_cohort_plotting_composition.Rmd", 
+  "210_cohort_plotting_composition.Rmd", 
   #"310_mutational_signatures.Rmd",
   "320_cancer_cell_plotting_umap.Rmd",
   "510_T_cell_plotting_umap_comp_heatmap.Rmd",
