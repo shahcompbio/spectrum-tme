@@ -218,7 +218,7 @@ for(i in 1:length(cell_types_immune)){
   cat('##### ', cell_types_immune[i],' \n')
   
   plist <- default_comp_grid_list(
-    filter(comp_tbl_sample, sort_short_x == "CD45+", consensus_signature %in% sois), 
+    filter(comp_tbl_sample, sort_short_x == "CD45+"), 
     cell_type, cell_types_immune[i], cell_type, site_box = F)
   
   p <- plot_grid(plotlist = plist, ncol = 1, align = "v",
@@ -243,7 +243,7 @@ for(i in 1:length(cell_types_stromal)){
   cat('##### ', cell_types_stromal[i],' \n')
   
   plist <- default_comp_grid_list(
-    filter(comp_tbl_sample, sort_short_x == "CD45-", consensus_signature %in% sois), 
+    filter(comp_tbl_sample, sort_short_x == "CD45-"), 
     cell_type, cell_types_stromal[i], cell_type, site_box = F)
   
   p <- plot_grid(plotlist = plist, ncol = 1, align = "v",
@@ -331,7 +331,7 @@ for(i in 1:length(tcga_subtypes)){
   cat('##### ', tcga_subtypes[i],' \n')
   
   plist <- default_comp_grid_list(
-    filter(comp_tbl_consOV, sort_short_x == "CD45+", consensus_signature %in% sois), 
+    filter(comp_tbl_consOV, sort_short_x == "CD45+"), 
     consensusOV, tcga_subtypes[i], consensusOV, site_box = F)
   
   p <- plot_grid(plotlist = plist, ncol = 1, align = "v",
@@ -355,7 +355,7 @@ for(i in 1:length(tcga_subtypes)){
   cat('##### ', tcga_subtypes[i],' \n')
   
   plist <- default_comp_grid_list(
-    filter(comp_tbl_consOV, sort_short_x == "CD45-", consensus_signature %in% sois), 
+    filter(comp_tbl_consOV, sort_short_x == "CD45-"), 
     consensusOV, tcga_subtypes[i], consensusOV, site_box = F)
   
   p <- plot_grid(plotlist = plist, ncol = 1, align = "v",
@@ -1173,7 +1173,7 @@ hne_cell_type_expanded <- hne_cell_type %>%
   # Keep included patients and pre-Rx samples
   filter(patient_id %in% included_patients, therapy == "pre-Rx") %>%
   # Keep adjacent H&E slides
-  # filter(is_adjacent | is_site_matched) %>%
+  filter(is_adjacent | is_site_matched) %>%
   # Keep tumor and stroma compartments
   filter(compartment %in% c("Tumor", "Stroma"))
 
@@ -1329,6 +1329,28 @@ pcomp6 <- plot_grid(plotlist = plist6[-3], ncol = 1, align = "v",
 gcomp1 <- plot_grid(pcomp1, pcomp2, ggdraw(), pcomp3, pcomp4, ggdraw(), pcomp5, pcomp6,  
                     ncol = 8, rel_widths = c(0.245, 0.245, 0.02, 0.245, 0.245, 0.02, 0.245, 0.245))
 
+## cell type grid with mut sig
+pcomp1 <- plot_grid(plotlist = plist1, ncol = 1, align = "v",
+                    rel_heights = c(0.13, 0.13, 0.1, 0.15, 0.59, 0))
+
+pcomp2 <- plot_grid(plotlist = plist2, ncol = 1, align = "v",
+                    rel_heights = c(0.13, 0.13, 0.1, 0.15, 0.59, 0))
+
+pcomp3 <- plot_grid(plotlist = plist3, ncol = 1, align = "v",
+                    rel_heights = c(0.13, 0.13, 0.1, 0.15, 0.59, 0))
+
+pcomp4 <- plot_grid(plotlist = plist4, ncol = 1, align = "v",
+                    rel_heights = c(0.13, 0.13, 0.1, 0.15, 0.59, 0))
+
+pcomp5 <- plot_grid(plotlist = plist5, ncol = 1, align = "v",
+                    rel_heights = c(0.13, 0.13, 0.1, 0.15, 0.59, 0))
+
+pcomp6 <- plot_grid(plotlist = plist6, ncol = 1, align = "v",
+                    rel_heights = c(0.13, 0.13, 0.1, 0.15, 0.59, 0))
+
+gcomp2 <- plot_grid(pcomp1, pcomp2, ggdraw(), pcomp3, pcomp4, ggdraw(), pcomp5, pcomp6,  
+                    ncol = 8, rel_widths = c(0.245, 0.245, 0.02, 0.245, 0.245, 0.02, 0.245, 0.245))
+
 
 # mpif_state_legend <- get_legend(plot_comp_bar(
 #   rank_by(filter(mpif_cell_state_n_slide_compartment, sort_short_x == "Tumor"),
@@ -1466,15 +1488,40 @@ comp_grid_full <- plot_grid(gcomp1,
 
 comp_grid_full
 
-ggsave(filename = "figures/210_cohort_cell_type_composition/210_comp_grid_site_mutsig.pdf", comp_grid_full,
-       width = 17, height = 10)
+ggsave_nodb(filename = "figures/210_cohort_cell_type_composition/210_comp_grid_site.pdf", 
+            comp_grid_full, width = 17, height = 10)
 
-ggsave(filename = "figures/210_cohort_cell_type_composition/210_comp_grid_site_mutsig.png", comp_grid_full,
-       width = 17, height = 10)
+ggsave(filename = "figures/210_cohort_cell_type_composition/210_comp_grid_site.png", 
+       comp_grid_full, width = 17, height = 10)
 
 ```
 
-```{r chunk_210_310, fig.width=16, fig.height=8}
+[figures/210_cohort_cell_type_composition/210_comp_grid_site.pdf](figures/210_cohort_cell_type_composition/210_comp_grid_site.pdf")
+
+[figures/210_cohort_cell_type_composition/210_comp_grid_site.png](figures/210_cohort_cell_type_composition/210_comp_grid_site.png)
+
+```{r chunk_210_310, fig.width=17, fig.height=11}
+
+comp_grid_full2 <- plot_grid(gcomp2,
+                             plot_grid(ggdraw(), vec_legend_shape, vec_legend_color, hne_cell_type_legend, mpif_cell_type_legend, ggdraw(), 
+                                       ncol = 6, rel_widths = c(0.15, 0.15, 0.15, 0.15, 0.15, 0.15)),
+                             ncol = 1, rel_heights = c(1, 0.15))
+comp_grid_full2
+
+ggsave_nodb(filename = "figures/210_cohort_cell_type_composition/210_comp_grid_site_mutsig.pdf", comp_grid_full2,
+       width = 17, height = 11)
+
+ggsave(filename = "figures/210_cohort_cell_type_composition/210_comp_grid_site_mutsig.png", comp_grid_full2,
+       width = 17, height = 11)
+
+
+```
+
+[figures/210_cohort_cell_type_composition/210_comp_grid_site_mutsig.pdf](figures/210_cohort_cell_type_composition/210_comp_grid_site_mutsig.pdf)
+
+[figures/210_cohort_cell_type_composition/210_comp_grid_site_mutsig.png](figures/210_cohort_cell_type_composition/210_comp_grid_site_mutsig.png)
+
+```{r chunk_210_315, fig.width=16, fig.height=8}
 
 # comp_grid_full <- ggdraw() +
 #   draw_plot(gcomp2, x = 0, y = 0, width = 0.69, height = 1) +
@@ -1518,7 +1565,7 @@ ggsave(filename = "figures/210_cohort_cell_type_composition/210_comp_grid_site_m
 
 ## Supplementary figure
 
-```{r chunk_210_330, fig.width=20, fig.height=16}
+```{r chunk_210_330, fig.width=22, fig.height=18}
 
 ## scRNA per patient comps
 plist1 <- default_comp_grid_list(
@@ -1656,7 +1703,7 @@ pgrid_supplement_full <- plot_grid(
   ggdraw(), 
   plot_grid(pgrid_supplement2, ggdraw(), nrow = 1, rel_widths = c(1, 0)), 
   ggdraw(),
-  plot_grid(pgrid_supplement3, ggdraw(), nrow = 1, rel_widths = c(0.9, 0.1)), 
+  plot_grid(pgrid_supplement3, ggdraw(), nrow = 1, rel_widths = c(1, 0)), 
   ggdraw(),
   plot_grid(pgrid_supplement4, ggdraw(), nrow = 1, rel_widths = c(0.7, 0.3)), 
   ncol = 1, 
@@ -1664,10 +1711,13 @@ pgrid_supplement_full <- plot_grid(
 
 pgrid_supplement_full
 
-ggsave(filename = "figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.pdf", 
-       pgrid_supplement_full, width = 20, height = 16)
+ggsave_nodb(filename = "figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.pdf", 
+            pgrid_supplement_full, width = 22, height = 18)
 ggsave(filename = "figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.png", 
-       pgrid_supplement_full, width = 20, height = 16)
+       pgrid_supplement_full, width = 22, height = 18)
 
 ```
 
+[figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.pdf](figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.pdf)
+
+[figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.png](figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.png)

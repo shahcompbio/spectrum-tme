@@ -191,8 +191,8 @@ cluster_label:
     M2.CXCL10: "#47eeb8"
     M2.SELENOP: "#91cf67"
     M2.MARCO: "#3d9f4b"
-    M2.ECM.1: "#a550bd"
-    M2.ECM.2: "#dd66ff"
+    M2.COL1A1: "#a550bd"
+    M2.MMP9: "#dd66ff"
     # M.stressed: "#5fcaa9"
     Clearing.M: "#46ccff"
     Cycling.M: "#FF8F00"
@@ -282,11 +282,11 @@ cluster_label_sub:
     Cycling.NK.2: "#8c9900"
     Cycling.NK.3: "#d7e53e"
 expression_module:
-  CD8.T.Dysfunctional: "#8BC34A"
-  CD8.T.Double.positive: "grey30"
-  CD8.T.Naive: "#43A047"
-  CD8.T.Cytotoxic: "#00897B"
-  CD8.T.Double.negative: "grey80"
+  CD8.Naive: "#52ff52"
+  CD8.Predysfunctional: "#b9cf8c"
+  CD8.Cytotoxic: "#005c00"
+  CD8.Dysfunctional: "#659400"
+  JAK.STAT.pathway: "#324a00"
 therapy:
   pre-Rx: "#CCABD8"
   post-Rx: "#8474A1"
@@ -562,3 +562,4 @@ Phase:
   G1: "#94b6d2"
   S: "#dc4040"
   G2M: "#7aa77f"
+

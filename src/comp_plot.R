@@ -190,14 +190,20 @@ plot_comp_bar <- function(comp_tbl_rank, x, y, fill, nmax = 10000, facet = F, su
 #               sample_id_lvl, nrel, cluster_label_sub, facet = sort_short_x, super_type_sub = "T.super", highlight = T) + NoLegend()
 
 ## composition box rank plots
-plot_comp_box <- function(comp_tbl_rank, x, y, color, rank_column, rank_value, pcut = 0.01, facet = F, tiles_only = F) {
+plot_comp_box <- function(comp_tbl_rank, x, y, color, rank_column, rank_value, pcut = 0.01, facet = F, tiles_only = F, post_filter_column = NULL, post_filter_value = NULL) {
   x <- enquo(x)
   y <- enquo(y)
   facet <- enquo(facet)
   color <- enquo(color)
   rank_column <- enquo(rank_column)
+  post_filter_column <- enquo(post_filter_column)
   comp_tbl_rank <- filter(comp_tbl_rank, !!rank_column == rank_value) %>% 
     distinct(sample_id_lvl, .keep_all = T)
+  if(as_label(post_filter_column) != "NULL") {
+    if(as_label(post_filter_column) == as_label(color)) {
+      comp_tbl_rank <- filter(comp_tbl_rank, !!post_filter_column %in% post_filter_value)
+    }
+  }
   wilcoxon_tbl <- wilcoxon_test(comp_tbl_rank, !!rank_column, rank_value, !!y)
   
   p <- ggplot(comp_tbl_rank) +
@@ -320,10 +326,12 @@ default_comp_grid_list <- function(
   n_bar = T, nrel_bar = T, mutsig_box = T, site_box = T, vec_plot = T,
   site_tiles = F, mutsig_tiles = F, 
   super_type = NULL, super_type_sub = NULL, nmax = 10000, 
-  facet = sort_short_x, yaxis = T, highlight = F) {
+  facet = sort_short_x, yaxis = T, highlight = F, post_filter_column = consensus_signature, 
+  post_filter_value = c("HRD-Del", "HRD-Dup", "FBI", "TD")) {
   rank_column <- enquo(rank_column)
   fill_column <- enquo(fill_column)
   facet <- enquo(facet)
+  post_filter_column <- enquo(post_filter_column)
   comp_tbl_rank <- rank_by(comp_tbl, !!rank_column, rank_value, !!fill_column, 
                            super_type = super_type, super_type_sub = super_type_sub)
   comp_tbl_rank_test <- filter(comp_tbl_rank, !!rank_column == rank_value) %>% 
@@ -348,6 +356,8 @@ default_comp_grid_list <- function(
   if (mutsig_box) {
     plist$pbox1 <- plot_comp_box(comp_tbl_rank, sample_id_rank, consensus_signature, 
                                  consensus_signature, !!rank_column, rank_value, 
+                                 post_filter_column = !!post_filter_column, 
+                                 post_filter_value = post_filter_value,
                                  facet = !!facet) + 
       remove_guides
     wilcoxon_tbl1 <- wilcoxon_test(comp_tbl_rank_test, !!rank_column, rank_value, 
@@ -357,13 +367,17 @@ default_comp_grid_list <- function(
     plist$ptiles1 <- plot_comp_box(comp_tbl_rank, sample_id_lvl, label_mutsig, 
                                    consensus_signature, !!rank_column, rank_value, 
                                    facet = !!facet,
+                                   post_filter_column = NULL, 
+                                   post_filter_value = NULL,
                                    tiles_only = T) + 
       remove_guides + remove_xaxis
   }
   if (site_box) {
     plist$pbox2 <- plot_comp_box(comp_tbl_rank, sample_id_rank, tumor_supersite, 
                                  tumor_supersite, !!rank_column, rank_value, 
-                                 facet = !!facet) + 
+                                 facet = !!facet, 
+                                 post_filter_column = !!post_filter_column, 
+                                 post_filter_value = post_filter_value) + 
       remove_guides
     wilcoxon_tbl2 <- wilcoxon_test(comp_tbl_rank_test, !!rank_column, rank_value, 
                                    tumor_supersite)
@@ -372,6 +386,8 @@ default_comp_grid_list <- function(
     plist$ptiles2 <- plot_comp_box(comp_tbl_rank, sample_id_lvl, label_supersite, 
                                    tumor_supersite, !!rank_column, rank_value, 
                                    facet = !!facet, 
+                                   post_filter_column = NULL, 
+                                   post_filter_value = NULL,
                                    tiles_only = T) + 
       remove_guides + remove_xaxis
   }
