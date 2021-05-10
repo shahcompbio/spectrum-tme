@@ -179,10 +179,12 @@ dc_plot_genes <- ggplot() +
   #                          data = filter(plot_data, key %in% gois, value > 0)) +
   ggrastr::geom_point_rast(aes(DC_1, DC_2), color = "grey80", size = 0.1, alpha = 1,
                            raster.dpi = 75,
-                           data = filter(plot_data, key %in% gois_sub, value == 0)) +
+                           data = filter(plot_data, key %in% gois_sub, value == 0) %>% 
+                             mutate(key = ordered(key, levels = gois_sub))) +
   ggrastr::geom_point_rast(aes(DC_1, DC_2, color = value), size = 0.1, alpha = 1,
                            raster.dpi = 75,
-                           data = filter(plot_data, key %in% gois_sub, value > 0)) +
+                           data = filter(plot_data, key %in% gois_sub, value > 0) %>% 
+                             mutate(key = ordered(key, levels = gois_sub))) +
   facet_wrap(~key) + 
   theme(axis.text = element_blank(),
         axis.title = element_blank(),

@@ -279,7 +279,7 @@ source("src/comp_plot.R")
 
 comp_tbl_sample_sort <- plot_data_sub %>%
   mutate(cell_type_super_ml = ifelse(cluster_label %in% grep("DC", names(clrs$cluster_label[[coi]]), value = T), "Dendritic cell", "Macrophage")) %>% 
-  filter(therapy == "pre-Rx", !(consensus_signature %in% c("Undetermined", "HRD"))) %>%
+  filter(therapy == "pre-Rx") %>%
   group_by(sample, tumor_subsite, tumor_supersite, tumor_megasite, patient_id_short,
            therapy, sort_short_x, consensus_signature, cluster_label, cell_type_super_ml) %>%
   tally %>%
@@ -292,7 +292,7 @@ comp_tbl_sample_sort <- plot_data_sub %>%
 
 comp_tbl_sample_sort_mp <- plot_data_sub %>%
   mutate(cell_type_super_ml = ifelse(cluster_label %in% grep("DC", names(clrs$cluster_label[[coi]]), value = T), "Dendritic cell", "Macrophage")) %>% 
-  filter(therapy == "pre-Rx", !(consensus_signature %in% c("Undetermined", "HRD")), cell_type_super_ml == "Macrophage", str_detect(cluster_label, "M[1-2]\\.|Cycling.M|Clearing.M")) %>%
+  filter(therapy == "pre-Rx", cell_type_super_ml == "Macrophage", str_detect(cluster_label, "M[1-2]\\.|Cycling.M|Clearing.M")) %>%
   group_by(sample, tumor_subsite, tumor_supersite, tumor_megasite, patient_id_short,
            therapy, sort_short_x, consensus_signature, cluster_label, cell_type_super_ml) %>%
   tally %>%
@@ -328,11 +328,11 @@ plist4_no_yaxis <- default_comp_grid_list(
   cluster_label, super_type = "Myeloid.super", vec_plot = F, yaxis = F, nmax = 5000)
 
 plist5 <- default_comp_grid_list(
-  comp_tbl_sample_sort_mp, cluster_label, "M2.ECM.1",
+  comp_tbl_sample_sort_mp, cluster_label, "M2.COL1A1",
   cluster_label, super_type = "Myeloid.super", vec_plot = F, nmax = 5000)
 
 plist6 <- default_comp_grid_list(
-  comp_tbl_sample_sort_mp, cluster_label, "M2.ECM.2",
+  comp_tbl_sample_sort_mp, cluster_label, "M2.MMP9",
   cluster_label, super_type = "Myeloid.super", vec_plot = F, nmax = 5000)
 
 plist7 <- default_comp_grid_list(
