@@ -377,8 +377,8 @@ ggplot(pm_score_tbl) +
   theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1),
         axis.title.x = element_blank())
 
-ggsave_nodb("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig.pdf", width = 6, height = 9)
-ggsave("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig.png", width = 6, height = 9)
+ggsave_pdf("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig.pdf", width = 6, height = 9)
+ggsave_png("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig.png", width = 6, height = 9)
 
 ```
 
@@ -407,8 +407,8 @@ ggplot(pm_score_tbl) +
   theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1),
         axis.title.x = element_blank())
 
-ggsave_nodb("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig_patient.pdf", width = 18, height = 9)
-ggsave("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig_patient.png", width = 18, height = 9)
+ggsave_pdf("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig_patient.pdf", width = 18, height = 9)
+ggsave_png("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig_patient.png", width = 18, height = 9)
 
 ```
 
@@ -471,8 +471,8 @@ pm_comparisons <- ggplot(ptt_tbl) +
 pm_comparisons
 print(ptt_tbl, n = 100)
 
-ggsave_nodb("figures/200_cohort_plotting_umap_v7/002_patient_mixing_tests.pdf", pm_comparisons, width = 5, height = 4)
-ggsave("figures/200_cohort_plotting_umap_v7/002_patient_mixing_tests.png", pm_comparisons, width = 5, height = 4)
+ggsave_pdf("figures/200_cohort_plotting_umap_v7/002_patient_mixing_tests.pdf", pm_comparisons, width = 5, height = 4)
+ggsave_png("figures/200_cohort_plotting_umap_v7/002_patient_mixing_tests.png", pm_comparisons, width = 5, height = 4)
 
 ```
 
@@ -587,8 +587,8 @@ full_grid1 <- ggdraw() +
 full_grid1
 full_grid1_rds <- list(rds = full_grid1, width = 20, height = 10)
 # write_rds(full_grid1, "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.rds")
-ggsave(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.png", full_grid1, width = 20, height = 10)
-ggsave_nodb(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.pdf", full_grid1, width = 20, height = 10)
+ggsave_png(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.png", full_grid1, width = 20, height = 10)
+ggsave_pdf(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.pdf", full_grid1, width = 20, height = 10)
 
 ```
 
@@ -625,8 +625,8 @@ full_grid2 <- ggdraw() +
 full_grid2
 full_grid2_rds <- list(rds = full_grid2, width = 20, height = 10)
 # write_rds(full_grid2, "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.2.rds")
-ggsave(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.2.png", full_grid2, width = 20, height = 10)
-ggsave_nodb(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.2.pdf", full_grid2, width = 20, height = 10)
+ggsave_png(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.2.png", full_grid2, width = 20, height = 10)
+ggsave_pdf(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.2.pdf", full_grid2, width = 20, height = 10)
 
 ```
 
@@ -663,8 +663,8 @@ full_grid3 <- ggdraw() +
 full_grid3
 full_grid3_rds <- list(rds = full_grid3, width = 20, height = 10)
 # write_rds(full_grid3, "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.rds")
-ggsave(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.png", full_grid3, width = 20, height = 10)
-ggsave_nodb(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.pdf", full_grid3, width = 20, height = 10)
+ggsave_png(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.png", full_grid3, width = 20, height = 10)
+ggsave_pdf(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.pdf", full_grid3, width = 20, height = 10)
 
 ```
 
@@ -757,8 +757,8 @@ figS1_panel <- ggdraw() +
 
 figS1_panel
 figS1_panel_rds <- list(rds = figS1_panel, width = 16, height = 9)
-ggsave("figures/200_cohort_plotting_umap_v7/002_supplementary_umap_v7.png", figS1_panel, width = 16, height = 9)
-ggsave_nodb("figures/200_cohort_plotting_umap_v7/002_supplementary_umap_v7.pdf", figS1_panel, width = 16, height = 9)
+ggsave_png("figures/200_cohort_plotting_umap_v7/002_supplementary_umap_v7.png", figS1_panel, width = 16, height = 9)
+ggsave_pdf("figures/200_cohort_plotting_umap_v7/002_supplementary_umap_v7.pdf", figS1_panel, width = 16, height = 9)
 # write_rds(figS1_panel_rds, "figures/200_cohort_plotting_umap_v7/002_supplementary_umap_v7.rds")
 
 

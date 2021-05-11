@@ -339,8 +339,8 @@ pcomp_grid_full_2 <- plot_grid(pcomp_grid_p4, pcomp_grid_p5, ggdraw(),
 
 pcomp_grid_full_1
 
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_comp_plot_1.pdf", pcomp_grid_full_1, width = 6, height = 5.5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_comp_plot_1.png", pcomp_grid_full_1, width = 6, height = 5.5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_comp_plot_1.pdf", pcomp_grid_full_1, width = 6, height = 5.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_comp_plot_1.png", pcomp_grid_full_1, width = 6, height = 5.5)
 
 ```
 
@@ -351,8 +351,8 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_comp_plot_1.png", pcomp_grid_f
 ```{r chunk_320_065, fig.width=6, fig.height=5.5}
 
 pcomp_grid_full_2
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_comp_plot_2.pdf", pcomp_grid_full_2, width = 6, height = 5.5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_comp_plot_2.png", pcomp_grid_full_2, width = 6, height = 5.5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_comp_plot_2.pdf", pcomp_grid_full_2, width = 6, height = 5.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_comp_plot_2.png", pcomp_grid_full_2, width = 6, height = 5.5)
 
 ```
 
@@ -372,8 +372,8 @@ pcomp_grid_p3_2 <- plot_grid(plotlist = plist3_2,
                              rel_heights = c(0.2, 0.2, 0.18, 0.42))
 
 pcomp_grid_p3_2
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_comp_plot_cluster3.pdf", pcomp_grid_p3_2, width = 3, height = 5.5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_comp_plot_cluster3.png", pcomp_grid_p3_2, width = 3, height = 5.5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_comp_plot_cluster3.pdf", pcomp_grid_p3_2, width = 3, height = 5.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_comp_plot_cluster3.png", pcomp_grid_p3_2, width = 3, height = 5.5)
 
 ```
 
@@ -411,8 +411,8 @@ wilcoxon_test_heat <- ggplot(test_tbl) +
 
 wilcoxon_test_heat
 
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_comp_test_stat_heat.pdf", width = 5, height = 5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_comp_test_stat_heat.png", width = 5, height = 5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_comp_test_stat_heat.pdf", width = 5, height = 5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_comp_test_stat_heat.png", width = 5, height = 5)
 
 
 ```
@@ -459,13 +459,13 @@ cancer_grid_pca
 cancer_grid_harmony
 cancer_grid
 
-# ggsave("figures/320_cancer_cell_plotting_umap/003_umap_grid.pdf", cancer_grid, width = 20, height = 5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_umap_grid_pca.png", cancer_grid_pca, width = 20, height = 5)
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_umap_grid_pca.pdf", cancer_grid_pca, width = 20, height = 5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_umap_grid_harmony.png", cancer_grid_harmony, width = 20, height = 5)
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_umap_grid_harmony.pdf", cancer_grid_harmony, width = 20, height = 5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_umap_grid.png", cancer_grid, width = 20, height = 5)
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_umap_grid.pdf", cancer_grid, width = 20, height = 5)
+# ggsave_png"figures/320_cancer_cell_plotting_umap/003_umap_grid.png", cancer_grid, width = 20, height = 5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_grid_pca.png", cancer_grid_pca, width = 20, height = 5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_grid_pca.pdf", cancer_grid_pca, width = 20, height = 5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_grid_harmony.png", cancer_grid_harmony, width = 20, height = 5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_grid_harmony.pdf", cancer_grid_harmony, width = 20, height = 5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_grid.png", cancer_grid, width = 20, height = 5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_grid.pdf", cancer_grid, width = 20, height = 5)
 
 ```
 
@@ -490,8 +490,8 @@ umap_genes_grid <- ggdraw() +
   draw_grob(get_legend(umap_genes), x = 0.85, y = -0.25)
 umap_genes_grid
 
-ggsave("figures/320_cancer_cell_plotting_umap/003_umap_genes.png", umap_genes_grid, width = 6.75, height = 4.5)
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_umap_genes.pdf", umap_genes_grid, width = 6.75, height = 4.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_genes.png", umap_genes_grid, width = 6.75, height = 4.5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_genes.pdf", umap_genes_grid, width = 6.75, height = 4.5)
 
 ```
 
@@ -508,8 +508,8 @@ umap_pathways_grid <- ggdraw() +
   draw_grob(get_legend(umap_pathways), x = 0.7, y = -0.25)
 umap_pathways_grid
 
-ggsave("figures/320_cancer_cell_plotting_umap/003_umap_pathways.png", umap_pathways_grid, width = 6.75, height = 4.5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_umap_pathways.pdf", umap_pathways_grid, width = 6.75, height = 4.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_pathways.png", umap_pathways_grid, width = 6.75, height = 4.5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_pathways.pdf", umap_pathways_grid, width = 6.75, height = 4.5)
 
 ```
 
@@ -611,8 +611,8 @@ heat_grid <- ggdraw() +
 
 heat_grid
 
-ggsave("figures/320_cancer_cell_plotting_umap/003_cluster_marker_heatmap.png", heat_grid, width = 3.75, height = 5)
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_cluster_marker_heatmap.pdf", heat_grid, width = 3.75, height = 5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_cluster_marker_heatmap.png", heat_grid, width = 3.75, height = 5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_cluster_marker_heatmap.pdf", heat_grid, width = 3.75, height = 5)
 
 ```
 
@@ -687,8 +687,8 @@ hla_violins_mutsig <- ggplot(filter(plot_data_vio, consensus_signature %in% sois
 
 plot_grid(hla_violins_cluster, hla_violins_mutsig, nrow = 1, align = "h")
 
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_hla_violins.pdf", width = 22, height = 3.5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_hla_violins.png", width = 22, height = 3.5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins.pdf", width = 22, height = 3.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins.png", width = 22, height = 3.5)
 
 ```
 
@@ -937,10 +937,10 @@ pw_grid_full <- ggdraw() +
 
 pw_grid_full
 
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.pdf", pw_grid_full, 
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.pdf", pw_grid_full, 
        width = 10, height = 5)
 
-ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.png", pw_grid_full, 
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.png", pw_grid_full, 
        width = 10, height = 5)
 
 
@@ -953,9 +953,9 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.png", 
 ```{r chunk_320_105, fig.width=4, fig.height=7}
 
 hla_grid_left
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.pdf", hla_grid_left, 
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.pdf", hla_grid_left, 
        width = 4.5, height = 7.5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.png", hla_grid_left, 
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.png", hla_grid_left, 
        width = 4.5, height = 7.5)
 
 ```
@@ -1003,9 +1003,9 @@ hla_patient_plots_list <- lapply(gois, pw_patient_boxplot_wrapper) %>%
 
 plot_grid(plotlist = pw_patient_plots_list, ncol = 1, align = "v")
 
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_pathway_boxplot_patient_lvl.pdf", 
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pathway_boxplot_patient_lvl.pdf", 
             width = 6, height = 12)
-ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_boxplot_patient_lvl.png", 
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_pathway_boxplot_patient_lvl.png", 
        width = 6, height = 12)
 
 ```
@@ -1018,9 +1018,9 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_boxplot_patient_lvl.pn
 
 plot_grid(plotlist = hla_patient_plots_list, ncol = 1, align = "v")
 
-ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_hla_boxplot_patient_lvl.pdf", 
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_boxplot_patient_lvl.pdf", 
             width = 6, height = 18)
-ggsave("figures/320_cancer_cell_plotting_umap/003_hla_boxplot_patient_lvl.png", 
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_boxplot_patient_lvl.png", 
        width = 6, height = 18)
 
 ```

@@ -9,9 +9,11 @@ output:
   bookdown::html_document2:
     includes:
       in_header: header.html
+    dev: CairoPNG
   bookdown::gitbook:
     includes:
       in_header: header.html
+    dev: CairoPNG
 documentclass: book
 # bibliography: [book.bib, packages.bib]
 biblio-style: apalike
