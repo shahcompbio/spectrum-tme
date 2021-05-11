@@ -368,22 +368,28 @@ comp_grid8 <- plot_grid(plotlist = plist8, ncol = 1, align = "v", rel_heights = 
 ```{r chunk_610_090, fig.width=3, fig.height=6}
 
 comp_grid1
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.pdf", comp_grid1, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.pdf", comp_grid1, width = 3, height = 6)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.png", comp_grid1, width = 3, height = 6)
 
 comp_grid2
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.pdf", comp_grid2, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.pdf", comp_grid2, width = 3, height = 6)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.png", comp_grid2, width = 3, height = 6)
 
 comp_grid3
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.pdf", comp_grid3, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.pdf", comp_grid3, width = 3, height = 6)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.png", comp_grid3, width = 3, height = 6)
 
 comp_grid4
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.pdf", comp_grid4, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.pdf", comp_grid4, width = 3, height = 6)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.png", comp_grid4, width = 3, height = 6)
 
 comp_grid5
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.pdf", comp_grid5, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.pdf", comp_grid5, width = 3, height = 6)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.png", comp_grid5, width = 3, height = 6)
 
 comp_grid6
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.pdf", comp_grid5, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.pdf", comp_grid5, width = 3, height = 6)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.png", comp_grid5, width = 3, height = 6)
 
 ```
 
@@ -392,17 +398,20 @@ ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_
 comp_grid2_4 <- plot_grid(comp_grid2, comp_grid4_no_yaxis, ncol = 2, rel_widths = c(0.64, 0.36))
 comp_grid2_4
 
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2_4.pdf", comp_grid2_4, width = 4.5, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2_4.pdf", comp_grid2_4, width = 4.5, height = 6)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2_4.png", comp_grid2_4, width = 4.5, height = 6)
 
 ```
 
 ```{r chunk_610_100, fig.width=3, fig.height=10}
 
 comp_grid7
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.pdf", comp_grid7, width = 3, height = 10)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.pdf", comp_grid7, width = 3, height = 10)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.png", comp_grid7, width = 3, height = 10)
 
 comp_grid8
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.pdf", comp_grid8, width = 3, height = 10)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.pdf", comp_grid8, width = 3, height = 10)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.png", comp_grid8, width = 3, height = 10)
 
 ```
 
@@ -428,8 +437,8 @@ umap_heat_grid <- ggdraw() +
 
 umap_heat_grid
 
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_umap_heat.png", umap_heat_grid, width = 16, height = 4)
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_umap_heat.pdf", umap_heat_grid, width = 16, height = 4)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_umap_heat.png", umap_heat_grid, width = 16, height = 4)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_umap_heat.pdf", umap_heat_grid, width = 16, height = 4)
 
 ```
 

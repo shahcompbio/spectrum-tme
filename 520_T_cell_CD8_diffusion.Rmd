@@ -401,7 +401,8 @@ ggdraw() +
   # draw_plot(dc_plot_cxcl13 + guides(color = F), x = 0.35, y = 0.05, width = 0.125, height = 0.3) +
   # draw_plot(box_grid, x = 0.5, y = 0, width = 0.5, height = 1)
   
-ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.pdf", width = 22, height = 4)
+ggsave_pdf("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.pdf", width = 22, height = 4)
+ggsave_png("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.png", width = 22, height = 4)
 
 
 ```
@@ -409,7 +410,9 @@ ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.pdf", width = 22, height
 ```{r chunk_520_165, fig.width=12, fig.height=12}
 
 plot_grid(plotlist = patient_boxplot_list, ncol = 1, align = "hv")
-ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_boxplot_per_patient.pdf", 
+ggsave_pdf("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_boxplot_per_patient.pdf", 
+       width = 12, height = 12)
+ggsave_png("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_boxplot_per_patient.png", 
        width = 12, height = 12)
 
 ```
@@ -465,7 +468,8 @@ cor_plot_grid <- plot_grid(cor_plot1 + guides(color = F), cor_plot2,
 
 cor_plot_grid
 
-ggsave("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.pdf", cor_plot_grid, width = 8, height = 3)
+ggsave_pdf("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.pdf", cor_plot_grid, width = 8, height = 3)
+ggsave_png("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.png", cor_plot_grid, width = 8, height = 3)
 
 
 ```
@@ -539,7 +543,8 @@ comp_grid8 <- plot_grid(plotlist = plist8, ncol = 1, align = "v", rel_heights = 
 pg <- plot_grid(comp_grid1, comp_grid2, comp_grid3, comp_grid4, comp_grid5, comp_grid6, comp_grid7, comp_grid8, ncol = 8)
 pg
 
-ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.pdf", pg, width = 24, height = 6)
+ggsave_pdf("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.pdf", pg, width = 24, height = 6)
+ggsave_png("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.png", pg, width = 24, height = 6)
 
 ```
 

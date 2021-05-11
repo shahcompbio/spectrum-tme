@@ -156,8 +156,8 @@ dc_plot_genes <- ggplot() +
   labs(color = "Expression")
 
 dc_plot_genes
-ggsave("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_gois_umap.pdf", dc_plot_genes, width = 8, height = 4)
-ggsave("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_gois_umap.png", dc_plot_genes, width = 8, height = 4)
+ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_gois_umap.pdf", dc_plot_genes, width = 8, height = 4)
+ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_gois_umap.png", dc_plot_genes, width = 8, height = 4)
 
 ```
 
@@ -237,7 +237,8 @@ mutsig_boxplot_grid <- plot_grid(
   nrow = 1, rel_widths = c(0.72, 0.28))
 
 mutsig_boxplot_grid
-ggsave("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots.pdf", mutsig_boxplot_grid, width = 6.5, height = 3.5)
+ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots.pdf", mutsig_boxplot_grid, width = 6.5, height = 3.5)
+ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots.png", mutsig_boxplot_grid, width = 6.5, height = 3.5)
 
 ```
 
@@ -317,7 +318,8 @@ mutsig_boxplot_grid_dc <- plot_grid(
 
 mutsig_boxplot_grid_dc
 
-ggsave("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots.pdf", mutsig_boxplot_grid_dc, width = 7.5, height = 3.5)
+ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots.pdf", mutsig_boxplot_grid_dc, width = 7.5, height = 3.5)
+ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots.png", mutsig_boxplot_grid_dc, width = 7.5, height = 3.5)
 
 ```
 
@@ -417,7 +419,8 @@ cor_plot1 <- plot_data_cor %>%
 # 
 
 cor_plot1
-ggsave("figures/620_Macrophage_umaps_and_boxplots/005_DC_cancer_cell_correlation.pdf", cor_plot1, width = 8, height = 3.25)
+ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_DC_cancer_cell_correlation.pdf", cor_plot1, width = 8, height = 3.25)
+ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_DC_cancer_cell_correlation.png", cor_plot1, width = 8, height = 3.25)
 
 
 ```

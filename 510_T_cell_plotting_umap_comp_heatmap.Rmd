@@ -272,8 +272,8 @@ heat_module_grid <- plot_grid(pw_plot1, pw_plot2, pw_plot1_anno, rel_heights = c
 
 heat_module_grid
 
-ggsave_nodb("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.pdf", heat_module_grid, width = 12, height = 4.5)
-ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.png", heat_module_grid, width = 12, height = 4.5)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.pdf", heat_module_grid, width = 12, height = 4.5)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.png", heat_module_grid, width = 12, height = 4.5)
 
 ```
 
@@ -405,10 +405,10 @@ comp_grid2 <- plot_grid(plotlist = plist2, ncol = 1, align = "v", rel_heights = 
 
 comp_grid1
 comp_grid2
-ggsave_nodb("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_memory.pdf", comp_grid1, width = 3, height = 9)
-ggsave_nodb("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_dysfunc.pdf", comp_grid2, width = 3, height = 9)
-ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_memory.png", comp_grid1, width = 3, height = 9)
-ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_dysfunc.png", comp_grid2, width = 3, height = 9)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_memory.pdf", comp_grid1, width = 3, height = 9)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_dysfunc.pdf", comp_grid2, width = 3, height = 9)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_memory.png", comp_grid1, width = 3, height = 9)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_dysfunc.png", comp_grid2, width = 3, height = 9)
 
 ```
 
@@ -442,8 +442,8 @@ umap_heat_grid <- ggdraw() +
 
 umap_heat_grid
 
-ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.png", umap_heat_grid, width = 20, height = 8)
-ggsave_nodb("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.pdf", umap_heat_grid, width = 20, height = 8)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.png", umap_heat_grid, width = 20, height = 8)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.pdf", umap_heat_grid, width = 20, height = 8)
 
 ```
 
@@ -490,8 +490,8 @@ umap_mini_cluster_label_sub <- ggplot() +
         strip.text = element_text(size = 16))
 
 umap_mini_cluster_label_sub
-ggsave_nodb("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.pdf", umap_mini_cluster_label_sub, width = 6, height = 1.5)
-ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.png", umap_mini_cluster_label_sub, width = 6, height = 1.5)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.pdf", umap_mini_cluster_label_sub, width = 6, height = 1.5)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.png", umap_mini_cluster_label_sub, width = 6, height = 1.5)
 
 ```
 
@@ -526,8 +526,8 @@ umap_mini_dysfunc_naivemem <- ggplot() +
 
 umap_mini_dysfunc_naivemem
 
-ggsave_nodb("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_naivemem.pdf", umap_mini_dysfunc_naivemem, width = 3, height = 1)
-ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_naivemem.png", umap_mini_dysfunc_naivemem, width = 3, height = 1)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_naivemem.pdf", umap_mini_dysfunc_naivemem, width = 3, height = 1)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_naivemem.png", umap_mini_dysfunc_naivemem, width = 3, height = 1)
 
 
 ```
