@@ -2,6 +2,7 @@
 libs/
 **/*.bib
 **/*.html
+docs/
 
 # Ignore all html files except:
 !**/mathjax_header.html
