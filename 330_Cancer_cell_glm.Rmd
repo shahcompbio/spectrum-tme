@@ -202,7 +202,7 @@ p_odds_ratio <- plot_data %>%
     colors = rev(brewer.pal(9, "RdBu")),
     values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -1, 0, 1, max(plot_data$log2.odds.ratio, na.rm=T))),
     limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
-    breaks = c(-2,, 0, 2)
+    breaks = c(-2, 0, 2)
   ) +
   scale_size_continuous(
     limits = c(0, 250),
@@ -254,12 +254,12 @@ p_cluster_anno <- plot_data %>%
 
 p_left <-
   plot_grid(
-    p_signature_site_anno + theme(plot.margin = margin(t = 18, r = 0, b = 18, l = 6)),
+    p_signature_site_anno + theme(plot.margin = margin(t = 10, r = 0, b = 12, l = 6)),
     ggdraw(),
     nrow = 2,
     align = "hv",
     axis = "tbr",
-    rel_heights = c(1, 0.8),
+    rel_heights = c(1, 0.9),
     rel_widths = c(0.75, 1)
   )
 
@@ -270,7 +270,7 @@ p_right <-
     nrow = 2,
     align = "v",
     axis = "lr",
-    rel_heights = c(1, 0.8),
+    rel_heights = c(1, 0.9),
     rel_widths = c(0.75, 1)
   )
 
