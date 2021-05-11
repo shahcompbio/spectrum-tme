@@ -290,9 +290,9 @@ p <- plot_grid(
 
 p
 
-ggsave("figures/330_Cancer_cell_glm/330_Cancer_cell_odds_ratio.pdf", p,
-       width = 4.35, height = 5.25)
-ggsave("figures/330_Cancer_cell_glm/330_Cancer_cell_odds_ratio.png", p,
-       width = 4.35, height = 5.25)
+ggsave_pdf("figures/330_Cancer_cell_glm/330_Cancer_cell_odds_ratio.pdf", p,
+           width = 4.35, height = 5.25)
+ggsave_png("figures/330_Cancer_cell_glm/330_Cancer_cell_odds_ratio.png", p,
+           width = 4.35, height = 5.25)
 
 ```
