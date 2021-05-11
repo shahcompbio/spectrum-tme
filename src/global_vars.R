@@ -24,12 +24,20 @@ remove_guides <- guides(color = F, fill = F, shape = F, alpha = F, size = F)
 
 ## ggsave wrapper suppressing dingbats symbols 
 ## for adobe illustrator compatibility
-ggsave_nodb <- function(filename, plot = last_plot(), device = NULL, path = NULL, 
-                        scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"), 
-                        dpi = 300, limitsize = TRUE, useDingbats = FALSE, ...) {
+ggsave_pdf <- function(filename, plot = last_plot(), device = NULL, path = NULL, 
+                       scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"), 
+                       dpi = 300, limitsize = TRUE, ...) {
+  ggsave(filename = filename, plot = plot, device = cairo_pdf, path = path, 
+         scale = scale, width = width, height = height, units = units, 
+         dpi = dpi, limitsize = limitsize, ...)
+}
+
+ggsave_png <- function(filename, plot = last_plot(), device = NULL, path = NULL, 
+                       scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"), 
+                       dpi = 300, limitsize = TRUE, type = "cairo", ...) {
   ggsave(filename = filename, plot = plot, device = device, path = path, 
          scale = scale, width = width, height = height, units = units, 
-         dpi = dpi, limitsize = limitsize, useDingbats = useDingbats, ...)
+         dpi = dpi, limitsize = limitsize, type = type, ...)
 }
 
 
