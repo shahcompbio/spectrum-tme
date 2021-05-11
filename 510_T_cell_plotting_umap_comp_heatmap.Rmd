@@ -434,8 +434,8 @@ heatmap_grob_rot <- grid.grab()
 umap_heat_grid <- ggdraw() +
   draw_plot(add_umap_coord(umap_cell_type_void, size = 3.5, x = 0),
             x = 0, y = 0.5, width = 0.2, height = 0.5) +
-  draw_plot(add_umap_coord(umap_site_void, size = 3.5, x = 0),
-            x = 0, y = 0, width = 0.2, height = 0.5) +
+  # draw_plot(add_umap_coord(umap_site_void, size = 3.5, x = 0),
+  #           x = 0, y = 0, width = 0.2, height = 0.5) +
   draw_grob(heatmap_grob_rot,
             x = 0.2, y = 0, width = 0.8, height = 1)
   # draw_plot_label(c("A", "B", "C", "D"), x = c(0, 0.63, 0, 0), y = c(0.995, 0.995, 0.72, 0.45))
@@ -444,6 +444,91 @@ umap_heat_grid
 
 ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.png", umap_heat_grid, width = 20, height = 8)
 ggsave_nodb("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.pdf", umap_heat_grid, width = 20, height = 8)
+
+```
+
+## mini umap inserts
+
+```{r chunk_510_120, fig.width=6, fig.height=1.5}
+
+plot_data_mini_umap <- plot_data_modules %>% 
+  distinct(umapharmony_1, umapharmony_2, cluster_label_sub,
+           cluster_label_super) %>% 
+  mutate(dysfunc_naivemem = case_when(
+    str_detect(cluster_label_sub, "dysfunc") ~ "Dysfunctional",
+    str_detect(cluster_label_sub, "naive|mem") ~ "Naive/memory",
+    T ~ "Other",
+  )) %>% 
+  mutate(dysfunc_naivemem = ordered(dysfunc_naivemem, 
+                                    levels = c("Naive/memory", "Dysfunctional", "Other")))
+
+umap_mini_cluster_label_sub <- ggplot() + 
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2), 
+    data = select(plot_data_mini_umap, -cluster_label_super),
+    alpha = 0.02, size = 0.01, color = "grey80",
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
+    data = select(plot_data_mini_umap, -cluster_label_super),
+    alpha = 0.02, size = 0.01, 
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
+    data = filter(plot_data_mini_umap, cluster_label_super != "Other"),
+    alpha = 0.5, size = 0.01,
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  facet_grid(~cluster_label_super, switch = "x") + 
+  theme_void() +
+  scale_color_manual(values = clrs$cluster_label_sub$T.super) +
+  remove_guides + 
+  theme(aspect.ratio = 1, 
+        panel.spacing.x = unit(0.1, "npc"), 
+        strip.text = element_text(size = 16))
+
+umap_mini_cluster_label_sub
+ggsave_nodb("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.pdf", umap_mini_cluster_label_sub, width = 6, height = 1.5)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.png", umap_mini_cluster_label_sub, width = 6, height = 1.5)
+
+```
+
+```{r chunk_510_130, fig.width=3, fig.height=1}
+
+umap_mini_dysfunc_naivemem <- ggplot() + 
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2), 
+    data = select(plot_data_mini_umap, -dysfunc_naivemem),
+    alpha = 0.02, size = 0.01, color = "grey80",
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
+    data = select(plot_data_mini_umap, -dysfunc_naivemem),
+    alpha = 0.02, size = 0.01, 
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
+    data = filter(plot_data_mini_umap, dysfunc_naivemem != "Other"),
+    size = 0.01,
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  facet_grid(~dysfunc_naivemem) + 
+  theme_void() +
+  scale_color_manual(values = clrs$cluster_label_sub$T.super) +
+  remove_guides + 
+  theme(aspect.ratio = 1, 
+        panel.spacing.x = unit(0.2, "npc"),
+        strip.text = element_text(size = 12))
+
+umap_mini_dysfunc_naivemem
+
+ggsave_nodb("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_naivemem.pdf", umap_mini_dysfunc_naivemem, width = 3, height = 1)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_naivemem.png", umap_mini_dysfunc_naivemem, width = 3, height = 1)
+
 
 ```
 

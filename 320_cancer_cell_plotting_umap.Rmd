@@ -67,12 +67,14 @@ coi <- "Ovarian.cancer.super"
 sois <- c("HRD-Dup", "HRD-Del", "FBI", "TD")
 gois <- c("HLA-A", "HLA-B", "HLA-C", "HLA-E", "HLA-F", "B2M", "HLA-DRA", "HLA-DRB1")
 pois <- paste0(c("JAK.STAT", "NFkB", "TNFa", "TGFb", "Hypoxia"), ".pathway")
+all_pws <- grep("pathway", colnames(seu_obj_cc@meta.data), value = T)
+all_pws_short <- str_remove_all(all_pws, "\\.pathway")
 
 ```
 
 ```{r chunk_320_050}
 
-plot_data <- cbind(cell_id = colnames(seu_obj_cc), FetchData(seu_obj_cc, c("umapharmony_1", "umapharmony_2", "umappca_1", "umappca_2", "RNA_snn_res.0.2", "sample", "cluster_label", gois, grep("pathway", colnames(seu_obj_cc@meta.data), value = T)))) %>% 
+plot_data <- cbind(cell_id = colnames(seu_obj_cc), FetchData(seu_obj_cc, c("umapharmony_1", "umapharmony_2", "umappca_1", "umappca_2", "RNA_snn_res.0.2", "sample", "cluster_label", gois, all_pws))) %>% 
   as_tibble() %>% 
   left_join(scrna_meta_tbl, by = "sample") %>% 
   filter(!is.na(consensus_signature)) %>% 
@@ -621,7 +623,7 @@ ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_cluster_marker_heatmap.pd
 
 ## HLA violins 
 
-```{r chunk_320_081, fig.width=18, fig.height=3.5}
+```{r chunk_320_081, fig.width=22, fig.height=3.5}
 
 plot_data_vio <- plot_data %>% 
   # sample_n(10000) %>% 
@@ -782,8 +784,10 @@ common_heat_layers <- list(
 #   geom_tile(aes(consensus_signature, pathway, fill = median_score)) +
 #   common_heat_layers
 
-pw_breaks <- c(seq(min(plot_data_summary_cluster$mean_score), 0, length.out = 5)[-5], 
-               0, seq(0, max(plot_data_summary_cluster$mean_score), length.out = 5)[-1])
+pw_mean_score <- filter(plot_data_summary_cluster, pathway %in% all_pws_short)$mean_score
+
+pw_breaks <- c(seq(min(pw_mean_score), 0, length.out = 5)[-5], 
+               0, seq(0, max(pw_mean_score), length.out = 5)[-1])
 
 rdbu_clrs <- rev(RColorBrewer::brewer.pal(9, "RdBu"))
 rdbu_clrs[c(1:2)] <- rdbu_clrs[3]
@@ -798,7 +802,7 @@ pw_plot1 <- plot_data_summary_cluster %>%
   labs(x = "Cluster", y = "Pathway", fill = "Mean\nPROGENy\nscore") +
   scale_fill_gradientn(colours = rdbu_clrs, 
                        values = scales::rescale(pw_breaks),
-                       # breaks = c(-signif(min(pw_breaks),1)+0.1, 0, signif(max(pw_breaks),1)-0.1),  
+                       # breaks = pw_breaks,  
                        na.value = "grey10") +
   theme(axis.text.x = element_blank())
 
@@ -850,7 +854,7 @@ pw_plot1_anno <- plot_data_summary_cluster %>%
 
 hla_grid_left <- plot_grid(hla_plot1, pw_plot1, pw_plot1_anno, ggdraw(),
                           ncol = 1, align = "v", axis = "lrtb",
-                          rel_heights = c(0.25, 0.5, 0.25, 0))
+                          rel_heights = c(0.29, 0.47, 0.24, 0))
 
 pw_grid_left <- plot_grid(pw_plot1, pw_plot1_anno, ggdraw(),
                           ncol = 1, align = "v", axis = "lrtb",
@@ -950,9 +954,9 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.png", 
 
 hla_grid_left
 ggsave_nodb("figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.pdf", hla_grid_left, 
-       width = 4.5, height = 8)
+       width = 4.5, height = 7.5)
 ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.png", hla_grid_left, 
-       width = 4.5, height = 8)
+       width = 4.5, height = 7.5)
 
 ```
 
