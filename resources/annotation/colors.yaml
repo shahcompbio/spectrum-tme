@@ -151,6 +151,12 @@ patient_id:
   SPECTRUM-OV-115: "#ed1e2e"
   SPECTRUM-OV-116: "#cd0000" ######### updated in v7
   SPECTRUM-OV-118: "#b00000" ######### updated in v7
+cluster_label_super:
+  T.super:
+    CD4.T.naive.mem: "#ff8a8a"
+    CD4.T.dysfunctional: "#891417"
+    CD8.T.naive.mem: "#43a047"
+    CD8.T.dysfunctional: "#8bc34a"
 cluster_label:
   T.super:
     CD4.T.naive: "#ff8a8a"
