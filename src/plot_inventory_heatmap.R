@@ -61,7 +61,7 @@ plot_inventory_heatmap <-
            column_split = "consensus_signature",
            column_split_shared = NULL) {
     patient_id_col = clrs$patient_id
-    tumor_supersite_col = list("Site" = clrs$tumor_supersite[names(clrs$tumor_supersite)!="Unknown"])
+    tumor_supersite_col = list("Site" = clrs$tumor_supersite[!names(clrs$tumor_supersite)%in%c("UQ","Unknown")])
     signature_col = list("Mutational\nsignature" = clrs$consensus_signature[names(clrs$consensus_signature)!="NA"])
     chemo_intent_col = list("Setting" = clrs$chemo_intent)
     pathology_stage_col = list("Stage" = clrs$pathology_stage)
@@ -134,7 +134,7 @@ plot_inventory_heatmap <-
     
     left_annotation <- ComplexHeatmap::rowAnnotation(
       df = left_df,
-      col = list("Site" = clrs$tumor_supersite[names(clrs$tumor_supersite) != "Unknown"]),
+      col = list("Site" = clrs$tumor_supersite[!names(clrs$tumor_supersite) %in% c("UQ","Unknown")]),
       show_annotation_name = TRUE,
       annotation_name_side = "bottom",
       annotation_name_gp = list(fontsize = 10),
