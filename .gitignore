@@ -3,6 +3,9 @@ libs/
 **/*.bib
 **/*.html
 docs/
+figures/
+tables/
+_bookdown_files/
 
 # Ignore all html files except:
 !**/header.html
@@ -14,3 +17,11 @@ docs/
 .Ruserdata
 .DS_Store
 *.rds
+
+# Bookdown specific files
+*.md
+
+*.pdf
+*.png
+
+!**/README.md
