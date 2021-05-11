@@ -107,10 +107,15 @@ add_umap_coord <- function(gg_obj) {
   return(p)
 }
 
+rdpi <- 75
+rh <- 7
+rw <- 7
+rs <- 0.01
 
 dc_plot_cluster <- ggplot(plot_data_uniq) +
-  geom_point(aes(DC_1, DC_2, color = cluster_label_sub), 
-             size = 0.01, alpha = 1) +
+  ggrastr::geom_point_rast(aes(DC_1, DC_2, color = cluster_label_sub), 
+                           size = rs, alpha = 1, 
+                           raster.dpi = rdpi, raster.height = rh, raster.width = rw) +
   # theme_void() +
   scale_color_manual(values = clrs$cluster_label_sub[[coi]]) +
   guides(color = guide_legend(override.aes = list(size = 3, alpha = 1))) +
@@ -152,7 +157,7 @@ dc_plot_dpt <- ggplot(plot_data_uniq) +
   labs(color = "Pseudotime")
 
 dc_plot_cxcl13 <- ggplot(filter(plot_data, key == "CXCL13")) +
-  ggrastr::geom_point_rast(aes(DC_1, DC_2, color = value), size = 0.1, alpha = 1,
+  ggrastr::geom_point_rast(aes(DC_1, DC_2, color = value), size = rs, alpha = 1,
                            raster.dpi = 75) +
   theme_void() +
   scale_color_gradientn(colors = viridis(9), breaks = c(0, 6), labels = c("low", "high")) +
@@ -160,7 +165,7 @@ dc_plot_cxcl13 <- ggplot(filter(plot_data, key == "CXCL13")) +
   labs(color = "Expression", title = "CXCL13")
 
 dc_plot_isg <- ggplot(filter(plot_data, key == "ISG15")) +
-  ggrastr::geom_point_rast(aes(DC_1, DC_2, color = value), size = 0.1, alpha = 1,
+  ggrastr::geom_point_rast(aes(DC_1, DC_2, color = value), size = rs, alpha = 1,
                            raster.dpi = 75) +
   theme(axis.text = element_blank(),
         axis.title = element_blank(),
@@ -177,12 +182,12 @@ dc_plot_genes <- ggplot() +
   # ggrastr::geom_point_rast(aes(DC_1, DC_2, color = value), size = 0.1, alpha = 1,
   #                          raster.dpi = 75,
   #                          data = filter(plot_data, key %in% gois, value > 0)) +
-  ggrastr::geom_point_rast(aes(DC_1, DC_2), color = "grey80", size = 0.1, alpha = 1,
-                           raster.dpi = 75,
+  ggrastr::geom_point_rast(aes(DC_1, DC_2), color = "grey80", size = rs, alpha = 1,
+                           raster.dpi = rdpi, raster.height = rh, raster.width = rw,
                            data = filter(plot_data, key %in% gois_sub, value == 0) %>% 
                              mutate(key = ordered(key, levels = gois_sub))) +
-  ggrastr::geom_point_rast(aes(DC_1, DC_2, color = value), size = 0.1, alpha = 1,
-                           raster.dpi = 75,
+  ggrastr::geom_point_rast(aes(DC_1, DC_2, color = value), size = rs, alpha = 1,
+                           raster.dpi = rdpi, raster.height = rh, raster.width = rw,
                            data = filter(plot_data, key %in% gois_sub, value > 0) %>% 
                              mutate(key = ordered(key, levels = gois_sub))) +
   facet_wrap(~key) + 
