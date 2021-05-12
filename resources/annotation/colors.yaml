@@ -159,6 +159,11 @@ cluster_label_super:
     CD8.T.dysfunctional: "#8bc34a"
     NK: "4FC3F7"
     Other: "#b3b3b3"
+  Myeloid.super:
+    M1: "#77a1cd"
+    M2: "#91cf67"
+    DC: "#ab1500"
+    Other: "#b3b3b3"
 cluster_label:
   T.super:
     CD4.T.naive: "#ff8a8a"
