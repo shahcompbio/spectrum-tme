@@ -257,6 +257,8 @@ module_curves_module <- plot_data_smooth %>%
   scale_y_continuous(breaks = c(0, 1))
 
 module_curves_module
+ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_modules.pdf", module_curves_module, width = 6, height = 4)
+ggsave_png("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_modules.png", module_curves_module, width = 6, height = 4)
 
 module_curves_gois <- plot_data_smooth %>% 
   filter(key %in% gois) %>%
@@ -273,6 +275,8 @@ module_curves_gois <- plot_data_smooth %>%
   scale_y_continuous(breaks = c(0, 1))
 
 module_curves_gois
+ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_genes.pdf", module_curves_module, width = 6, height = 4)
+ggsave_png("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_genes.png", module_curves_module, width = 6, height = 4)
 
 ```
 
