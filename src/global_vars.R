@@ -118,7 +118,6 @@ scrna_patients <- db$sequencing_scrna %>%
 ## load mutational signatures ----------------------
 
 signature_tbl <- db$mutational_signatures %>%
-  dplyr::select(patient_id, consensus_signature) %>% 
   mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>% 
   arrange(patient_id)
 
