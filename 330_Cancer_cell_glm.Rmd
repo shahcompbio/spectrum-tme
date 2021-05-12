@@ -1,9 +1,21 @@
 ---
-output:
-  bookdown::html_document2:
-    fig_caption: yes
-editor_options:
-  chunk_output_type: inline
+title: "Generalized linear model of cancer cell composition"
+subtitle: "MSK SPECTRUM"
+author:
+  - "Ignacio Vazquez-Garcia"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    highlight: tango
+    df_print: paged
+    code_folding: hide
+    fig_align: center
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: yes
+params:
+   rmd: "330_Cancer_cell_glm.Rmd"
 ---
 
 # Generalized linear model of cancer cell clusters
@@ -127,11 +139,13 @@ heatmap_layers <- list(
 ```
 
 ```{r}
+
 data <- list()
 formulas <- list()
 models <- list()
 consensus_signature_emm <- list()
 site_emm <- list()
+
 ```
 
 ## Cancer cells {.tabset}
@@ -147,13 +161,11 @@ models[["Ovarian cancer cell"]] <- glm(formula = formulas[["Ovarian cancer cell"
 
 consensus_signature_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ consensus_signature | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
 consensus_signature_odds <- consensus_signature_emm[["Ovarian cancer cell"]]$contrasts %>%
-  # summary(infer = TRUE, type = 'response') %>%
   rbind() %>%
   as.data.frame()
 
 site_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ tumor_supersite | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
 site_odds <- site_emm[["Ovarian cancer cell"]]$contrasts %>%
-  # summary(infer = TRUE, type = 'response') %>%
   rbind() %>%
   as.data.frame()
 
@@ -171,39 +183,29 @@ plot_data <- bind_rows(consensus_signature_odds %>% add_column(contrast_variable
   mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
   filter(!str_detect(contrast, "Undetermined")) %>%
   filter(!str_detect(contrast, "Other")) %>%
-  mutate(log2.odds.ratio = log2(odds.ratio)) #%>%
-  # mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 2, 2, log2.odds.ratio),
-  #        log2.odds.ratio = ifelse(log2.odds.ratio < -4, -4, log2.odds.ratio))
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
 
 p_odds_ratio <- plot_data %>%
   filter(p.value < 1E-20) %>%
   filter(SE < 0.15) %>%
   ggplot(aes(x = cluster_label, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
-  # geom_tile() +
   geom_point() +
-  # geom_point(data = filter(plot_data, p.value < 0.0001)) +#, shape = "*", size = 4, color = "black") +
-  # scale_color_distiller(palette = "RdBu", direction = -1, breaks=c(-2,0,2)) +
-  # scale_color_gradientn(
-  #   colors = rev(brewer.pal(9, "RdBu")),
-  #   # values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -0.5, 0, 0.5, max(plot_data$log2.odds.ratio, na.rm=T))),
-  #   limits = c(-4, 2),
-  #   # limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
-  #   labels = c("≤-4", -2, 0, "≥2"),
-  #   breaks = c(-4, -2, 0, 2)
-  # ) +
-  # scale_color_distiller(palette = "RdBu", direction = -1, values=rescale(c(-4,-2,0,2)), limits=c(-4,2), breaks=c(-4,-2,0,2)) +
-  # scale_color_distiller(palette = "RdBu", trans = "log2", direction = -1) +
-  # scale_color_distiller(palette = "RdBu", direction = -1,
-  #                       values=rescale(c(0,1,3)), limits=c(0,3), breaks=c(0,1,2,3),
-  #                       oob = scales::squish, labels = c("0", "1", "2", ">3")) +
-  # scale_color_distiller(palette = "RdBu", direction = -1, values=rescale(c(0,1,4)), limits=c(0,4), breaks=c(0,1,2,4)) +
-  # scale_color_gradient2(low="navy", mid="white", high="red", midpoint=1, breaks=c(0.2,1,2)) +
   scale_color_gradientn(
     colors = rev(brewer.pal(9, "RdBu")),
-    values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -1, 0, 1, max(plot_data$log2.odds.ratio, na.rm=T))),
-    limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
-    breaks = c(-2, 0, 2)
+    # values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -0.5, 0, 0.5, max(plot_data$log2.odds.ratio, na.rm=T))),
+    limits = c(-1.5, 1.5),
+    # limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
   ) +
+  # scale_color_gradientn(
+  #   colors = rev(brewer.pal(9, "RdBu")),
+  #   values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -1, 0, 1, max(plot_data$log2.odds.ratio, na.rm=T))),
+  #   limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
+  #   breaks = c(-2, 0, 2)
+  # ) +
   scale_size_continuous(
     limits = c(0, 250),
     breaks = c(0, 125, 250),
@@ -254,7 +256,7 @@ p_cluster_anno <- plot_data %>%
 
 p_left <-
   plot_grid(
-    p_signature_site_anno + theme(plot.margin = margin(t = 10, r = 0, b = 12, l = 6)),
+    p_signature_site_anno + theme(plot.margin = margin(t = 6, r = 0, b = 0, l = 6)),
     ggdraw(),
     nrow = 2,
     align = "hv",
