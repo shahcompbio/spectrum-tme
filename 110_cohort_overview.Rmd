@@ -472,7 +472,7 @@ rownames(oncoprint_main_ht@matrix)
 
 colnames(oncoprint_main_ht@matrix)
 
-pdf("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.pdf", width = 13.5, height = 4.4)
+cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.pdf", width = 13.5, height = 4.4)
 print(oncoprint_main_ht)
 dev.off()
 
@@ -592,7 +592,7 @@ oncoprint_supp_ht <- ComplexHeatmap::draw(
   heatmap_legend_list = oncoprint_supp_lgd_list
 )
 
-pdf("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients.pdf", width = 13.5, height = 4.4)
+cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients.pdf", width = 13.5, height = 4.4)
 print(oncoprint_supp_ht)
 dev.off()
 
@@ -689,7 +689,7 @@ cohort_ht <- ComplexHeatmap::draw(
   # column_order = column_order)#, column_split = ann)
 
 
-pdf("figures/110_cohort_overview/110_cohort_overview.pdf", width = 9, height = 8.5)
+cairo_pdf("figures/110_cohort_overview/110_cohort_overview.pdf", width = 9, height = 8.5)
 print(cohort_ht)
 dev.off()
 
@@ -710,7 +710,7 @@ composite <-
 
 composite
 
-pdf("figures/110_cohort_overview/110_composite.pdf", width = 10, height = 4)
+cairo_pdf("figures/110_cohort_overview/110_composite.pdf", width = 10, height = 4)
 composite
 dev.off()
 
