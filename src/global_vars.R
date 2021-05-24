@@ -1,7 +1,7 @@
 ## plotting themes --------------------------------
 
 theme_cowplot2 <- function(...) {
-  theme_cowplot(font_size = 16, font_family = "sans", ...) %+replace%
+  theme_cowplot(font_size = 16, font_family = "Roboto", ...) %+replace%
     theme(strip.background = element_blank(),
           panel.background = element_rect(fill = "transparent", color = NA),
           plot.background = element_rect(fill = "transparent", color = NA),
@@ -20,13 +20,6 @@ remove_yaxis <- theme(axis.title.y = element_blank(),
                       axis.line.y = element_blank())
 
 remove_guides <- guides(color = F, fill = F, shape = F, alpha = F, size = F)
-
-Cairo::CairoFonts(
-  regular="FreeSans:style=Medium",
-  bold="FreeSans:style=Bold",
-  italic="FreeSans:style=Oblique",
-  bolditalic="FreeSans:style=BoldOblique"
-)
 
 ## ggsave wrapper suppressing dingbats symbols 
 ## for adobe illustrator compatibility
