@@ -66,7 +66,8 @@ coi <- "Ovarian.cancer.super"
 
 sois <- c("HRD-Dup", "HRD-Del", "FBI", "TD")
 gois <- c("HLA-A", "HLA-B", "HLA-C", "HLA-E", "HLA-F", "B2M", "HLA-DRA", "HLA-DRB1")
-pois <- paste0(c("JAK.STAT", "NFkB", "TNFa", "TGFb", "Hypoxia"), ".pathway")
+pois_short <- c("JAK.STAT", "NFkB", "TNFa", "TGFb", "Hypoxia")
+pois <- paste0(pois_short, ".pathway")
 all_pws <- grep("pathway", colnames(seu_obj_cc@meta.data), value = T)
 all_pws_short <- str_remove_all(all_pws, "\\.pathway")
 
@@ -93,24 +94,6 @@ base_umap <- ggplot(plot_data) +
         legend.title = element_blank(),
         plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 22))
 
-arrow <- arrow(angle = 20, type = "closed", length = unit(0.1, "npc"))
-umap_coord_anno <- ggplot(tibble(group = c("UMAP1", "UMAP2"),
-                                 x = c(0, 0), xend = c(1, 0),
-                                 y = c(0, 0), yend = c(0, 1),
-                                 lx = c(0.5, -0.15), ly = c(-0.15, 0.5),
-                                 angle = c(0, 90))) +
-  geom_segment(aes(x, y, xend = xend, yend = yend, group = group),
-               arrow = arrow, size = 1, lineend = "round") +
-  geom_text(aes(lx, ly, label = group, angle = angle), size = 4) +
-  theme_void() +
-  coord_fixed(xlim = c(-0.3, 1), ylim = c(-0.3, 1))
-
-add_umap_coord <- function(gg_obj, x = -0.015, y = -0.015, width = 0.2, height = 0.2) {
-  p <- ggdraw() + 
-    draw_plot(gg_obj, x = 0, y = 0, width = 1, height = 1) +
-    draw_plot(umap_coord_anno, x = x, y = y, width = width, height = height)
-  return(p)
-}
 
 ```
 
@@ -227,7 +210,7 @@ umap_genes <- plot_data %>%
   remove_xaxis +
   remove_yaxis + 
   theme(aspect.ratio = 1) +
-  facet_wrap(~key) +
+  facet_wrap(~key, nrow = 1) +
   labs(color = "Expression")
 
 umap_pathways <- plot_data %>% 
@@ -254,7 +237,7 @@ umap_pathways <- plot_data %>%
   remove_xaxis +
   remove_yaxis + 
   theme(aspect.ratio = 1) +
-  facet_wrap(~key) +
+  facet_wrap(~key, nrow = 1) +
   labs(color = "PROGENy\nscore")
 
 ```
@@ -377,11 +360,28 @@ ggsave_png("figures/320_cancer_cell_plotting_umap/003_comp_plot_cluster3.png", p
 
 ```
 
+```{r chunk_320_067, fig.width=3, fig.height=4.5}
+
+plist3_2 <- default_comp_grid_list(filter(cluster_comp, sort_short_x == "CD45-"),
+                                   cluster_label, "Cancer.cell.3", cluster_label,
+                                   vec_plot = F, site_box = F, yaxis = T,
+                                   super_type = "Ovarian.cancer.super")
+
+pcomp_grid_p3_2 <- plot_grid(plotlist = plist3_2,
+                             ncol = 1, align = "v",
+                             rel_heights = c(0.3, 0.3, 0.4))
+
+pcomp_grid_p3_2
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_comp_plot_cluster3_mutsig.pdf", pcomp_grid_p3_2, width = 3, height = 4.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_comp_plot_cluster3_mutsig.png", pcomp_grid_p3_2, width = 3, height = 4.5)
+
+```
+
 [figures/320_cancer_cell_plotting_umap/003_comp_plot_cluster3.pdf](figures/320_cancer_cell_plotting_umap/003_comp_plot_cluster3.pdf)
 
 ## composition test statistics heatmap
 
-```{r chunk_320_067, fig.width=5, fig.height=5}
+```{r chunk_320_068, fig.width=5, fig.height=5}
 
 test_tbl_mutsig <- wilcoxon_tests(filter(cluster_comp, sort_short_x == "CD45-"), cluster_label, names(clrs$cluster_label$Ovarian.cancer.super), consensus_signature) %>% 
   rename(y_var = consensus_signature) %>% 
@@ -483,15 +483,19 @@ ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_grid.pdf", cancer_gri
 
 ### genes of interest
 
-```{r chunk_320_071, fig.width=8, fig.height=4}
+```{r chunk_320_071, fig.width=15, fig.height=2.5}
 
-umap_genes_grid <- ggdraw() + 
-  draw_plot(add_umap_coord(umap_genes + remove_guides), x = 0, y = 0, width = 1, height = 1) +
-  draw_grob(get_legend(umap_genes), x = 0.85, y = -0.25)
-umap_genes_grid
+# umap_genes_grid <- ggdraw() + 
+#   draw_plot(add_umap_coord(umap_genes + remove_guides), x = 0, y = 0, width = 1, height = 1) +
+#   draw_grob(get_legend(umap_genes), x = 0.85, y = -0.25)
+# umap_genes_grid
 
-ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_genes.png", umap_genes_grid, width = 6.75, height = 4.5)
-ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_genes.pdf", umap_genes_grid, width = 6.75, height = 4.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_genes.png", 
+           add_umap_coord(umap_genes, x_offset = -0.175, textsize = 3), 
+           width = 15, height = 2)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_genes.pdf", 
+           add_umap_coord(umap_genes, x_offset = -0.175, textsize = 3), 
+           width = 15, height = 2)
 
 ```
 
@@ -501,15 +505,21 @@ ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_genes.pdf", umap_gene
 
 ### pathways of interest
 
-```{r chunk_320_072, fig.width=8, fig.height=4}
+```{r chunk_320_072, fig.width=10, fig.height=2.5}
 
-umap_pathways_grid <- ggdraw() + 
-  draw_plot(add_umap_coord(umap_pathways + remove_guides), x = 0, y = 0, width = 1, height = 1) +
-  draw_grob(get_legend(umap_pathways), x = 0.7, y = -0.25)
-umap_pathways_grid
+# umap_pathways_grid <- ggdraw() + 
+#   draw_plot(add_umap_coord(umap_pathways + remove_guides), x = 0, y = 0, width = 1, height = 1) +
+#   draw_grob(get_legend(umap_pathways), x = 0.7, y = -0.25)
+# umap_pathways_grid
 
-ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_pathways.png", umap_pathways_grid, width = 6.75, height = 4.5)
-ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_pathways.pdf", umap_pathways_grid, width = 6.75, height = 4.5)
+add_umap_coord(umap_pathways, x_offset = -0.15, textsize = 3)
+
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_pathways.png", 
+           add_umap_coord(umap_pathways, x_offset = -0.15, textsize = 3), 
+           width = 10, height = 2.5)
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_pathways.pdf",
+           add_umap_coord(umap_pathways, x_offset = -0.15, textsize = 3), 
+           width = 10, height = 2.5)
 
 ```
 
@@ -621,76 +631,161 @@ ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_cluster_marker_heatmap.pdf
 [figures/320_cancer_cell_plotting_umap/003_cluster_marker_heatmap.pdf](figures/320_cancer_cell_plotting_umap/003_cluster_marker_heatmap.pdf)
 
 
-## HLA violins 
+## Violins 
 
 ```{r chunk_320_081, fig.width=22, fig.height=3.5}
 
 plot_data_vio <- plot_data %>% 
   # sample_n(10000) %>% 
-  select(umapharmony_1, umapharmony_2, cluster_label, consensus_signature, gois, sample_id) %>% 
-  gather(key, value, -umapharmony_1, -umapharmony_2, -cluster_label, -consensus_signature, -sample_id) %>% 
+  select(umapharmony_1, umapharmony_2, cluster_label, consensus_signature, consensus_signature_short, gois, pois, sample_id) %>% 
+  gather(key, value, -umapharmony_1, -umapharmony_2, -cluster_label, -consensus_signature, -consensus_signature_short, -sample_id) %>% 
   # mutate(value = ifelse(value > 3, 3, value)) %>% 
-  filter(key %in% gois) %>% 
+  filter(consensus_signature %in% sois) %>% 
   filter(str_detect(cluster_label, "^Cancer.cell")) %>% 
   mutate(cluster_label_num = str_remove_all(cluster_label, "Cancer.cell.")) %>% 
-  mutate(key = ordered(key, levels = gois))
+  mutate(key = str_remove_all(key, ".pathway")) %>% 
+  mutate(key = ordered(key, levels = c(gois, pois_short)))
 
-plot_data_vio_cluster_summary <- plot_data_vio %>% 
-  group_by(cluster_label, cluster_label_num, sample_id, key) %>% 
-  summarise(value = mean(value, na.rm = T))
+plot_data_vio_summary <- plot_data_vio %>% 
+  group_by(sample_id, key) %>% 
+  mutate(value = mean(value, na.rm = T)) %>% 
+  distinct(sample_id, key, .keep_all = T) %>% 
+  ungroup()
 
-plot_data_vio_mutsig_summary <- plot_data_vio %>% 
-  filter(consensus_signature %in% sois) %>% 
-  group_by(consensus_signature, sample_id, key) %>% 
-  summarise(value = mean(value, na.rm = T))
+my_comparisons <- list(
+  c("HRD-Dup", "HRD-Del"), 
+  c("HRD-Dup", "FBI"), 
+  c("HRD-Del", "FBI")
+)
 
-hla_violins_cluster <- ggplot(plot_data_vio) +
-  geom_violin(aes(cluster_label_num, value, fill = cluster_label), color = "white", adjust = 2, alpha = 0.5, width = 2.5) +
-  geom_boxplot(aes(cluster_label_num, value, color = cluster_label),
-               width = 0.25, size = 0.75, outlier.shape = NA) +
-  geom_boxplot(aes(cluster_label_num, value, fill = cluster_label),
-               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
-  stat_compare_means(aes(cluster_label_num, value, color = "red"), 
-                     ref.group = ".all.", data = plot_data_vio_cluster_summary,
-                     label = "p.signif", label.y.npc = 0.82, hide.ns = T) +
-  stat_compare_means(aes(cluster_label_num, value),
-                     data = plot_data_vio_cluster_summary,
-                     label.y.npc = 0.92, label.x.npc = 0.1, label.sep = "\n\n", ) +
-  facet_grid(~key) +
-  scale_color_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
-  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
-  scale_y_continuous(expand = c(0, 0)) +
-  theme(plot.margin = unit(c(0, 0.075, 0, 0.075), "npc")) + 
-  labs(x = "Cancer cell cluster", y = "Expression") +
-  remove_guides
+my_comparisons2 <- list(
+  c("HRD", "HRP")
+)
 
-hla_violins_mutsig <- ggplot(filter(plot_data_vio, consensus_signature %in% sois)) +
-  geom_violin(aes(consensus_signature, value, fill = consensus_signature), color = "white", adjust = 2, alpha = 0.5, width = 2.5) +
-  geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
-               width = 0.25, size = 0.75, outlier.shape = NA) +
-  geom_boxplot(aes(consensus_signature, value, fill = consensus_signature),
-               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
-  facet_grid(~key) +
-  stat_compare_means(aes(consensus_signature, value, color = "red"), 
-                     ref.group = ".all.", data = plot_data_vio_mutsig_summary,
-                     label = "p.signif", label.y.npc = 0.82, hide.ns = T) +
-  stat_compare_means(aes(consensus_signature, value),
-                     data = plot_data_vio_mutsig_summary,
-                     label.y.npc = 0.92, label.x.npc = 0.1, label.sep = "\n\n", ) +
-  scale_color_manual(values = clrs$consensus_signature) +
-  scale_fill_manual(values = clrs$consensus_signature) +
-  scale_y_continuous(expand = c(0, 0)) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-        plot.margin = unit(c(0, 0.075, 0, 0.075), "npc")) +
-  labs(y = "Expression", x = "") +
-  remove_guides
 
-plot_grid(hla_violins_cluster, hla_violins_mutsig, nrow = 1, align = "h")
+boxplot_wrapper <- function(group_column, group_var_label, keys, comps, y_label, ylims, ncol) {
+  
+  group_column <- enquo(group_column)
+  yrange <- ylims[2]-ylims[1]
+  ylabels <- yrange*c(0.95,0.85,0.75)+ylims[1]
+  clrs$cluster_label <- clrs$cluster_label$Ovarian.cancer.super
+  p <- plot_data_vio %>% 
+    filter(key %in% keys) %>% 
+    ggplot(aes(!!group_column, value)) +
+    geom_violin(aes(!!group_column, value, fill = !!group_column), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+    geom_boxplot(aes(!!group_column, value, color = !!group_column),
+                 width = 0.5, size = 0.75, outlier.shape = NA) +
+    geom_boxplot(aes(!!group_column, value, fill = !!group_column),
+                 color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+    # geom_jitter(aes(!!group_column, value, group = !!group_column),
+    #             color = "black", size = 0.01, width = 0.25, alpha = 0.5,
+    #             data = filter(plot_data_vio_summary, key %in% keys)) +
+    facet_wrap(~key, ncol = ncol) +
+    scale_color_manual(values = clrs[[as_label(group_column)]]) +
+    scale_fill_manual(values = clrs[[as_label(group_column)]]) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          axis.title.x = element_blank()) + 
+    coord_cartesian(clip = "off", ylim = ylims) +
+    labs(y = y_label, color = group_var_label, 
+         fill = group_var_label) +
+    remove_guides
 
-ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins.pdf", width = 22, height = 3.5)
-ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins.png", width = 22, height = 3.5)
+  if (any(unlist(comps) != ".all.")) {
+    p <- p + 
+      stat_compare_means(comparisons = comps, 
+                         data = filter(plot_data_vio_summary, 
+                                       key %in% keys),
+                         label = "p.signif", label.y = ylabels, 
+                         tip.length = 0.01,
+                         hide.ns = F)
+  }
+  
+  if (all(unlist(comps) == ".all.")) {
+    p <- p + 
+      stat_compare_means(ref.group = ".all.", 
+                         method.args = list(alternative = "greater"),
+                         data = filter(plot_data_vio_summary,
+                                       key %in% keys), 
+                         label.y = ylabels[1], hide.ns = T,
+                         label = "p.signif")
+  }
+  
+  return(p)
+  
+}
 
 ```
+
+```{r chunk_320_083, fig.width=6, fig.height=3}
+
+violins_pw_mutsig <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", pois_short, my_comparisons, "PROGENy score", c(-1,5), 10)
+
+violins_pw_mutsig
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pw_violins.pdf", 
+           violins_pw_mutsig, width = 6, height = 3)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_pw_violins.png", 
+           violins_pw_mutsig, width = 6, height = 3)
+
+```
+
+```{r chunk_320_084, fig.width=6, fig.height=3}
+
+violins_pw_mutsig_short <- boxplot_wrapper(consensus_signature_short, "Mutational\nsignature", pois_short, my_comparisons2, "PROGENy score", c(-1,5), 10)
+
+violins_pw_mutsig_short
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pw_violins_short.pdf", 
+           violins_pw_mutsig_short, width = 6, height = 2.75)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_pw_violins_short.png", 
+           violins_pw_mutsig_short, width = 6, height = 2.75)
+
+```
+
+```{r chunk_320_085, fig.width=6, fig.height=3}
+
+violins_pw_cluster <- boxplot_wrapper(cluster_label, "Cluster", pois_short, ".all.", "Expression", c(-1,8), 10)
+
+violins_pw_cluster
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pw_violins_cluster.pdf", 
+           violins_pw_cluster, width = 8, height = 3)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_pw_violins_cluster.png", 
+           violins_pw_cluster, width = 8, height = 3)
+
+```
+
+
+```{r chunk_320_086, fig.width=9, fig.height=3.5}
+
+violins_hla_mutsig <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", gois, my_comparisons, "Expression", c(0,6.1), 10)
+
+violins_hla_mutsig
+
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins.pdf", width = 9, height = 3.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins.png", width = 9, height = 3.5)
+
+```
+
+```{r chunk_320_087, fig.width=9, fig.height=3.5}
+
+violins_hla_mutsig_short <- boxplot_wrapper(consensus_signature_short, "Mutational\nsignature", gois, my_comparisons2, "Expression", c(0,6.1), 10)
+
+violins_hla_mutsig_short
+
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins_mutsig_short.pdf", width = 9, height = 2.75)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins_mutsig_short.png", width = 9, height = 2.75)
+
+```
+
+```{r chunk_320_088, fig.width=12, fig.height=3.5}
+
+violins_hla_cluster <- boxplot_wrapper(cluster_label, "Cluster", gois, ".all.", "Expression", c(0,6.1), 10)
+
+violins_hla_cluster
+
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins_cluster.pdf", width = 12, height = 3.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins_cluster.png", width = 12, height = 3.5)
+
+```
+
 
 [figures/320_cancer_cell_plotting_umap/003_hla_violins.pdf](figures/320_cancer_cell_plotting_umap/003_hla_violins.pdf)
 
@@ -853,8 +948,8 @@ pw_plot1_anno <- plot_data_summary_cluster %>%
 #   guides(fill = F)
 
 hla_grid_left <- plot_grid(hla_plot1, pw_plot1, pw_plot1_anno, ggdraw(),
-                          ncol = 1, align = "v", axis = "lrtb",
-                          rel_heights = c(0.29, 0.47, 0.24, 0))
+                           ncol = 1, align = "v", axis = "lrtb",
+                           rel_heights = c(0.29, 0.47, 0.24, 0))
 
 pw_grid_left <- plot_grid(pw_plot1, pw_plot1_anno, ggdraw(),
                           ncol = 1, align = "v", axis = "lrtb",
