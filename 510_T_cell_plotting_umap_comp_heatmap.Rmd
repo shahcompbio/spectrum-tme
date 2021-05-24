@@ -66,6 +66,8 @@ source("src/global_vars.R")
 
 myfeatures <- c("UMAP_1", "UMAP_2", "umapharmony_1", "umapharmony_2", "sample", "doublet", "nCount_RNA", "nFeature_RNA", "percent.mt", "doublet_score", "cell_type", "cluster_label_sub")
 
+gois <- c("CD4", "CD8A", "CD8B", "FOXP3", "GNLY", "MKI67")
+
 seu_obj_sub <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/T.super_processed_filtered_annotated.rds")
 
 marker_tbl <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/T.super_marker_table_annotated_full.tsv")
@@ -90,11 +92,26 @@ plot_data_sub <- as_tibble(FetchData(seu_obj_sub, c(myfeatures))) %>%
   mutate(sort_short = str_remove_all(sort_parameters, "singlet, live, ")) %>% 
   mutate(sort_short_x = ifelse(sort_short == "U" & cell_type_super == "Immune", 
                                "CD45+", ifelse(sort_short == "U" & cell_type_super == "Stromal", "CD45-", sort_short))) %>% 
-  mutate(cluster_label_sub = ordered(cluster_label_sub, levels = names(clrs$cluster_label_sub[[coi]])))
+  mutate(cluster_label_sub = ordered(cluster_label_sub, levels = names(clrs$cluster_label_sub[[coi]]))) %>% 
+  mutate(umapscaled_1 = scales::rescale(umapharmony_1),
+         umapscaled_2 = scales::rescale(umapharmony_2))
   
 plot_data_sub <- filter(plot_data_sub, sort_short_x == cell_sort, !is.na(tumor_supersite))
 
+plot_data_genes <- as_tibble(FetchData(seu_obj_sub, c("umapharmony_1", "umapharmony_2", "sample", "cell_type", gois))) %>% 
+  gather(gene, value, -umapharmony_1, -umapharmony_2, -sample, -cell_type) %>% 
+  left_join(scrna_meta_tbl, by = "sample") %>% 
+  mutate(cell_type_super = cell_type_super_lookup[cell_type]) %>% 
+  mutate(sort_short = str_remove_all(sort_parameters, "singlet, live, ")) %>% 
+  mutate(sort_short_x = ifelse(sort_short == "U" & cell_type_super == "Immune", 
+                               "CD45+", ifelse(sort_short == "U" & cell_type_super == "Stromal", "CD45-", sort_short)))
+  
+plot_data_genes <- filter(plot_data_genes, sort_short_x == cell_sort, !is.na(tumor_supersite))
+
 ```
+
+
+## umaps 
 
 ```{r chunk_510_50, fig.width=7, fig.height=4}
 
@@ -102,7 +119,8 @@ alpha_lvl <- ifelse(nrow(plot_data_sub) < 20000, 0.2, 0.1)
 pt_size <- ifelse(nrow(plot_data_sub) < 20000, 0.2, 0.05)
 
 common_layers_disc <- list(  
-  ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, raster.dpi = 150),
+  ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, 
+                           raster.dpi = 50, raster.width = 10, raster.height = 10),
   NoAxes(),
   guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))),
   labs(color = ""),
@@ -110,10 +128,12 @@ common_layers_disc <- list(
 )
 
 common_layers_cont <- list(  
-  ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, raster.dpi = 150),
+  ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, 
+                           raster.dpi = 50, raster.width = 10, raster.height = 10),
   NoAxes(),
   scale_color_gradientn(colors = viridis(9)),
-  guides(color = guide_colorbar())
+  guides(color = guide_colorbar()),
+  theme(aspect.ratio = 1)
 )
 
 umap_coord_anno <- function(size) {
@@ -139,12 +159,16 @@ add_umap_coord <- function(gg_obj, x = 0, y = 0, width = 0.3, height = 0.3, size
 
 ```
 
-```{r chunk_510_60, fig.width=7, fig.height=4}
+### cluster umap
+
+```{r chunk_510_60, fig.width=6, fig.height=5}
 
 plot_data_label <- plot_data_sub %>% 
   group_by(cluster_label_sub) %>% 
   summarise(umapharmony_1 = median(umapharmony_1),
-            umapharmony_2 = median(umapharmony_2)) %>% 
+            umapharmony_2 = median(umapharmony_2),
+            umapscaled_1 = median(umapscaled_1),
+            umapscaled_2 = median(umapscaled_2)) %>% 
   mutate(cluster_number = as.numeric(cluster_label_sub))
 
 umap_cell_type <- ggplot(plot_data_sub, aes(umapharmony_1, umapharmony_2, color = cluster_label_sub)) + 
@@ -154,7 +178,7 @@ umap_cell_type <- ggplot(plot_data_sub, aes(umapharmony_1, umapharmony_2, color 
              data = plot_data_label, alpha = 0.5, size = 6) +
   geom_text(aes(umapharmony_1, umapharmony_2, label = cluster_number), color = "black",
              data = plot_data_label) +
-  scale_color_manual(values = clrs$cluster_label_sub[[coi]], labels = str_remove_all(names(clrs$cluster_label_sub[[coi]]), "functional|ivated")[-4]) +
+  scale_color_manual(values = clrs$cluster_label_sub[[coi]]) +
   guides(color = guide_legend(override.aes = list(size = 2, alpha = 1), nrow = 12))
 
 umap_site <- ggplot(plot_data_sub, aes(umapharmony_1, umapharmony_2, color = tumor_supersite)) + 
@@ -167,11 +191,101 @@ umap_site_void <- umap_site + guides(color = F)
 umap_cell_type_legend <- cowplot::get_legend(umap_cell_type)
 umap_site_legend <- cowplot::get_legend(umap_site)
 
+umap_site <- ggplot(filter(plot_data_sub, tumor_supersite %in% c("Ascites", "Adnexa")),
+                    aes(umapharmony_1, umapharmony_2, color = tumor_megasite)) + 
+  ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2), color = "grey80",
+                           size = 0.01, alpha = 0.1,
+                           raster.dpi = 50, raster.width = 10, raster.height = 10,
+                           data = select(plot_data_sub, -tumor_supersite)) + 
+  common_layers_disc +
+  # facet_wrap(~tumor_supersite) + 
+  scale_color_manual(values = clrs$tumor_megasite)
+
+add_umap_coord(umap_cell_type_void)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_cluster_label_sub.pdf", width = 6, height = 5)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_cluster_label_sub.png", width = 6, height = 5)
+```
+
+
+### gene umaps
+
+```{r chunk_510_61, fig.width=8, fig.height=4}
+
+umap_gois <- ggplot(plot_data_genes) +
+  ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2),
+                           size = pt_size, alpha = alpha_lvl, color = "grey80",
+                           raster.dpi = 50, raster.width = 10, raster.height = 10,
+                           data = filter(plot_data_genes, value == 0))  + 
+  ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2, color = value),
+                           size = pt_size, alpha = alpha_lvl, 
+                           raster.dpi = 50, raster.width = 10, raster.height = 10,
+                           data = filter(plot_data_genes, value > 0)) + 
+  NoAxes() + 
+  scale_color_gradientn(colors = viridis(9)) +
+  guides(color = guide_colorbar()) +
+  theme(aspect.ratio = 1) +
+  facet_wrap(~gene) +
+  labs(color = "Expression")
+
+umap_gois
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_gois.pdf", width = 8, height = 4)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_gois.png", width = 8, height = 4)
+
+
+```
+
+### kernel umap
+
+```{r chunk_510_62, fig.width=5, fig.height=5}
+
+source("src/umap_kernel.R")
+
+kernel_tbl <- kde2d_contrast(
+  data_tbl = plot_data_sub,
+  x = umapharmony_1, y = umapharmony_2, kernel_group = tumor_megasite,
+  kernel_subsets_a = c("Adnexa"), kernel_subsets_b = c("Other", "Ascites")
+) %>%
+  filter(value.x > 0.001 & value.y > 0.001)
+
+rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
+
+kernel_umap <- ggplot() +
+  ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), color = "grey80", size = 0.01, alpha = 0.02,
+                           data = plot_data_sub,
+                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
+  ggrastr::geom_point_rast(aes(x, y, color = value_quenched), data = kernel_tbl, size = 0.01, 
+                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
+  geom_point(aes(umapscaled_1, umapscaled_2), color = "white",
+             data = plot_data_label, alpha = 0.5, size = 6) +
+  geom_text(aes(umapscaled_1, umapscaled_2, label = cluster_number), color = "black",
+            data = plot_data_label) +
+  scale_color_gradientn(colours = rdbu,
+                        values = scales::rescale(c(min(kernel_tbl$value_quenched), 0,
+                                                   max(kernel_tbl$value_quenched)))) +
+  guides(color = guide_colorbar(label.position = "right",
+                                title.position = "top",
+                                title.hjust = 0,
+                                title.vjust = 1,
+                                direction = "vertical")) +
+  theme(aspect.ratio = 1,
+        legend.key.height = unit(0.05, "npc"),
+        legend.key.width = unit(0.03, "npc"),
+        legend.position = c(-0.1, 0.95),
+        legend.justification = c("left", "top"),
+        plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)) + 
+  labs(color = "Enrichment\nin adnexa") +
+  remove_xaxis +
+  remove_yaxis
+
+add_umap_coord(kernel_umap)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel.pdf", width = 6, height = 5)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel.png", width = 6, height = 5)
+
 ```
 
 ## module heatmap
 
-```{r chunk_510_61, fig.width=15, fig.height=5}
+```{r chunk_510_64, fig.width=15, fig.height=5}
 
 module_names <- grep("pathway|CD8", colnames(seu_obj_sub@meta.data), value = T)
 
@@ -209,7 +323,7 @@ plot_data_modules_summary_cluster <- plot_data_modules %>%
 
 ```
 
-```{r chunk_510_62, fig.width=12, fig.height=4.5}
+```{r chunk_510_65, fig.width=12, fig.height=4.5}
 
 common_heat_layers <- list(
   scale_fill_gradient2(low = scales::muted("blue"), high = scales::muted("red"), 
@@ -399,9 +513,9 @@ plist2 <- default_comp_grid_list(
   comp_tbl_sample_sort, cell_type_dysfunc, "T dysfunctional",
   cluster_label_sub, super_type_sub = "T.super", vec_plot = T, nmax = 5000, highlight = T)
 
-comp_grid1 <- plot_grid(plotlist = plist1, ncol = 1, align = "v", rel_heights = c(0.1, 0.1, 0.15, 0.2, 0.45))
+comp_grid1 <- plot_grid(plotlist = plist1[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
-comp_grid2 <- plot_grid(plotlist = plist2, ncol = 1, align = "v", rel_heights = c(0.1, 0.1, 0.15, 0.2, 0.45))
+comp_grid2 <- plot_grid(plotlist = plist2[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
 comp_grid1
 comp_grid2
@@ -481,17 +595,17 @@ umap_mini_cluster_label_sub <- ggplot() +
     alpha = 0.5, size = 0.01,
     raster.dpi = 15, raster.width = 40, raster.height = 40
   ) +
-  facet_grid(~cluster_label_super, switch = "x") + 
+  facet_wrap(~cluster_label_super, ncol = 1) + 
   theme_void() +
   scale_color_manual(values = clrs$cluster_label_sub$T.super) +
   remove_guides + 
   theme(aspect.ratio = 1, 
-        panel.spacing.x = unit(0.1, "npc"), 
-        strip.text = element_text(size = 16))
+        panel.spacing = unit(0.1, "npc"), 
+        strip.text = element_text(size = 12))
 
 umap_mini_cluster_label_sub
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.pdf", umap_mini_cluster_label_sub, width = 6, height = 1.5)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.png", umap_mini_cluster_label_sub, width = 6, height = 1.5)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.pdf", umap_mini_cluster_label_sub, width = 1.5, height = 6)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.png", umap_mini_cluster_label_sub, width = 1.5, height = 6)
 
 ```
 
