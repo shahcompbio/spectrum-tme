@@ -319,11 +319,14 @@ plot_data_modules_summary_cluster <- plot_data_modules %>%
   group_by(pathway, key_group, cluster_label_sub, cluster_label_super) %>% 
   summarise(mean_score = mean(value, na.rm = T)) %>% 
   ungroup %>% 
-  mutate(cluster_number = as.numeric(cluster_label_sub))
+  mutate(cluster_number = as.numeric(cluster_label_sub)) %>% 
+  mutate(cluster_label_sub = fct_rev(cluster_label_sub))
 
 ```
 
 ```{r chunk_510_65, fig.width=12, fig.height=4.5}
+
+rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
 
 common_heat_layers <- list(
   scale_fill_gradient2(low = scales::muted("blue"), high = scales::muted("red"), 
@@ -343,51 +346,63 @@ common_heat_layers <- list(
 pw_plot1 <- plot_data_modules_summary_cluster %>% 
   filter(key_group == "pathway", pathway %in% c("JAK.STAT", "TNFa", "TGFb")) %>% 
   ggplot() +
-  geom_tile(aes(cluster_label_sub, pathway, fill = mean_score)) +
+  geom_tile(aes(pathway, cluster_label_sub, fill = mean_score)) +
   common_heat_layers +
-  facet_grid(~cluster_label_super, scales = "free", space = "free") + 
-  labs(x = "Cluster", y = "Pathway", fill = "\n\n\nMean\nPROGENy\nscore") +
-  scale_fill_gradient2(low = scales::muted("blue"), high = scales::muted("red"), 
-                       # labels = c(paste0("≤-", cut_value), "0", paste0("≥", cut_value)),
-                       # breaks = c(-cut_value, 0, cut_value), 
-                       na.value = "grey10") +
-  theme(axis.text.x = element_blank())
+  facet_grid(cluster_label_super~., scales = "free", space = "free") + 
+  labs(x = "Cluster", y = "Pathway", fill = "Mean\nPROGENy\nscore") +
+  scale_color_gradientn(colours = rdbu,
+                        values = scales::rescale(c(min(filter(plot_data_modules_summary_cluster, pathway %in% c("JAK.STAT", "TNFa", "TGFb"))$mean_score), 0, max(filter(plot_data_modules_summary_cluster, pathway %in% c("JAK.STAT", "TNFa", "TGFb"))$mean_score)))) + 
+  scale_x_discrete(position = "top") +
+  theme(axis.text.y = element_blank(),
+        axis.text.x.top = element_text(angle = 90, hjust = 0, vjust = 0.5),
+        legend.position = "bottom") +
+  guides(fill = guide_colorbar(title.position = "top"))
 
 pw_plot2 <- plot_data_modules_summary_cluster %>% 
   filter(key_group == "module") %>% 
   mutate(pathway = str_remove_all(pathway, "CD8.")) %>% 
+  mutate(pathway = ordered(pathway, levels = c("Naive", "Predysfunctional", "Cytotoxic", "Dysfunctional"))) %>% 
   ggplot() +
-  geom_tile(aes(cluster_label_sub, pathway, fill = mean_score)) +
+  geom_tile(aes(pathway, cluster_label_sub, fill = mean_score)) +
   common_heat_layers +
-  facet_grid(~cluster_label_super, scales = "free", space = "free") + 
-  labs(x = "Cluster", y = "Module", fill = "\n\n\n\n\n\n\n\n\n\n\n\n\n\nMean\nmodule\nscore") +
-  scale_fill_gradient2(low = scales::muted("blue"), high = scales::muted("red"), 
-                       # labels = c(paste0("≤-", cut_value), "0", paste0("≥", cut_value)),
-                       # breaks = c(-cut_value, 0, cut_value), 
-                       na.value = "grey10") +
-  theme(axis.text.x = element_blank())
+  facet_grid(cluster_label_super~., scales = "free", space = "free") + 
+  labs(x = "Cluster", y = "Module", fill = "Mean\nmodule\nscore") +
+  scale_color_gradientn(colours = rdbu,
+                        values = scales::rescale(c(min(filter(plot_data_modules_summary_cluster, key_group == "module")$mean_score), 0, max(filter(plot_data_modules_summary_cluster, key_group == "module")$mean_score)))) + 
+  scale_x_discrete(position = "top") +
+  theme(axis.text.y = element_blank(),
+        axis.text.x.top = element_text(angle = 90, hjust = 0, vjust = 0.5),
+        legend.position = "bottom") +
+  guides(fill = guide_colorbar(title.position = "top"))
 
 pw_plot1_anno <- plot_data_modules_summary_cluster %>% 
   distinct(cluster_label_sub, cluster_number, cluster_label_super) %>% 
   mutate(facet_helper = "") %>% 
   ggplot() +
-  geom_tile(aes(cluster_label_sub, facet_helper, fill = cluster_label_sub)) +
-  geom_point(aes(cluster_label_sub, facet_helper), color = "white", size = 6, alpha = 0.5) +
-  geom_text(aes(cluster_label_sub, facet_helper, label = cluster_number)) +
+  geom_tile(aes(facet_helper, cluster_label_sub, fill = cluster_label_sub)) +
+  geom_point(aes(facet_helper, cluster_label_sub), color = "white", size = 6, alpha = 0.5) +
+  geom_text(aes(facet_helper, cluster_label_sub, label = cluster_number)) +
   common_heat_layers + 
   scale_fill_manual(values = clrs$cluster_label_sub[[coi]]) +
-  facet_grid(~cluster_label_super, scales = "free", space = "free") +
-  theme(axis.text.y = element_blank(),
+  facet_grid(cluster_label_super~., scales = "free", space = "free") +
+  theme(axis.text.x = element_blank(),
         strip.text = element_blank()) +
   guides(fill = F)
 
 # heat_module_grid <- plot_grid(pw_plot1, pw_plot2, pw_plot1_anno, rel_heights = c(0.45, 0.15, 0.4), ncol = 1, align = "v", axis = "lrtb")
-heat_module_grid <- plot_grid(pw_plot1, pw_plot2, pw_plot1_anno, rel_heights = c(0.2, 0.24, 0.56), ncol = 1, align = "v", axis = "lrtb")
+# heat_module_grid <- plot_grid(pw_plot1, pw_plot2, pw_plot1_anno, rel_heights = c(0.2, 0.24, 0.56), ncol = 1, align = "v", axis = "lrtb")
+heat_module_grid <- plot_grid(pw_plot1_anno, 
+                              ggdraw(),
+                              pw_plot2 + remove_guides, 
+                              ggdraw(),
+                              pw_plot1 + remove_guides, 
+                              rel_widths = c(0.57, 0.01, 0.22, 0.03, 0.17), 
+                              nrow = 1, align = "h", axis = "tb")
 
 heat_module_grid
 
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.pdf", heat_module_grid, width = 12, height = 4.5)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.png", heat_module_grid, width = 12, height = 4.5)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.pdf", heat_module_grid, width = 4.5, height = 12)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.png", heat_module_grid, width = 4.5, height = 12)
 
 ```
 
@@ -601,7 +616,7 @@ umap_mini_cluster_label_sub <- ggplot() +
   remove_guides + 
   theme(aspect.ratio = 1, 
         panel.spacing = unit(0.1, "npc"), 
-        strip.text = element_text(size = 12))
+        strip.text = element_text(size = 14))
 
 umap_mini_cluster_label_sub
 ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.pdf", umap_mini_cluster_label_sub, width = 1.5, height = 6)
@@ -645,6 +660,23 @@ ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_
 
 
 ```
+
+## full heatmap grid with mini umaps
+
+```{r chunk_510_140, fig.width=6, fig.height=1.5}
+
+ggdraw() +
+  draw_plot(umap_mini_cluster_label_sub, x = -0.05, y = 0.15, width = 3/7.5, height = 0.68) +
+  draw_plot(heat_module_grid, x = 0.3, y = 2/14, width = 4.5/7.5, height = 12/14) + 
+  draw_grob(get_legend(pw_plot2), x = 0.62, y = -0.42) +
+  draw_grob(get_legend(pw_plot1), x = 0.82, y = -0.42)
+  
+
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap_mini_umap.pdf", width = 7.5, height = 14)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap_mini_umap.png", width = 7.5, height = 14)
+
+```
+
 
 [figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.png](figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.png)
 
