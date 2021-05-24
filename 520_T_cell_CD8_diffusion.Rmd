@@ -35,6 +35,7 @@ cell_type_major <- "T.cell"
 louvain_resolution <- 0.3
 louvain_cluster <- "RNA_snn_res.0.3"
 pcut <- 0.05
+sois <- c("HRD-Dup", "HRD-Del", "FBI", "TD")
 
 ```
 
@@ -218,30 +219,61 @@ dc_plot_mutsig <- ggplot() +
 
 ```{r chunk_520_130, fig.width=6, fig.height=4}
 
-# plot_data_smooth <- plot_data %>%
-#   # filter(key %in% "TCF7") %>%
-#   # sample_n(10000) %>%
-#   group_by(key) %>%
-#   arrange(DPT1) %>%
-#   mutate(DPT1_bin = as.numeric(cut_number(DPT1, 10000))) %>%
-#   group_by(key, DPT1_bin) %>%
-#   mutate(mean_value = mean(value)) %>%
-#   distinct(key, DPT1_bin, .keep_all = T) %>%
-#   group_by(key) %>%
-#   do(fit = {
-#     loess(mean_value ~ DPT1_bin, data = .) %>%
-#       predict(se = T) %>%
-#       as_tibble() %>%
-#       mutate(DPT1_bin = row_number())
-#     }) %>%
-#   unnest(fit) %>%
-#   group_by(key) %>%
-#   mutate(scaled_value = scales::rescale(fit),
-#          se_upper = scaled_value+scaled_value/fit*se.fit,
-#          se_lower = scaled_value-scaled_value/fit*se.fit)
-# 
+plot_data_smooth_wrapper <- function(...) {
+  group_vars <- enquos(...)
+  plot_data %>% 
+    # filter(key %in% "TCF7") %>%
+    # sample_n(10000) %>%
+    group_by(!!!group_vars) %>%
+    arrange(DPT1) %>%
+    mutate(DPT1_bin = as.numeric(cut_number(DPT1, 10000))) %>%
+    group_by(!!!group_vars, DPT1_bin) %>%
+    mutate(mean_value = mean(value)) %>%
+    distinct(!!!group_vars, DPT1_bin, .keep_all = T) %>%
+    group_by(!!!group_vars) %>%
+    do(fit = {
+      loess(mean_value ~ DPT1_bin, data = .) %>%
+        predict(se = T) %>%
+        as_tibble() %>%
+        mutate(DPT1_bin = row_number())
+    }) %>%
+    unnest(fit) %>%
+    group_by(!!!group_vars) %>%
+    mutate(scaled_value = scales::rescale(fit),
+           se_upper = scaled_value+scaled_value/fit*se.fit,
+           se_lower = scaled_value-scaled_value/fit*se.fit)
+}
+
+# plot_data_smooth <- plot_data_smooth_wrapper(key)
 # write_tsv(plot_data_smooth, "/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves.tsv")
 plot_data_smooth <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves.tsv")
+
+# plot_data_smooth_megasite <- plot_data_smooth_wrapper(key, tumor_megasite) %>%
+#   group_by(key) %>%
+#   mutate(scaled_value = scales::rescale(fit),
+#            se_upper = scaled_value+scaled_value/fit*se.fit,
+#            se_lower = scaled_value-scaled_value/fit*se.fit) %>% 
+#   group_by(tumor_megasite) %>%
+#   mutate(DPT1_bin = scales::rescale(DPT1_bin)) %>% 
+#   ungroup()
+# write_tsv(plot_data_smooth_megasite, "/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_megasite.tsv")
+plot_data_smooth_megasite <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_megasite.tsv")
+
+# plot_data_smooth_mutsig <- plot_data_smooth_wrapper(key, consensus_signature) %>%
+#   group_by(key) %>%
+#   mutate(scaled_value = scales::rescale(fit),
+#            se_upper = scaled_value+scaled_value/fit*se.fit,
+#            se_lower = scaled_value-scaled_value/fit*se.fit) %>% 
+#   group_by(consensus_signature) %>% 
+#   mutate(DPT1_bin = scales::rescale(DPT1_bin)) %>% 
+#   ungroup()
+# write_tsv(plot_data_smooth_mutsig, "/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_mutsig.tsv")
+plot_data_smooth_mutsig <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_mutsig.tsv")
+
+
+```
+
+```{r chunk_520_135, fig.width=6, fig.height=4}
 
 module_curves_module <- plot_data_smooth %>% 
   filter(key %in% module_names_sub) %>%
@@ -280,9 +312,50 @@ ggsave_png("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_genes.png", m
 
 ```
 
-## boxplots  
+```{r chunk_520_136, fig.width=8, fig.height=4}
 
-```{r chunk_520_140, fig.width=6, fig.height=4}
+module_curves_module_megasite <- plot_data_smooth_megasite %>% 
+  filter(key %in% module_names_sub) %>%
+  mutate(key = ordered(str_remove_all(key, ".module"), 
+                       levels = names(clrs$expression_module))) %>% 
+  ggplot() +
+  geom_line(aes(DPT1_bin, scaled_value, color = tumor_megasite), size = 1.5) +
+  labs(x = "Pseudotime", y = "Scaled module score", color = "Site") +
+  facet_wrap(~key) + 
+  scale_color_manual(values = clrs$tumor_supersite) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        aspect.ratio = 0.75) +
+  guides(color = guide_legend(override.aes = list(fill = NA))) +
+  scale_y_continuous(breaks = c(0, 1))
+
+ggdraw() +
+  draw_plot(module_curves_module_megasite + remove_guides) +
+  draw_plot(get_legend(module_curves_module_megasite), x = 0.72, y = -0.2)
+
+ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_megasite.pdf", width = 8, height = 4)
+ggsave_png("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_megasite.png", width = 8, height = 4)
+
+module_curves_module_mutsig <- plot_data_smooth_mutsig %>% 
+  filter(consensus_signature %in% sois) %>% 
+  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>% 
+  filter(key %in% module_names_sub[c(1,4,5)]) %>%
+  mutate(key = ordered(str_remove_all(key, ".module"), 
+                       levels = names(clrs$expression_module))) %>% 
+  ggplot() +
+  geom_line(aes(DPT1_bin, scaled_value, color = consensus_signature), size = 1.5) +
+  labs(x = "Pseudotime", y = "Scaled module score", color = "Site") +
+  facet_wrap(~key) + 
+  scale_color_manual(values = clrs$consensus_signature) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "bottom", aspect.ratio = 1) +
+  guides(color = guide_legend(override.aes = list(fill = NA), ncol = 4)) +
+  scale_y_continuous(breaks = c(0, 1))
+
+```
+
+## violins  
+
+```{r chunk_520_140, fig.width=4.5, fig.height=4}
 
 mutsig_boxplot_data <- plot_data %>% 
   filter(key %in% module_names_sub) %>% 
@@ -294,100 +367,132 @@ mutsig_boxplot_data <- plot_data %>%
   mutate(key = str_remove_all(key, ".module")) %>% 
   mutate(key = ordered(key, levels = c("CD8\nNaive", "CD8\nPredysfunct.", "CD8\nCytotoxic", "CD8\nDysfunct.", "JAK/STAT\npathway")))
 
+my_comparisons <- list(
+  c("HRD-Dup", "HRD-Del"), 
+  c("HRD-Dup", "FBI"), 
+  c("HRD-Del", "FBI")
+)
+
+my_comparisons2 <- list(
+  c("HRD", "HRP")
+)
+
 mutsig_boxplot_data_stats <- mutsig_boxplot_data %>% 
   group_by(sample, key) %>% 
   mutate(value = mean(value)) %>% 
-  distinct(sample, key, .keep_all = T)
+  distinct(sample, key, .keep_all = T) %>% 
+  ungroup()
 
-mutsig_boxplot <- mutsig_boxplot_data %>% 
-  filter(key != "JAK/STAT\npathway") %>% 
-  ggplot(aes(consensus_signature, value)) +
-  geom_violin(aes(consensus_signature, value, fill = consensus_signature), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
-  geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
-               width = 0.5, size = 0.75, outlier.shape = NA) +
-  geom_boxplot(aes(consensus_signature, value, fill = consensus_signature),
-               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
-  # geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
-  #              fill = "white") +
-  stat_compare_means(ref.group = ".all.", 
-                     data = filter(mutsig_boxplot_data_stats, 
-                                   key != "JAK/STAT\npathway"),
-                     label = "p.signif", label.y = 1.6, hide.ns = T) +
-  stat_compare_means(label.y = 1.9, label.x = 1.5, label.sep = "\n\n",
-                     data = filter(mutsig_boxplot_data_stats, 
-                                   key != "JAK/STAT\npathway")) +
-  facet_wrap(~key, ncol = 5) +
-  scale_color_manual(values = clrs$consensus_signature) +
-  scale_fill_manual(values = clrs$consensus_signature) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-        axis.title.x = element_blank()) +
-  coord_cartesian(ylim = c(-1, 2)) +
-  labs(y = "Module score", color = "Mutational\nsignature", 
-       fill = "Mutational\nsignature")
+boxplot_wrapper <- function(group_column, group_var_label, keys, comps, y_label, ylims) {
+  group_column <- enquo(group_column)
+  yrange <- ylims[2]-ylims[1]
+  ylabels <- yrange*c(0.95,0.85,0.75)+ylims[1]
+  mutsig_boxplot_data %>% 
+    filter(key %in% keys) %>% 
+    ggplot(aes(!!group_column, value)) +
+    geom_violin(aes(!!group_column, value, fill = !!group_column), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+    geom_boxplot(aes(!!group_column, value, color = !!group_column),
+                 width = 0.5, size = 0.75, outlier.shape = NA) +
+    geom_boxplot(aes(!!group_column, value, fill = !!group_column),
+                 color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+    stat_compare_means(comparisons = comps, 
+                       data = filter(mutsig_boxplot_data_stats, 
+                                     key %in% keys),
+                       label = "p.signif", label.y = ylabels, 
+                       hide.ns = F) +
+    # stat_compare_means(ref.group = ".all.", 
+    #                    data = filter(mutsig_boxplot_data_stats, 
+    #                                  key != "JAK/STAT\npathway"),
+    #                    label = "p.signif", label.y = 1.6, hide.ns = T) +
+    # stat_compare_means(label.y = 1.9, label.x = 1.5, label.sep = "\n\n",
+    #                    data = filter(mutsig_boxplot_data_stats, 
+    #                                  key != "JAK/STAT\npathway")) +
+    facet_wrap(~key, ncol = 5) +
+    scale_color_manual(values = clrs[[as_label(group_column)]]) +
+    scale_fill_manual(values = clrs[[as_label(group_column)]]) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          axis.title.x = element_blank()) + 
+    coord_cartesian(clip = "off", ylim = ylims) +
+    labs(y = y_label, color = group_var_label, 
+         fill = group_var_label)
+}
 
-mutsig_boxplot_jakstat <- mutsig_boxplot_data %>% 
-  filter(key == "JAK/STAT\npathway") %>% 
-  ggplot(aes(consensus_signature, value)) +
-  geom_violin(aes(consensus_signature, value, fill = consensus_signature), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
-  geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
-               width = 0.5, size = 0.75, outlier.shape = NA) +
-  geom_boxplot(aes(consensus_signature, value, fill = consensus_signature),
-               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
-  # geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
-  #              fill = "white") +
-  stat_compare_means(ref.group = ".all.", 
-                     data = filter(mutsig_boxplot_data_stats, 
-                                   key == "JAK/STAT\npathway"),
-                     label = "p.signif", label.y = 4.2, hide.ns = T) +
-  stat_compare_means(label.y = 4.8, label.x = 1.5, label.sep = "\n\n",
-                     data = filter(mutsig_boxplot_data_stats, 
-                                   key == "JAK/STAT\npathway")) +
-  facet_wrap(~key, ncol = 5) +
-  scale_color_manual(values = clrs$consensus_signature) +
-  scale_fill_manual(values = clrs$consensus_signature) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-        axis.title.x = element_blank()) +
-  coord_cartesian(ylim = c(-1, 5)) +
-  labs(y = "PROGENy score", color = "Mutational\nsignature", 
-       fill = "Mutational\nsignature")
+mutsig_boxplot_cd8 <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", c("CD8\nNaive", "CD8\nDysfunct."), my_comparisons, "Module score", c(-1,2))
+mutsig_boxplot_cd8_short <- boxplot_wrapper(consensus_signature_short, "Mutational\nsignature", c("CD8\nNaive", "CD8\nDysfunct."), my_comparisons2, "Module score", c(-1,2))
+
+mutsig_boxplot_jakstat <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", c("JAK/STAT\npathway"), my_comparisons, "PROGENy score", c(-1,5))
+mutsig_boxplot_jakstat_short <- boxplot_wrapper(consensus_signature_short, "Mutational\nsignature", c("JAK/STAT\npathway"), my_comparisons2, "PROGENy score", c(-1,5))
+
 
 mutsig_boxplot_grid <- plot_grid(
-  mutsig_boxplot + guides(color = F, fill = F), 
+  mutsig_boxplot_cd8 + guides(color = F, fill = F), 
   mutsig_boxplot_jakstat + guides(color = F, fill = F), 
-  nrow = 1, rel_widths = c(0.74, 0.26)) 
+  nrow = 1, rel_widths = c(0.62, 0.38)) 
 
 mutsig_boxplot_grid
 
-patient_boxplot_wrapper <- function(xkey) {
-  
-  xkey <- enquo(xkey)
-  
-  patient_lvls <- plot_data %>% 
-    mutate(key = !!xkey) %>% 
+ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_violins_mutsig.pdf", width = 4.5, height = 4)
+ggsave_png("figures/520_T_cell_CD8_diffusion/005_violins_mutsig.png", width = 4.5, height = 4)
+
+```
+
+```{r chunk_520_141, fig.width=4, fig.height=4}
+
+mutsig_boxplot_grid <- plot_grid(
+  mutsig_boxplot_cd8_short + guides(color = F, fill = F), 
+  mutsig_boxplot_jakstat_short + guides(color = F, fill = F), 
+  nrow = 1, rel_widths = c(0.62, 0.38)) 
+
+mutsig_boxplot_grid
+
+ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_violins_mutsig_short.pdf", width = 4, height = 4)
+ggsave_png("figures/520_T_cell_CD8_diffusion/005_violins_mutsig_short.png", width = 4, height = 4)
+
+```
+
+```{r chunk_520_142, fig.width=6, fig.height=8}
+
+
+patient_boxplot_wrapper <- function(koi, ylabel = "Module score") {
+
+  mutsig_boxplot_data_ranked <- filter(mutsig_boxplot_data, key == koi) %>%
     group_by(patient_id_short) %>% 
-    summarise(median = median(value)) %>% 
-    ungroup() %>% 
+    mutate(median = median(value)) %>%
+    ungroup %>% 
     arrange(median) %>% 
-    pull(patient_id_short)
+    mutate(patient_id_short = ordered(patient_id_short, levels = unique(patient_id_short)))
   
-  plot_data %>% 
-    mutate(patient_id_short = ordered(patient_id_short, levels = patient_lvls)) %>% 
-    ggplot() +
-    geom_violin(aes(patient_id_short, !!xkey, fill = consensus_signature), 
-                color = "white") +
-    # geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
-    #              width = 0.2, size = 2) +
-    geom_boxplot(aes(patient_id_short, !!xkey, fill = consensus_signature),
-                 color = "white", width = 0.2, outlier.shape = NA) +
+  ggplot(mutsig_boxplot_data_ranked) +
+    geom_violin(aes(patient_id_short, value, fill = consensus_signature), 
+                color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+    geom_boxplot(aes(patient_id_short, value, color = consensus_signature),
+                 width = 0.5, size = 0.75, outlier.shape = NA) +
+    geom_boxplot(aes(patient_id_short, value, fill = consensus_signature),
+                 color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+    facet_wrap(~key) +
     scale_color_manual(values = clrs$consensus_signature) +
     scale_fill_manual(values = clrs$consensus_signature) +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-          axis.title.x = element_blank()) +
-    labs(y = "Module score", color = "Mutational\nsignature", title = xkey) 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+    labs(x = "Patient", y = ylabel,
+         fill = "Mutational\nsignature",
+         color = "Mutational\nsignature") +
+    remove_guides
+  
 }
 
-patient_boxplot_list <- lapply(module_names_sub, patient_boxplot_wrapper) %>% 
-  setNames(module_names_sub)
+patient_plots_list <- lapply(c("CD8\nNaive", "CD8\nDysfunct."), 
+                             patient_boxplot_wrapper, "Module score") %>% 
+  lapply(add, ylim(c(-1, 2)))
+
+patient_plots_list[[3]] <- patient_boxplot_wrapper("JAK/STAT\npathway", "PROGENy score") +
+  ylim(c(-1, 5))
+
+plot_grid(plotlist = patient_plots_list, ncol = 1, align = "v")
+
+ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_violins_patient_lvl.pdf", 
+            width = 6, height = 8)
+ggsave_png("figures/520_T_cell_CD8_diffusion/005_violins_patient_lvl.png", 
+       width = 6, height = 8)
 
 ```
 
@@ -413,16 +518,6 @@ ggdraw() +
 ggsave_pdf("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.pdf", width = 22, height = 4)
 ggsave_png("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.png", width = 22, height = 4)
 
-
-```
-
-```{r chunk_520_165, fig.width=12, fig.height=12}
-
-plot_grid(plotlist = patient_boxplot_list, ncol = 1, align = "hv")
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_boxplot_per_patient.pdf", 
-       width = 12, height = 12)
-ggsave_png("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_boxplot_per_patient.png", 
-       width = 12, height = 12)
 
 ```
 
