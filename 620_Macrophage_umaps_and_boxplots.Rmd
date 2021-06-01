@@ -247,11 +247,18 @@ boxplot_wrapper <- function(plot_data_vio, plot_data_vio_summary, group_column, 
 
 ```{r chunk_620_141, fig.width=5, fig.height=4}
 
-violins_genes_mutsig_mp <- boxplot_wrapper(
+violins_genes_mutsig_mp_pdl1 <- boxplot_wrapper(
   plot_data_vio_mp, plot_data_vio_mp_summary, 
   consensus_signature, pct.expr, 
-  c("CD274", "CXCL10"), 
-  my_comparisons, "Mutational\nsignature", "% Pos. Macrophages", c(0,100), 5
+  c("CD274"), 
+  my_comparisons, "Mutational\nsignature", "% Pos. Macroph.", c(0,25), 5
+)
+
+violins_genes_mutsig_mp_cxcl10 <- boxplot_wrapper(
+  plot_data_vio_mp, plot_data_vio_mp_summary, 
+  consensus_signature, pct.expr, 
+  c("CXCL10"), 
+  my_comparisons, "Mutational\nsignature", "% Pos. Macroph.", c(0,100), 5
 )
 
 violins_pw_mutsig_mp <- boxplot_wrapper(
@@ -262,23 +269,30 @@ violins_pw_mutsig_mp <- boxplot_wrapper(
 )
 
 violins_grid_mutsig_mp <- plot_grid(
-  violins_genes_mutsig_mp, violins_pw_mutsig_mp,
-  nrow = 1, rel_widths = c(0.63, 0.37), align = "h")
+  violins_genes_mutsig_mp_pdl1, violins_genes_mutsig_mp_cxcl10, violins_pw_mutsig_mp,
+  nrow = 1, align = "h")
 
 violins_grid_mutsig_mp
 
-ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots.pdf", violins_grid_mutsig_mp, width = 4.5, height = 3.5)
-ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots.png", violins_grid_mutsig_mp, width = 4.5, height = 3.5)
+ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots.pdf", violins_grid_mutsig_mp, width = 5, height = 3)
+ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots.png", violins_grid_mutsig_mp, width = 5, height = 3)
 
 ```
 
 ```{r chunk_620_142, fig.width=5, fig.height=4}
 
-violins_genes_mutsig_short_mp <- boxplot_wrapper(
+violins_genes_mutsig_short_mp_pdl1 <- boxplot_wrapper(
   plot_data_vio_mp, plot_data_vio_mp_summary, 
   consensus_signature_short, pct.expr, 
-  c("CD274", "CXCL10"), 
-  my_comparisons2, "Mutational\nsignature", "% Pos. Macrophages", c(0,100), 5
+  c("CD274"), 
+  my_comparisons2, "Mutational\nsignature", "% Pos. Macroph.", c(0,25), 5
+)
+
+violins_genes_mutsig_short_mp_cxcl10 <- boxplot_wrapper(
+  plot_data_vio_mp, plot_data_vio_mp_summary, 
+  consensus_signature_short, pct.expr, 
+  c("CXCL10"), 
+  my_comparisons2, "Mutational\nsignature", "% Pos. Macroph.", c(0,100), 5
 )
 
 violins_pw_mutsig_short_mp <- boxplot_wrapper(
@@ -289,13 +303,13 @@ violins_pw_mutsig_short_mp <- boxplot_wrapper(
 )
 
 violins_grid_mutsig_short_mp <- plot_grid(
-  violins_genes_mutsig_short_mp, violins_pw_mutsig_short_mp,
-  nrow = 1, rel_widths = c(0.63, 0.37), align = "h")
+  violins_genes_mutsig_short_mp_pdl1, violins_genes_mutsig_short_mp_cxcl10, violins_pw_mutsig_short_mp,
+  nrow = 1, align = "h")
 
 violins_grid_mutsig_short_mp
 
-ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots_mutsig_short.pdf", violins_grid_mutsig_short_mp, width = 4.5, height = 3)
-ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots_mutsig_short.png", violins_grid_mutsig_short_mp, width = 4.5, height = 3)
+ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots_mutsig_short.pdf", violins_grid_mutsig_short_mp, width = 5, height = 3)
+ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_macrophage_boxplots_mutsig_short.png", violins_grid_mutsig_short_mp, width = 5, height = 3)
 
 ```
 
@@ -344,15 +358,30 @@ violins_pw_mutsig_dc_short <- boxplot_wrapper(
   my_comparisons2, "Mutational\nsignature", "Module score", c(-1, 2), 5
 )
 
-violins_genes_mutsig_dc
-ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots.pdf", violins_genes_mutsig_dc, width = 4.5, height = 3.5)
-ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots.png", violins_genes_mutsig_dc, width = 4.5, height = 3.5)
 
-violins_genes_mutsig_dc_short
-ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots_mutsig_short.pdf", violins_genes_mutsig_dc_short, width = 4.5, height = 3)
-ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots_mutsig_short.png", violins_genes_mutsig_dc_short, width = 4.5, height = 3)
 
 ```
+
+```{r chunk_620_146, fig.width=5, fig.height=3.5}
+
+plot_grid(violins_genes_mutsig_dc, violins_pw_mutsig_dc, 
+          nrow = 1, rel_widths = c(0.73, 0.27), align = "h")
+
+ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots.pdf", width = 6, height = 3)
+ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots.png", width = 6, height = 3)
+
+```
+
+```{r chunk_620_147, fig.width=5, fig.height=3.5}
+
+plot_grid(violins_genes_mutsig_dc_short, violins_pw_mutsig_dc_short, 
+          nrow = 1, rel_widths = c(0.73, 0.27))
+
+ggsave_pdf("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots_mutsig_short.pdf", width = 6, height = 3)
+ggsave_png("figures/620_Macrophage_umaps_and_boxplots/005_DC_boxplots_mutsig_short.png", width = 6, height = 3)
+
+```
+
 
 ```{r chunk_620_150, fig.width=6, fig.height=4}
 
@@ -417,13 +446,13 @@ plot_data_cor <- plot_data_vio_dc_summary %>%
  
 cor_plot1 <- plot_data_cor %>%
   distinct(sample, cell_type, key_x, key_y, .keep_all = T) %>% 
-  filter(key_x == "Interferon.regulators.module", key_y == "JAK.STAT.pathway") %>%
+  filter(key_x == "IFN\nregulators", key_y == "JAK.STAT.pathway") %>%
   mutate(cell_type = case_when(cell_type == "Ovarian.cancer.cell" ~ "Ov cancer cells",
                                cell_type == "T.cell" ~ "T cells",
                                cell_type == "Monocyte" ~ "Macrophages",
                                T ~ "NA")) %>% 
   mutate(cell_type = ordered(cell_type, levels = c("Ov cancer cells", "T cells", "Macrophages"))) %>% 
-  ggplot() +
+  ggplot(aes(mean_value_x, mean_value_y, color = consensus_signature)) +
   geom_point(aes(mean_value_x, mean_value_y, color = consensus_signature)) +
   geom_smooth(aes(mean_value_x, mean_value_y), method = "lm", se = T,
               linetype = 2, size = 0.5, color = "black") +
