@@ -129,7 +129,7 @@ signature_tbl <- db$mutational_signatures %>%
 scrna_meta_tbl <- db$sequencing_scrna %>% 
   filter(patient_id %in% included_patients,
          therapy == "pre-Rx") %>% 
-  rename(sample = isabl_id) %>% 
+  dplyr::rename(sample = isabl_id) %>% 
   distinct(sample, .keep_all = T) %>% 
   mutate(patient_id_short = str_remove_all(patient_id, "SPECTRUM-OV-"),
          sort_short = str_remove_all(sort_parameters, "singlet, live, "),
@@ -137,6 +137,14 @@ scrna_meta_tbl <- db$sequencing_scrna %>%
   mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
                                  "Other", tumor_supersite)) %>% 
   mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>%
+  mutate(
+    tumor_supersite_adnexa = case_when(
+      tumor_supersite == "Adnexa" & grepl("Adnexa", tumor_subsite) ~ "Adnexa",
+      tumor_supersite == "Adnexa" & grepl("Ovary", tumor_subsite) ~ "Ovary",
+      tumor_supersite == "Adnexa" & grepl("Fallopian Tube", tumor_subsite) ~ "Fallopian Tube",
+      TRUE ~ as.character(tumor_supersite)
+    )
+  ) %>%
   left_join(signature_tbl, by = "patient_id")
 
 ## load mpIF meta data -------------------------------
@@ -146,7 +154,7 @@ mpif_slide_meta_tbl <- db$mpif_slide %>%
          sample_id = paste0(patient_id, "_", surgery, str_replace_all(toupper(tumor_subsite), " ", "_"))) %>%
   mutate(patient_id_short = str_remove_all(patient_id, "SPECTRUM-OV-"),
          tumor_supersite = str_replace_all(tumor_supersite, "Upper Quadrant", "UQ")) %>% 
-  mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
+  mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa"),
                                  "Other", tumor_supersite)) %>% 
   mutate(tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) %>% 
   filter(patient_id %in% included_patients,
