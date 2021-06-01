@@ -85,7 +85,7 @@ plot_inventory_heatmap <-
     
     column_title = "MSK SPECTRUM"
     
-    top_df = as_tibble(colSums(inventory_mat), rownames = "patient_id") %>%
+    top_df <- as_tibble(colSums(inventory_mat), rownames = "patient_id") %>%
       column_to_rownames(var = "patient_id") %>%
       as.matrix
     
@@ -100,7 +100,7 @@ plot_inventory_heatmap <-
       annotation_width = unit(c(1, 4), "cm")
     )
     
-    bottom_df = bottom_annotation %>%
+    bottom_df <- bottom_annotation %>%
       dplyr::select(
         patient_age,
         gyn_diagnosis_chemo_intent_description,
