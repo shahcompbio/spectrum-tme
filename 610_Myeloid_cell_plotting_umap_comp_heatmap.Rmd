@@ -185,6 +185,11 @@ umap_site_void <- umap_site + guides(color = F)
 umap_cell_type_legend <- cowplot::get_legend(umap_cell_type)
 umap_site_legend <- cowplot::get_legend(umap_site)
 
+add_umap_coord(umap_cell_type_void, width = 0.3, height = 0.3, x_offset = -0.05) %>% 
+  add_umap_coord(width = 0.3, height = 0.3, x_offset = 0.4)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_cell_type_myeloid.pdf", width = 10, height = 5)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_cell_type_myeloid.png", width = 10, height = 5)
+
 
 ```
 
@@ -304,7 +309,7 @@ kernel_umap <- ggplot() +
   remove_xaxis +
   remove_yaxis
 
-add_umap_coord(kernel_umap)
+add_umap_coord(kernel_umap, width = 0.3, height = 0.3)
 ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_kernel.pdf", width = 5, height = 5)
 ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_kernel.png", width = 5, height = 5)
 

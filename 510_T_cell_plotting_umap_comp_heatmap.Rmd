@@ -236,6 +236,8 @@ ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_gois.png", wi
 
 ### kernel umap
 
+#### site
+
 ```{r chunk_510_62, fig.width=5, fig.height=5}
 
 source("src/umap_kernel.R")
@@ -283,6 +285,54 @@ ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel.png", 
 
 ```
 
+#### mutsig
+
+```{r chunk_510_63, fig.width=5, fig.height=5}
+
+kernel_tbl_fbi <- kde2d_contrast(
+  data_tbl = plot_data_sub %>% filter(tumor_supersite != "Ascites"),
+  x = umapharmony_1, y = umapharmony_2, kernel_group = consensus_signature,
+  kernel_subsets_a = c("FBI"), kernel_subsets_b = c("HRD-Dup", "HRD-Del", "TD")
+) %>%
+  filter(value.x > 0.001 & value.y > 0.001)
+
+rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
+
+kernel_umap_fbi <- ggplot() +
+  ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), color = "grey80", size = 0.01, alpha = 0.02,
+                           data = plot_data_sub,
+                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
+  ggrastr::geom_point_rast(aes(x, y, color = value_quenched), data = kernel_tbl_fbi, size = 0.01, 
+                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
+  geom_point(aes(umapscaled_1, umapscaled_2), color = "white",
+             data = plot_data_label, alpha = 0.5, size = 6) +
+  geom_text(aes(umapscaled_1, umapscaled_2, label = cluster_number), color = "black",
+            data = plot_data_label) +
+  scale_color_gradientn(colours = rdbu,
+                        values = scales::rescale(c(min(kernel_tbl_fbi$value_quenched), 0,
+                                                   max(kernel_tbl_fbi$value_quenched)))) +
+  guides(color = guide_colorbar(label.position = "right",
+                                title.position = "top",
+                                title.hjust = 0,
+                                title.vjust = 1,
+                                direction = "vertical")) +
+  theme(aspect.ratio = 1,
+        legend.key.height = unit(0.05, "npc"),
+        legend.key.width = unit(0.03, "npc"),
+        legend.position = c(-0.1, 0.95),
+        legend.justification = c("left", "top"),
+        plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)) + 
+  labs(color = "Enrichment\nin FBI") +
+  remove_xaxis +
+  remove_yaxis
+
+add_umap_coord(kernel_umap_fbi)
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel_fbi.pdf", width = 6, height = 5)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel_fbi.png", width = 6, height = 5)
+
+```
+
+
 ## module heatmap
 
 ```{r chunk_510_64, fig.width=15, fig.height=5}
@@ -329,12 +379,12 @@ plot_data_modules_summary_cluster <- plot_data_modules %>%
 rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
 
 common_heat_layers <- list(
-  scale_fill_gradient2(low = scales::muted("blue"), high = scales::muted("red"), 
-                       na.value = "grey10", 
-                       # breaks = c(-cut_value, 0, cut_value), 
-                       # labels = c(paste0("≤-", cut_value), "0", paste0("≥", cut_value)),
-                       # limits = c(-cut_value, cut_value)
-                       ),
+  # scale_fill_gradient2(low = scales::muted("blue"), high = scales::muted("red"), 
+  #                      na.value = "grey10", 
+  #                      # breaks = c(-cut_value, 0, cut_value), 
+  #                      # labels = c(paste0("≤-", cut_value), "0", paste0("≥", cut_value)),
+  #                      # limits = c(-cut_value, cut_value)
+  #                      ),
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
         axis.ticks = element_blank(),
         axis.line = element_blank(),
@@ -350,7 +400,7 @@ pw_plot1 <- plot_data_modules_summary_cluster %>%
   common_heat_layers +
   facet_grid(cluster_label_super~., scales = "free", space = "free") + 
   labs(x = "Cluster", y = "Pathway", fill = "Mean\nPROGENy\nscore") +
-  scale_color_gradientn(colours = rdbu,
+  scale_fill_gradientn(colours = rdbu,
                         values = scales::rescale(c(min(filter(plot_data_modules_summary_cluster, pathway %in% c("JAK.STAT", "TNFa", "TGFb"))$mean_score), 0, max(filter(plot_data_modules_summary_cluster, pathway %in% c("JAK.STAT", "TNFa", "TGFb"))$mean_score)))) + 
   scale_x_discrete(position = "top") +
   theme(axis.text.y = element_blank(),
@@ -367,7 +417,7 @@ pw_plot2 <- plot_data_modules_summary_cluster %>%
   common_heat_layers +
   facet_grid(cluster_label_super~., scales = "free", space = "free") + 
   labs(x = "Cluster", y = "Module", fill = "Mean\nmodule\nscore") +
-  scale_color_gradientn(colours = rdbu,
+  scale_fill_gradientn(colours = rdbu,
                         values = scales::rescale(c(min(filter(plot_data_modules_summary_cluster, key_group == "module")$mean_score), 0, max(filter(plot_data_modules_summary_cluster, key_group == "module")$mean_score)))) + 
   scale_x_discrete(position = "top") +
   theme(axis.text.y = element_blank(),
