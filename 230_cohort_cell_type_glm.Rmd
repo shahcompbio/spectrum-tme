@@ -1,0 +1,1231 @@
+---
+title: "Generalized linear model of cell composition"
+subtitle: "MSK SPECTRUM"
+author:
+  - "Ignacio Vazquez-Garcia"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    highlight: tango
+    df_print: paged
+    code_folding: hide
+    fig_align: center
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: yes
+params:
+   rmd: "230_cohort_cell_type_glm.Rmd"
+---
+
+```{r, echo=FALSE}
+# log <- file(snakemake@log[[1]], open="wt")
+# sink(log)
+# sink(log, type="message")
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(ggridges)
+library(data.table)
+library(tidytext)
+library(cowplot)
+library(ggthemes)
+library(ggrepel)
+library(corrplot)
+library(viridisLite)
+library(grid)
+library(RColorBrewer)
+library(lme4)
+library(emmeans)
+```
+
+```{r}
+
+## load global vars: 
+source("src/global_vars.R")
+
+# scrna_meta_tbl
+# clrs
+# markers_v7
+# markers_v7_super
+# cell_type_super_lookup
+
+names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "\\.", " ")
+names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "Ovarian", "Ov")
+
+```
+
+# scRNA
+
+```{r}
+
+## load data --------------------------------------
+
+scrna_cell_tbl <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/cells.tsv") %>% 
+  mutate(cell_type = ifelse(cell_type == "Monocyte", "Myeloid.cell", cell_type)) %>% 
+  mutate(cell_type = ifelse(cell_type == "Ovarian.cancer.cell", "Ov.cancer.cell", cell_type))
+
+## join data
+scrna_cell_tbl <- scrna_cell_tbl %>% 
+  left_join(scrna_meta_tbl, by = "sample") %>% 
+  filter(therapy == "pre-Rx", cell_type != "Other", tumor_supersite != "Unknown") %>% 
+  rename(UMAP_1 = umap50_1, UMAP_2 = umap50_2) %>% 
+  mutate(cell_type_super = cell_type_super_lookup[cell_type]) %>% 
+  mutate(cell_type = ordered(str_replace_all(cell_type, "\\.", " "), 
+                             levels = names(clrs$cell_type))) %>% 
+  mutate(sort_short_x = ifelse(sort_short == "U" & cell_type_super == "Immune", 
+                               "CD45+", ifelse(sort_short == "U" & cell_type_super == "Stromal", 
+                                               "CD45-", sort_short)))
+
+```
+
+```{r}
+
+scrna_sample_tbl <- scrna_cell_tbl %>%
+  mutate(cell_type = as.character(cell_type)) %>%
+  group_by(patient_id, consensus_signature, consensus_signature_short, tumor_type, tumor_supersite, tumor_subsite, therapy, sort_short_x, cell_type) %>%
+  summarize(cell_type_count = n_distinct(cell_id)) %>% 
+  mutate(
+      other_cell_type_count = sum(cell_type_count) - cell_type_count,
+      total_cell_type_count = sum(cell_type_count),
+      cell_type_proportion = cell_type_count/total_cell_type_count*100
+      ) %>%
+  ungroup 
+
+```
+
+```{r}
+
+heatmap_layers <- list(
+  scale_fill_gradient2(low = scales::muted("blue"), high = scales::muted("red"), 
+                       na.value = "grey10", 
+                       ),
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks = element_blank(),
+        axis.line = element_blank(),
+        axis.title = element_blank(),
+        plot.margin = margin(0, 0, 0, 0),
+        strip.text = element_blank())
+)
+
+```
+
+```{r}
+
+data <- list()
+formulas <- list()
+models <- list()
+consensus_signature_emm <- list()
+site_emm <- list()
+
+```
+
+## Cell type GLM {.tabset}
+
+```{r}
+
+data[["scRNA"]] <- scrna_sample_tbl
+formulas[["scRNA"]] <-cbind(cell_type_count, other_cell_type_count) ~ cell_type * consensus_signature * sort_short_x + cell_type * tumor_supersite * sort_short_x# + cell_type * sort_parameters
+models[["scRNA"]] <- glm(formula = formulas[["scRNA"]], family = binomial(link = 'logit'), data = data[["scRNA"]])
+
+consensus_signature_emm[["scRNA"]] <- emmeans(models[["scRNA"]], specs = eff ~ consensus_signature | cell_type * sort_short_x, type = "response", tran = "logit", adjust = "bonferroni")
+consensus_signature_odds <- consensus_signature_emm[["scRNA"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+site_emm[["scRNA"]] <- emmeans(models[["scRNA"]], specs = eff ~ tumor_supersite | cell_type * sort_short_x, type = "response", tran = "logit", adjust = "bonferroni")
+site_odds <- site_emm[["scRNA"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+```
+
+## Signature + site contrasts
+
+```{r, fig.width = 4.25, fig.height = 5.3, results = "asis"}
+
+plot_data <- bind_rows(consensus_signature_odds %>% add_column(contrast_variable = "Signature"),
+                       site_odds %>% add_column(contrast_variable = "Site")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  filter(!str_detect(contrast, "HRD effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  filter(!str_detect(contrast, "Undetermined")) %>%
+  filter(!str_detect(contrast, "Other")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  filter(p.value < 1E-20) %>%
+  filter(SE < 0.15) %>%
+  ggplot(aes(x = cell_type, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1.5, 1.5),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_x_discrete(drop=FALSE) +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.title = element_text(size=14),
+        legend.direction = "horizontal", 
+        legend.position = "top",
+        legend.box = "horizontal") +
+  guides(color = guide_colourbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  facet_grid(contrast_variable ~ ., scales = "free_y", space = "free")
+
+p_signature_site_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=0, y=forcats::fct_rev(contrast), fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = c(clrs$consensus_signature, clrs$tumor_supersite)) +
+  facet_grid(contrast_variable~., scales = "free", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  mutate(facet_helper = "") %>% 
+  distinct(cell_type, facet_helper, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(cell_type, facet_helper, fill = cell_type)) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$cell_type) +
+  scale_x_discrete(drop=FALSE) +
+  facet_grid(~facet_helper, scales = "free", space = "free") +
+  theme(axis.text.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    p_signature_site_anno + theme(plot.margin = margin(t = 6, r = 0, b = 0, l = 6)),
+    ggdraw(),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(1, 0.7),
+    rel_widths = c(0.75, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 0, r = 6, b = 0, l = 0)),
+    p_cluster_anno + theme(plot.margin = margin(t = 0, r = 6, b = 6, l = 6)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(1, 0.7),
+    rel_widths = c(0.75, 1)
+  )
+
+p_scrna_odds_ratio <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(0.5, 1)
+    ),
+  get_legend(p_odds_ratio),
+  ncol = 1,
+  rel_heights = c(1, 0.15)
+  )
+
+p_scrna_odds_ratio
+
+data.table(plot_data)
+
+ggsave_pdf("figures/230_cohort_cell_type_glm/230_cohort_cell_type_scrna_odds_ratio_signature_site.pdf", p_scrna_odds_ratio,
+           width = 4.35, height = 5.25)
+ggsave_png("figures/230_cohort_cell_type_glm/230_cohort_cell_type_scrna_odds_ratio_signature_site.png", p_scrna_odds_ratio,
+           width = 4.35, height = 5.25)
+
+```
+
+# H&E
+
+```{r}
+
+## load data --------------------------------------
+
+hne_cell_type <- read_tsv("/work/shah/vazquezi/projects/spectrum/results/hne/v15/qupath/outputs/detection_summary/cohort/SPECTRUM.tsv")
+
+hne_cell_type_expanded <- hne_cell_type %>%
+  filter(ROI != "Geometry") %>% 
+  dplyr::select(image_hid, compartment=Parent, cell_type=Class, count, proportion) %>%
+  left_join(hne_meta_tbl, by = c("image_hid"="image_id")) %>%
+  filter(patient_id %in% scrna_patients) %>%
+  mutate(sort_short_x = compartment) %>%
+  mutate(sample_id = paste(tumor_subsite, patient_id, therapy, sort_short_x)) %>%
+  mutate(n = count, nrel = 100*proportion) %>%
+  mutate(cell_type = ordered(cell_type, levels = names(clrs$cell_type_hne))) %>%
+  mutate(cell_type_hne = cell_type)  %>%
+  mutate(tumor_supersite = ordered(tumor_supersite, levels = rev(names(clrs$tumor_supersite)))) %>%
+  # Keep included patients and pre-Rx samples
+  filter(patient_id %in% included_patients, therapy == "pre-Rx") %>%
+  # Keep adjacent H&E slides
+  filter(is_adjacent | is_site_matched) %>%
+  # Keep tumor and stroma compartments
+  filter(compartment %in% c("Tumor", "Stroma"))
+
+## cell type composition slide lvl
+hne_cell_type_n_slide <- hne_cell_type_expanded %>%
+  # mutate(n = count, nrel = 100*proportion) %>%
+  group_by(patient_id_short, tumor_supersite, tumor_subsite, tumor_megasite, therapy, sample_id, consensus_signature, cell_type_hne) %>%
+  mutate(n = sum(count)) %>%
+  group_by(patient_id_short, tumor_supersite, tumor_subsite, tumor_megasite, therapy, sample_id, consensus_signature) %>%
+  mutate(nrel = n/sum(n)*100) %>%
+  ungroup()
+
+## cell type composition slide lvl compartment
+hne_cell_type_n_slide_compartment <- hne_cell_type_expanded %>%
+  # mutate(n = count, nrel = 100*proportion) %>%
+  group_by(patient_id_short, tumor_supersite, tumor_subsite, tumor_megasite, therapy, sample_id, consensus_signature, sort_short_x, cell_type_hne) %>%
+  mutate(cell_type_count = sum(count)) %>%
+  group_by(patient_id_short, tumor_supersite, tumor_subsite, tumor_megasite, therapy, sample_id, consensus_signature, sort_short_x) %>%
+  mutate(total_cell_type_count = sum(cell_type_count),
+         other_cell_type_count = total_cell_type_count - cell_type_count,
+         cell_type_proportion = cell_type_count/total_cell_type_count*100) %>%
+  ungroup()
+  
+```
+
+## Cell type GLM {.tabset}
+
+```{r}
+
+data[["H&E"]] <- hne_cell_type_n_slide_compartment
+formulas[["H&E"]] <-cbind(cell_type_count, other_cell_type_count) ~ cell_type * consensus_signature * sort_short_x + cell_type * tumor_supersite * sort_short_x #+ cell_type * sort_short_x
+models[["H&E"]] <- glm(formula = formulas[["H&E"]], family = binomial(link = 'logit'), data = data[["H&E"]])
+
+consensus_signature_emm[["H&E"]] <- emmeans(models[["H&E"]], specs = eff ~ consensus_signature | cell_type * sort_short_x, type = "response", tran = "logit", adjust = "bonferroni")
+consensus_signature_odds <- consensus_signature_emm[["H&E"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+site_emm[["H&E"]] <- emmeans(models[["H&E"]], specs = eff ~ tumor_supersite | cell_type * sort_short_x, type = "response", tran = "logit", adjust = "bonferroni")
+site_odds <- site_emm[["H&E"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+```
+
+## Signature + site contrasts
+
+```{r, fig.width = 3, fig.height = 5, results = "asis"}
+
+plot_data <- bind_rows(consensus_signature_odds %>% add_column(contrast_variable = "Signature"),
+                       site_odds %>% add_column(contrast_variable = "Site")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  filter(!str_detect(contrast, "HRD effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  filter(!str_detect(contrast, "Undetermined")) %>%
+  filter(!str_detect(contrast, "Other")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  filter(p.value < 1E-20) %>%
+  filter(SE < 0.15) %>%
+  ggplot(aes(x = cell_type, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1.5, 1.5),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_x_discrete(drop=FALSE) +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.title = element_text(size=14),
+        legend.direction = "horizontal", 
+        legend.position = "top",
+        legend.box = "horizontal") +
+  guides(color = guide_colourbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  facet_grid(contrast_variable ~ ., scales = "free_y", space = "free")
+
+p_signature_site_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=0, y=forcats::fct_rev(contrast), fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = c(clrs$consensus_signature, clrs$tumor_supersite)) +
+  facet_grid(contrast_variable~., scales = "free", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  mutate(facet_helper = "") %>% 
+  distinct(cell_type, facet_helper, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(cell_type, facet_helper, fill = cell_type)) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$cell_type_hne) +
+  scale_x_discrete(drop=FALSE) +
+  facet_grid(~facet_helper, scales = "free", space = "free") +
+  theme(axis.text.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    p_signature_site_anno + theme(plot.margin = margin(t = 6, r = 0, b = 0, l = 6)),
+    ggdraw(),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(1, 0.7),
+    rel_widths = c(0.75, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 0, r = 6, b = 0, l = 0)),
+    p_cluster_anno + theme(plot.margin = margin(t = 0, r = 6, b = 6, l = 6)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(1, 0.7),
+    rel_widths = c(0.75, 1)
+  )
+
+p_hne_odds_ratio <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(1, 0.65)
+    ),
+  get_legend(p_odds_ratio),
+  ncol = 1,
+  rel_heights = c(1, 0.1)
+  )
+
+p_hne_odds_ratio
+
+data.table(plot_data)
+
+ggsave_pdf("figures/230_cohort_cell_type_glm/230_cohort_cell_type_hne_odds_ratio_signature_site.pdf", p_hne_odds_ratio,
+           width = 3, height = 5)
+ggsave_png("figures/230_cohort_cell_type_glm/230_cohort_cell_type_hne_odds_ratio_signature_site.png", p_hne_odds_ratio,
+           width = 3, height = 5)
+
+```
+
+# mpIF
+
+```{r}
+
+## load data --------------------------------------
+
+mpif_cell_state_expanded <- read_tsv("/work/shah/vazquezi/data/transfers/spectrum/results/mpif/v10/cell-type/outputs/phenotype_summary_merged/SPECTRUM/phenotypes_expanded.tsv") %>%
+  tidyr::separate(Image, c("patient_id","site","markers",NA,"fov"), sep = "_", remove = FALSE) %>%
+  dplyr::mutate(slide_id = paste(patient_id, site, sep = "_")) %>%
+  dplyr::select(-c('patient_id','site')) %>%
+  # select(cell_id, slide_id, fov_id, compartment, cell_type, cell_state, contains("state")) %>%
+  left_join(mpif_slide_meta_tbl, by = c("slide_id")) %>%
+  mutate(sort_short_x = Parent) %>%
+#   mutate(tumor_supersite = ordered(tumor_supersite, levels = rev(names(clrs$tumor_supersite)))) %>% 
+#   rename(cell_phenotype_short_mpif = cell_type,
+#          cell_phenotype_mpif = cell_state)
+  mutate(cell_type = ordered(cell_type, levels = names(clrs$cell_state_mpif)))
+
+## cell type composition slide lvl compartment
+mpif_cell_type_n_slide_compartment <- mpif_cell_state_expanded %>%
+  group_by(patient_id_short, tumor_supersite, tumor_subsite, tumor_megasite, therapy, sample_id, consensus_signature, sort_short_x, cell_type) %>%
+  summarize(cell_type_count = sum(count)) %>%
+  group_by(patient_id_short, tumor_supersite, tumor_subsite, tumor_megasite, therapy, sample_id, consensus_signature, sort_short_x) %>%
+  mutate(total_cell_type_count = sum(cell_type_count),
+         other_cell_type_count = total_cell_type_count - cell_type_count,
+         cell_type_proportion = cell_type_count/total_cell_type_count*100) %>%
+  ungroup()
+
+```
+
+## Cell type GLM {.tabset}
+
+```{r}
+
+data[["mpIF"]] <- mpif_cell_type_n_slide_compartment
+formulas[["mpIF"]] <-cbind(cell_type_count, other_cell_type_count) ~ cell_type * consensus_signature * sort_short_x + cell_type * tumor_supersite * sort_short_x #+ cell_type * sort_short_x
+models[["mpIF"]] <- glm(formula = formulas[["mpIF"]], family = binomial(link = 'logit'), data = data[["mpIF"]])
+
+consensus_signature_emm[["mpIF"]] <- emmeans(models[["mpIF"]], specs = eff ~ consensus_signature | cell_type * sort_short_x, type = "response", tran = "logit", adjust = "bonferroni")
+consensus_signature_odds <- consensus_signature_emm[["mpIF"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+site_emm[["mpIF"]] <- emmeans(models[["mpIF"]], specs = eff ~ tumor_supersite | cell_type * sort_short_x, type = "response", tran = "logit", adjust = "bonferroni")
+site_odds <- site_emm[["mpIF"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+```
+
+## Signature + site contrasts
+
+```{r, fig.width = 3.5, fig.height = 5, results = "asis"}
+
+plot_data <- bind_rows(consensus_signature_odds %>% add_column(contrast_variable = "Signature"),
+                       site_odds %>% add_column(contrast_variable = "Site")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  filter(!str_detect(contrast, "HRD effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  filter(!str_detect(contrast, "Undetermined")) %>%
+  filter(!str_detect(contrast, "Other")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  filter(p.value < 1E-20) %>%
+  filter(SE < 0.15) %>%
+  ggplot(aes(x = cell_type, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1.5, 1.5),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_x_discrete(drop=FALSE) +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.title = element_text(size=14),
+        legend.direction = "horizontal", 
+        legend.position = "top",
+        legend.box = "horizontal") +
+  guides(color = guide_colourbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  facet_grid(contrast_variable ~ ., scales = "free_y", space = "free")
+
+p_signature_site_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=0, y=forcats::fct_rev(contrast), fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = c(clrs$consensus_signature, clrs$tumor_supersite)) +
+  facet_grid(contrast_variable~., scales = "free", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  mutate(facet_helper = "") %>% 
+  distinct(cell_type, facet_helper, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(cell_type, facet_helper, fill = cell_type)) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$cell_state_mpif) +
+  scale_x_discrete(drop=FALSE) +
+  facet_grid(~facet_helper, scales = "free", space = "free") +
+  theme(axis.text.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    p_signature_site_anno + theme(plot.margin = margin(t = 6, r = 0, b = 0, l = 6)),
+    ggdraw(),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(1, 0.5),
+    rel_widths = c(0.75, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 0, r = 6, b = 0, l = 0)),
+    p_cluster_anno + theme(plot.margin = margin(t = 0, r = 6, b = 6, l = 6)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(1, 0.5),
+    rel_widths = c(0.75, 1)
+  )
+
+p_mpif_odds_ratio <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(0.7, 1)
+    ),
+  get_legend(p_odds_ratio),
+  ncol = 1,
+  rel_heights = c(1, 0.15)
+  )
+
+p_mpif_odds_ratio
+
+data.table(plot_data)
+
+ggsave_pdf("figures/230_cohort_cell_type_glm/230_cohort_cell_type_mpif_odds_ratio_signature_site.pdf", p_mpif_odds_ratio,
+           width = 3, height = 5)
+ggsave_png("figures/230_cohort_cell_type_glm/230_cohort_cell_type_mpif_odds_ratio_signature_site.png", p_mpif_odds_ratio,
+           width = 3, height = 5)
+
+```
+
+# scRNA + H&E + mpIF
+
+```{r}
+
+scrna_consensus_signature_odds <- consensus_signature_emm[["scRNA"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+scrna_site_odds <- site_emm[["scRNA"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+hne_consensus_signature_odds <- consensus_signature_emm[["H&E"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+hne_site_odds <- site_emm[["H&E"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+mpif_consensus_signature_odds <- consensus_signature_emm[["mpIF"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+mpif_site_odds <- site_emm[["mpIF"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+```
+
+## Signature + site contrasts
+
+```{r, fig.width = 8, fig.height = 6, results = "asis"}
+
+plot_data <- bind_rows(
+  scrna_consensus_signature_odds %>%
+    add_column(technique = "scRNA", contrast_variable = "Signature"),
+  scrna_site_odds %>%
+    add_column(technique = "scRNA", contrast_variable = "Site"),
+  hne_consensus_signature_odds %>%
+    add_column(technique = "H&E", contrast_variable = "Signature"),
+  hne_site_odds %>%
+    add_column(technique = "H&E", contrast_variable = "Site"),
+  mpif_consensus_signature_odds %>%
+    add_column(technique = "mpIF", contrast_variable = "Signature"),
+  mpif_site_odds %>%
+    add_column(technique = "mpIF", contrast_variable = "Site")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  mutate(technique = ordered(technique, levels = c("scRNA","H&E","mpIF"))) %>%
+  mutate(cell_type = ordered(cell_type, levels = Reduce(union, list(
+    names(clrs$cell_type)[names(clrs$cell_type)!="Other"],
+    names(clrs$cell_type_hne),
+    names(clrs$cell_state_mpif)
+  )))) %>%
+  filter(cell_type != "Other") %>%
+  mutate(sort_short_x = ordered(sort_short_x, levels = c("Tumor","Stroma","Ignore*"))) %>%
+  filter(is.na(sort_short_x) | sort_short_x != "Ignore*") %>%
+  mutate(technique_sort_short_x = paste(technique, sort_short_x)) %>%
+  mutate(technique_sort_short_x = ordered(
+    technique_sort_short_x, levels = c("scRNA NA","H&E Tumor","H&E Stroma","mpIF Tumor","mpIF Stroma"))) %>%
+  filter(!str_detect(contrast, "HRD effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  filter(!str_detect(contrast, "Undetermined")) %>%
+  filter(!str_detect(contrast, "Other")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  filter(p.value < 1E-20) %>%
+  filter(SE < 0.15) %>%
+  ggplot(aes(x = cell_type, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1.5, 1.5),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  theme(#aspect.ratio = 1,
+        axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        # axis.title.x = element_blank(),
+        # axis.title.y = element_blank(),
+        axis.ticks = element_blank(),
+        legend.title = element_text(size=14),
+        legend.direction = "vertical",
+        legend.position = "top",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        panel.background = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        # panel.spacing = unit(2, "lines"),
+        plot.title = element_text(face = "plain", size=14),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()
+        ) +
+  guides(color = guide_colourbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = "             scRNA                 H&E             mpIF", 
+       x = NULL, y = NULL, 
+       color = expression(log[2]~odds~ratio), 
+       size = expression(-log[10]~p~value)) +
+  facet_grid(contrast_variable ~ technique_sort_short_x, scales = "free", space = "free")
+
+p_signature_site_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=0, y=forcats::fct_rev(contrast), fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = c(clrs$consensus_signature, clrs$tumor_supersite)) +
+  facet_grid(contrast_variable ~ technique, scales = "free", space = "free") +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_compartment_anno <- plot_data %>% 
+  distinct(cell_type, sort_short_x, technique, .keep_all = T) %>%
+  mutate(facet_helper = "") %>%
+  ggplot() +
+  geom_tile(aes(cell_type, facet_helper, fill = sort_short_x)) +
+  heatmap_layers +
+  scale_fill_manual(values = c(clrs$region_hne), na.translate=FALSE) +
+  labs(fill = "Region") +
+  facet_grid(. ~ technique_sort_short_x, scales = "free", space = "free") +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        legend.title = element_text(size=14),
+        strip.text = element_blank()) #+
+  # guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  distinct(cell_type, sort_short_x, technique, .keep_all = T) %>%
+  mutate(facet_helper = "") %>%
+  ggplot() +
+  geom_tile(aes(cell_type, facet_helper, fill = cell_type)) +
+  heatmap_layers + 
+  scale_fill_manual(values = c(clrs$cell_type, clrs$cell_state_mpif, clrs$cell_type_hne)) +
+  facet_grid(. ~ technique_sort_short_x, scales = "free", space = "free") +
+  theme(aspect.ratio = 1,
+        axis.text.y = element_blank(),
+        strip.text = element_blank()) +
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank()
+  ) +
+  guides(fill = F)
+
+p_compartment_cluster_anno <- ggdraw() +
+  draw_plot(p_compartment_anno, x = 0, y = 0.8, width = 1, height = 0.2) +
+  draw_plot(p_cluster_anno, x = 0, y = 0, width = 1, height = 0.8)
+
+p_left <-
+  plot_grid(
+    p_signature_site_anno + theme(plot.margin = margin(t = 25, r = 0, b = 0, l = 6)),
+    ggdraw(),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(1, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    p_compartment_cluster_anno + theme(legend.position = "none", plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(1, 1)
+  )
+
+p_scrna_hne_mpif_odds_ratio <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(1, 3)
+    ),
+  plot_grid(
+    get_legend(p_odds_ratio),# + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 6)),
+    get_legend(p_compartment_anno),
+    ncol = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_heights = c(2, 1)
+    ),
+  nrow = 1,
+  rel_widths = c(1, 0.3)
+  )
+
+p_scrna_hne_mpif_odds_ratio
+
+data.table(plot_data)
+
+ggsave_pdf("figures/230_cohort_cell_type_glm/230_cohort_cell_type_scrna_hne_mpif_odds_ratio_signature_site.pdf", p_scrna_hne_mpif_odds_ratio,
+           width = 8, height = 6)
+ggsave_png("figures/230_cohort_cell_type_glm/230_cohort_cell_type_scrna_hne_mpif_odds_ratio_signature_site.png", p_scrna_hne_mpif_odds_ratio,
+           width = 8, height = 6)
+
+```
+
+## Signature contrasts
+
+```{r, fig.width = 8, fig.height = 4.5, results = "asis"}
+
+plot_data <- bind_rows(
+  scrna_consensus_signature_odds %>%
+    filter((sort_short_x == "CD45+" & cell_type %in% c("B cell","Dendritic cell","Mast cell","Myeloid cell","Plasma cell","T cell")) |
+           (sort_short_x == "CD45-" & cell_type %in% c("Ov cancer cell","Endothelial cell","Fibroblast"))) %>%
+    add_column(technique = "scRNA", contrast_variable = "Signature"),
+  mpif_consensus_signature_odds %>%
+    add_column(technique = "mpIF", contrast_variable = "Signature"),
+  hne_consensus_signature_odds %>%
+    add_column(technique = "H&E", contrast_variable = "Signature")) %>% 
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  mutate(technique = ordered(technique, levels = c("scRNA","H&E","mpIF"))) %>%
+  mutate(cell_type = ordered(cell_type, levels = Reduce(union, list(
+    names(clrs$cell_type)[names(clrs$cell_type)!="Other"],
+    names(clrs$cell_type_hne),
+    names(clrs$cell_state_mpif)
+  )))) %>%
+  filter(cell_type != "Other") %>%
+  mutate(sort_short_x = ordered(sort_short_x, levels = c("Tumor","Stroma","Ignore*"))) %>%
+  filter(is.na(sort_short_x) | sort_short_x != "Ignore*") %>%
+  mutate(technique_sort_short_x = paste(technique, sort_short_x)) %>%
+  mutate(technique_sort_short_x = ordered(
+    technique_sort_short_x, levels = c("scRNA NA","H&E Tumor","H&E Stroma","mpIF Tumor","mpIF Stroma"))) %>%
+  filter(!str_detect(contrast, "HRD effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  filter(!str_detect(contrast, "Undetermined")) %>%
+  filter(!str_detect(contrast, "Other")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  # filter(p.value < 1E-20) %>%
+  # filter(SE < 0.15) %>%
+  ggplot(aes(x = cell_type, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1.5, 1.5),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  theme(#aspect.ratio = 1,
+        axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        # axis.title.x = element_blank(),
+        # axis.title.y = element_blank(),
+        axis.ticks = element_blank(),
+        legend.title = element_text(size=14),
+        legend.direction = "vertical",
+        legend.position = "top",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        panel.background = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        # panel.spacing = unit(2, "lines"),
+        plot.title = element_text(face = "plain", size=14),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()
+        ) +
+  guides(color = guide_colourbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = "             scRNA                 H&E             mpIF", 
+       x = NULL, y = NULL, 
+       color = expression(log[2]~odds~ratio), 
+       size = expression(-log[10]~p~value)) +
+  facet_grid(contrast_variable ~ technique_sort_short_x, scales = "free", space = "free")
+
+p_signature_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=0, y=forcats::fct_rev(contrast), fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$consensus_signature) +
+  facet_grid(contrast_variable ~ technique, scales = "free", space = "free") +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_compartment_anno <- plot_data %>% 
+  distinct(cell_type, sort_short_x, technique, .keep_all = T) %>%
+  mutate(facet_helper = "") %>%
+  ggplot() +
+  geom_tile(aes(cell_type, facet_helper, fill = sort_short_x)) +
+  heatmap_layers +
+  scale_fill_manual(values = c(clrs$region_hne), na.translate=FALSE) +
+  labs(fill = "Region") +
+  facet_grid(. ~ technique_sort_short_x, scales = "free", space = "free") +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        legend.title = element_text(size=14),
+        strip.text = element_blank()) #+
+  # guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  distinct(cell_type, sort_short_x, technique, .keep_all = T) %>%
+  mutate(facet_helper = "") %>%
+  ggplot() +
+  geom_tile(aes(cell_type, facet_helper, fill = cell_type)) +
+  heatmap_layers + 
+  scale_fill_manual(values = c(clrs$cell_type, clrs$cell_state_mpif, clrs$cell_type_hne)) +
+  facet_grid(. ~ technique_sort_short_x, scales = "free", space = "free") +
+  theme(aspect.ratio = 1,
+        axis.text.y = element_blank(),
+        strip.text = element_blank()) +
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank()
+  ) +
+  guides(fill = F)
+
+p_compartment_cluster_anno <- ggdraw() +
+  draw_plot(p_compartment_anno + theme(legend.position = "none"), 
+            x = 0, y = 0.7, width = 1, height = 0.2) +
+  draw_plot(p_cluster_anno + theme(legend.position = "none"), 
+            x = 0, y = 0, width = 1, height = 0.8)
+
+p_left <-
+  plot_grid(
+    p_signature_anno + theme(plot.margin = margin(t = 25, r = 0, b = 0, l = 6)),
+    ggdraw(),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(1, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    p_compartment_cluster_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(1, 1)
+  )
+
+p_scrna_hne_mpif_odds_ratio <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(1, 3)
+    ),
+  plot_grid(
+    get_legend(p_odds_ratio),# + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 6)),
+    get_legend(p_compartment_anno),
+    ncol = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_heights = c(2, 1)
+    ),
+  nrow = 1,
+  rel_widths = c(1, 0.3)
+  )
+
+p_scrna_hne_mpif_odds_ratio
+
+data.table(plot_data)
+
+ggsave_pdf("figures/230_cohort_cell_type_glm/230_cohort_cell_type_scrna_hne_mpif_odds_ratio_signature.pdf",
+           p_scrna_hne_mpif_odds_ratio, width = 8, height = 3.5)
+ggsave_png("figures/230_cohort_cell_type_glm/230_cohort_cell_type_scrna_hne_mpif_odds_ratio_signature.png",
+           p_scrna_hne_mpif_odds_ratio, width = 8, height = 3.5)
+
+```
+
+## Site contrasts
+
+```{r, fig.width = 8, fig.height = 4.5, results = "asis"}
+
+plot_data <- bind_rows(
+  scrna_site_odds %>%
+    filter((sort_short_x == "CD45+" & cell_type %in% c("B cell","Dendritic cell","Mast cell","Myeloid cell","Plasma cell","T cell")) |
+           (sort_short_x == "CD45-" & cell_type %in% c("Ov cancer cell","Endothelial cell","Fibroblast"))) %>%
+    add_column(technique = "scRNA", contrast_variable = "Site"),
+  mpif_site_odds %>%
+    add_column(technique = "mpIF", contrast_variable = "Site"),
+  hne_site_odds %>%
+    add_column(technique = "H&E", contrast_variable = "Site")) %>% 
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  mutate(technique = ordered(technique, levels = c("scRNA","H&E","mpIF"))) %>%
+  mutate(cell_type = ordered(cell_type, levels = Reduce(union, list(
+    names(clrs$cell_type)[names(clrs$cell_type)!="Other"],
+    names(clrs$cell_type_hne),
+    names(clrs$cell_state_mpif)
+  )))) %>%
+  filter(cell_type != "Other") %>%
+  mutate(sort_short_x = ordered(sort_short_x, levels = c("Tumor","Stroma","Ignore*"))) %>%
+  filter(is.na(sort_short_x) | sort_short_x != "Ignore*") %>%
+  mutate(technique_sort_short_x = paste(technique, sort_short_x)) %>%
+  mutate(technique_sort_short_x = ordered(
+    technique_sort_short_x, levels = c("scRNA NA","H&E Tumor","H&E Stroma","mpIF Tumor","mpIF Stroma"))) %>%
+  filter(!str_detect(contrast, "HRD effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  filter(!str_detect(contrast, "Undetermined")) %>%
+  filter(!str_detect(contrast, "Other")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  # filter(p.value < 1E-20) %>%
+  # filter(SE < 0.15) %>%
+  ggplot(aes(x = cell_type, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1.5, 1.5),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  theme(#aspect.ratio = 1,
+        axis.line = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        # axis.title.x = element_blank(),
+        # axis.title.y = element_blank(),
+        axis.ticks = element_blank(),
+        legend.title = element_text(size=14),
+        legend.direction = "vertical",
+        legend.position = "top",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        panel.background = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        # panel.spacing = unit(2, "lines"),
+        plot.title = element_text(face = "plain", size=14),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()
+        ) +
+  guides(color = guide_colourbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = "             scRNA                 H&E             mpIF", 
+       x = NULL, y = NULL, 
+       color = expression(log[2]~odds~ratio), 
+       size = expression(-log[10]~p~value)) +
+  facet_grid(contrast_variable ~ technique_sort_short_x, scales = "free", space = "free")
+
+p_site_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=0, y=forcats::fct_rev(contrast), fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$tumor_supersite) +
+  facet_grid(contrast_variable ~ technique, scales = "free", space = "free") +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_compartment_anno <- plot_data %>% 
+  distinct(cell_type, sort_short_x, technique, .keep_all = T) %>%
+  mutate(facet_helper = "") %>%
+  ggplot() +
+  geom_tile(aes(cell_type, facet_helper, fill = sort_short_x)) +
+  heatmap_layers +
+  scale_fill_manual(values = c(clrs$region_hne), na.translate=FALSE) +
+  labs(fill = "Region") +
+  facet_grid(. ~ technique_sort_short_x, scales = "free", space = "free") +
+  theme(aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        legend.title = element_text(size=14),
+        strip.text = element_blank()) #+
+  # guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  distinct(cell_type, sort_short_x, technique, .keep_all = T) %>%
+  mutate(facet_helper = "") %>%
+  ggplot() +
+  geom_tile(aes(cell_type, facet_helper, fill = cell_type)) +
+  heatmap_layers + 
+  scale_fill_manual(values = c(clrs$cell_type, clrs$cell_state_mpif, clrs$cell_type_hne)) +
+  facet_grid(. ~ technique_sort_short_x, scales = "free", space = "free") +
+  theme(aspect.ratio = 1,
+        axis.text.y = element_blank(),
+        strip.text = element_blank()) +
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank()
+  ) +
+  guides(fill = F)
+
+p_compartment_cluster_anno <- ggdraw() +
+  draw_plot(p_compartment_anno + theme(legend.position = "none"), 
+            x = 0, y = 0.8, width = 1, height = 0.2) +
+  draw_plot(p_cluster_anno + theme(legend.position = "none"), 
+            x = 0, y = 0.1, width = 1, height = 0.8)
+
+p_left <-
+  plot_grid(
+    p_site_anno + theme(plot.margin = margin(t = 25, r = 0, b = 0, l = 6)),
+    ggdraw(),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(0.6, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    p_compartment_cluster_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.6, 1)
+  )
+
+p_scrna_hne_mpif_odds_ratio <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(1, 3)
+    ),
+  plot_grid(
+    get_legend(p_odds_ratio),# + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 6)),
+    get_legend(p_compartment_anno),
+    ncol = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_heights = c(2, 1)
+    ),
+  nrow = 1,
+  rel_widths = c(1, 0.3)
+  )
+
+p_scrna_hne_mpif_odds_ratio
+
+data.table(plot_data)
+
+ggsave_pdf("figures/230_cohort_cell_type_glm/230_cohort_cell_type_scrna_hne_mpif_odds_ratio_site.pdf",
+           p_scrna_hne_mpif_odds_ratio, width = 8, height = 3.5)
+ggsave_png("figures/230_cohort_cell_type_glm/230_cohort_cell_type_scrna_hne_mpif_odds_ratio_site.png",
+           p_scrna_hne_mpif_odds_ratio, width = 8, height = 3.5)
+
+```
