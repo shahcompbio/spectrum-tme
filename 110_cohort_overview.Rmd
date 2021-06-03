@@ -34,35 +34,6 @@ source("src/plot_inventory_heatmap.R")
 source("src/plot_oncoprint_heatmap.R")
 ```
 
-## Load data
-
-```{r}
-# Define confirmed HGS patients
-hgsoc_patients <- db$gyn_diagnosis %>%
-  filter(gyn_diagnosis_histology == "HGS") %>%
-  pull(patient_id)
-
-# Define patients on clinical trials
-protocol_patients <- db$consents %>%
-  filter(patient_consent_irb == "17-182") %>%
-  pull(patient_id)
-
-included_patients <- db$patients %>%
-  filter(patient_inclusion_exclusion=="Included") %>%
-  filter(patient_cohort_version___2=="Checked") %>%
-  filter(patient_id %in% hgsoc_patients) %>%
-  filter(!patient_id %in% protocol_patients) %>%
-  pull(patient_id)
-
-# Define patients included in the study with scRNA data
-scrna_patients <- db$sequencing_scrna %>%
-  filter(patient_id %in% included_patients) %>%
-  filter(therapy == "pre-Rx") %>%
-  filter(platform == "10x 3' GE") %>%
-  pull(patient_id) %>%
-  unique
-```
-
 ## Overview
 
 ```{r}
@@ -72,7 +43,39 @@ diagram_png <- ggdraw() +
 diagram_png
 ```
 
-## MSK IMPACT data
+### Patients
+
+```{r}
+patients <- db$patients %>%
+  dplyr::select(patient_id, patient_age) %>%
+  mutate(patient_id = as.character(patient_id))
+
+gyn_diagnosis <- db$gyn_diagnosis %>%
+  mutate(gyn_diagnosis_chemo_intent_description = factor(gyn_diagnosis_chemo_intent_description, levels = c('Primary', 'NACT/IDS'))) %>%
+  mutate(patient_id = as.character(patient_id)) %>%
+  select(patient_id, gyn_diagnosis_chemo_intent_description, gyn_diagnosis_figo_stage, gyn_diagnosis_histology)
+
+patient_merged <- patients %>%
+  left_join(gyn_diagnosis, by = "patient_id") %>%
+  filter(patient_id %in% included_patients)
+
+patient_list <-
+  list(
+    "Patients" = patient_merged
+  )
+```
+
+```{r}
+wb <- createWorkbook()
+lapply(seq_along(patient_list), function(i){
+  addWorksheet(wb=wb, sheetName = names(patient_list[i]))
+  writeData(wb, sheet = i, patient_list[[i]][-length(patient_list[[i]])])
+})
+
+saveWorkbook(wb, "tables/patient_metadata.xlsx", overwrite = TRUE)
+```
+
+## MSK IMPACT
 
 ```{r}
 # Load all IMPACT data
@@ -96,7 +99,7 @@ cancer_gene_census <- readr::read_tsv("/work/shah/vazquezi/projects/spectrum/res
 genes <- yaml::read_yaml("/work/shah/vazquezi/projects/spectrum/resources/annotation/cancer_gene_disease_specific.yaml")
 ```
 
-## SNVs and indels
+### SNVs and indels
 
 ```{r}
 # Load SNV/indel data
@@ -141,6 +144,8 @@ snv <- snv %>%
 snv
 ```
 
+### Copy number
+
 ```{r}
 # Load CNA data
 cna <- readr::read_tsv("/work/shah/vazquezi/projects/dmp-2021/mskimpact/data_CNA.txt")
@@ -166,6 +171,8 @@ cna <- cna %>%
 
 cna
 ```
+
+### Fusions
 
 ```{r}
 # Load fusion data
@@ -313,7 +320,7 @@ data <- data %>%
 # mat <- mat > 0
 ```
 
-### Patient table {.tabset}
+### Patient table
 
 ```{r merge_patient_inventory}
 patient_inventory <- sample_inventory %>%
@@ -351,7 +358,7 @@ mat <- data %>%
 ```
 
 
-#### OncoPrint (main)
+## OncoPrint (main)
 
 ```{r, fig.width = 8, fig.height = 4.25}
 
@@ -482,7 +489,7 @@ dev.off()
 
 ```
 
-#### OncoPrint (supplement)
+## OncoPrint (supplement)
 
 ```{r, fig.width = 13.5, fig.height = 4.4}
 
