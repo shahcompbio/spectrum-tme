@@ -634,7 +634,7 @@ data <- inventory %>%
   mutate(`Bulk WGS_Other` = rowSums(dplyr::select(.,starts_with("Bulk WGS")))) %>%
   mutate(`MSK-IMPACT_Other` = rowSums(dplyr::select(.,starts_with("MSK-IMPACT")))) %>%
   dplyr::select(c("patient_id", "patient_age", "gyn_diagnosis_chemo_intent_description", "gyn_diagnosis_figo_stage", "consensus_signature", contains(c("scRNA", "mpIF", "H&E")), "Bulk WGS_Other", "MSK-IMPACT_Other")) %>%
-  dplyr::select(-c("H&E_Ascites","H&E_Other","mpIF_Ascites"))
+  dplyr::select(-c("H&E_Ascites","mpIF_Ascites"))
 
 inventory_mat <- data %>%
     dplyr::rename(`Bulk WGS_Other` = `Bulk WGS_Other`, `MSK-IMPACT_Other` = `MSK-IMPACT_Other`) %>%
@@ -675,7 +675,7 @@ ComplexHeatmap::draw(inventory_ht,
 
 ```
 
-```{r, fig.width = 9, fig.height = 8.5}
+```{r, fig.width = 9, fig.height = 8.75}
 
 ht_list <- oncoprint_main_ht %v% inventory_ht 
 
@@ -696,11 +696,11 @@ cohort_ht <- ComplexHeatmap::draw(
   # column_order = column_order)#, column_split = ann)
 
 
-cairo_pdf("figures/110_cohort_overview/110_cohort_overview.pdf", width = 9, height = 8.5)
+cairo_pdf("figures/110_cohort_overview/110_cohort_overview.pdf", width = 9, height = 8.75)
 print(cohort_ht)
 dev.off()
 
-png("figures/110_cohort_overview/110_cohort_overview.png", width = 9, height = 8.5, res = 300)
+png("figures/110_cohort_overview/110_cohort_overview.png", width = 9, height = 8.75, res = 300)
 print(cohort_ht)
 dev.off()
 
