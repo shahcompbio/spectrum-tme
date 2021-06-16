@@ -1,0 +1,451 @@
+---
+title: "SPECTRUM MSK Nichenet preprocessing"
+author: "Florian Uhlitz"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+```
+
+```{r chunk_010}
+
+library(magrittr)
+library(tidyverse)
+library(Seurat)
+library(readxl)
+library(cowplot)
+library(colorblindr)
+library(viridis)
+library(magick, lib.loc = "/home/uhlitzf/miniconda3/lib/R/library")
+library(ggpubr)
+library(nichenetr)
+
+```
+
+```{r chunk_030}
+
+## load global vars: 
+source("src/global_vars.R")
+
+# meta_tbl
+# clrs
+# markers_v7
+# markers_v7_super
+# cell_type_super_lookup
+
+# names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "\\.", " ")
+# names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "Ovarian", "Ov")
+
+```
+
+
+```{r chunk_040}
+
+seu_cc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated_sample.rds")
+seu_tc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/T.super_processed_filtered_annotated_sample.rds")
+seu_ml <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Myeloid.super_processed_filtered_annotated_sample.rds")
+seu_fb <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Fibroblast.super_processed_filtered_annotated_sample.rds")
+
+seu_ml$cell_type <- "Myeloid.cell"
+
+Idents(seu_cc) <- seu_cc$cluster_label
+Idents(seu_tc) <- seu_tc$cluster_label
+Idents(seu_ml) <- seu_ml$cluster_label
+Idents(seu_fb) <- seu_fb$cluster_label
+
+seu_cc$consensus_signature <- deframe(select(scrna_meta_tbl, sample, consensus_signature))[seu_cc$sample]
+seu_tc$consensus_signature <- deframe(select(scrna_meta_tbl, sample, consensus_signature))[seu_tc$sample]
+seu_ml$consensus_signature <- deframe(select(scrna_meta_tbl, sample, consensus_signature))[seu_ml$sample]
+seu_fb$consensus_signature <- deframe(select(scrna_meta_tbl, sample, consensus_signature))[seu_fb$sample]
+
+seu_merge <- seu_cc %>% 
+  merge(seu_tc) %>% 
+  merge(seu_ml) %>% 
+  merge(seu_fb)
+
+```
+
+
+```{r chunk_050}
+
+ligand_target_matrix <- read_rds(url("https://zenodo.org/record/3260758/files/ligand_target_matrix.rds"))
+lr_network <- read_rds(url("https://zenodo.org/record/3260758/files/lr_network.rds"))
+weighted_networks <- read_rds(url("https://zenodo.org/record/3260758/files/weighted_networks.rds"))
+
+```
+
+
+```{r chunk_060}
+
+## one receiver against all senders --------------------------------------
+
+nichenet_output_cell_type <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/nichenet/nichenet_output_cell_type.rds")
+nichenet_output_cluster_label <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/nichenet/nichenet_output_cluster_label.rds")
+
+## pairwise receiver sender comparisons --------------------------------------
+
+nichenet_output_cell_type_pw <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/nichenet/nichenet_output_cell_type_pairwise.rds")
+nichenet_output_cluster_label_pw <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/nichenet/nichenet_output_cluster_label_pairwise.rds")
+
+## spectrum - expressed ligand receptor pairs per cell type and paitent -----
+
+lr_spectrum <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/nichenet/lr_network_spectrum_pd1.tsv")
+lr_spectrum_summary <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/nichenet/lr_network_spectrum_summary_pd1.tsv")
+
+```
+
+# Ligand receptor pairs per condition 
+
+```{r chunk_070, fig.width=10, fig.height=8}
+
+extract_df <- function(df_name) {
+  
+  df1 <- map_depth(nichenet_output_cell_type, 2, df_name) %>% 
+    map_depth(1, bind_rows, .id = "comp") %>% 
+    bind_rows(.id = "receiver") %>% 
+    mutate(interaction_lvl = "cell_type",
+           sender = "all")
+  
+  df2 <- map_depth(nichenet_output_cluster_label, 2, df_name) %>% 
+    map_depth(1, bind_rows, .id = "comp") %>% 
+    bind_rows(.id = "receiver") %>% 
+    mutate(interaction_lvl = "cluster_label",
+           sender = "all")
+  
+  df3 <- map_depth(nichenet_output_cell_type_pw, 3, df_name) %>% 
+    map_depth(2, bind_rows, .id = "comp") %>% 
+    map_depth(1, bind_rows, .id = "receiver") %>% 
+    bind_rows(.id = "sender") %>% 
+    mutate(interaction_lvl = "cell_type")
+  
+  df4 <- map_depth(nichenet_output_cluster_label_pw, 3, df_name) %>% 
+    map_depth(2, bind_rows, .id = "comp") %>% 
+    map_depth(1, bind_rows, .id = "receiver") %>% 
+    bind_rows(.id = "sender") %>% 
+    mutate(interaction_lvl = "cluster_label")
+  
+  df_all <- bind_rows(df1, df2, df3, df4) 
+  
+  return(df_all)
+  
+}
+
+ligand_activties_tbl <- extract_df("ligand_activities") 
+ligand_receptor_tbl <- extract_df("ligand_receptor_df_bonafide") 
+
+write_tsv(distinct(ligand_receptor_tbl, ligand, receptor), "/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/nichenet/lr_network_bonafide.tsv")
+
+```
+
+```{r chunk_080, fig.width=25, fig.height=10}
+
+ggplot(filter(lr_spectrum_summary, consensus_signature %in% c("FBI", "HRD-Dup", "HRD-Del")),
+       aes(sender, receiver, fill = mean_n)) +
+  geom_tile() +
+  facet_grid(ct_receiver~consensus_signature, scales = "free", space = "free") +
+  scale_fill_viridis() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank())
+
+```
+
+# ligand receptor graph
+
+```{r chunk_080, fig.width=25, fig.height=15}
+
+ct_clr_tbl <- clrs$cluster_label %>% 
+  lapply(enframe, "cluster_label", "cl_color") %>% 
+  bind_rows(.id = "cell_type") %>% 
+  mutate(cell_type = str_replace_all(cell_type, "super", "cell")) %>% 
+  mutate(cell_type = str_replace_all(cell_type, "Fibroblast.cell", "Fibroblast")) %>% 
+  left_join(enframe(clrs$cell_type, "cell_type", "ct_color"), by = "cell_type")
+
+library(igraph)
+
+plot_graph <- function(loi, roi, cs, nmin = 0.25, min.pct = 0.1) {
+  
+  get_lr_mat <- function(cs) {
+    lr_spectrum %>% 
+      filter(ligand %in% loi, receptor %in% roi) %>% 
+      filter(pct.lig > min.pct, pct.rec > min.pct) %>%
+      # filter((pct.lig > min.pct & pct.rec > min.pct) | str_detect(sender, "^Cancer.cell")) %>%
+      # filter((pct.lig > min.pct/2 & pct.rec > min.pct/2)) %>%
+      filter(ct_receiver %in% c("T.cell")) %>%  
+      filter(ct_sender %in% c("Ovarian.cancer.cell", "Myeloid.cell")) %>% 
+      filter(consensus_signature %in% cs) %>% 
+      mutate(np = length(unique(patient_id))) %>% 
+      unite("lr", receptor, ligand) %>% 
+      select(receiver, sender, lr, np) %>% 
+      group_by(receiver, sender) %>% 
+      summarise(n = length(lr), np = np) %>% 
+      ungroup %>% 
+      distinct(receiver, sender, n, np) %>% 
+      mutate(nrel = n/np) %>% 
+      filter(nrel >= nmin) %>% 
+      select(-n, -np) %>% 
+      mutate(receiver = ordered(receiver, levels = unique(c(receiver, sender)))) %>% 
+      mutate(sender = ordered(sender, levels = levels(receiver))) %>% 
+      complete(receiver, nesting(sender), fill = list(nrel = 0)) %>% 
+      complete(sender, nesting(receiver), fill = list(nrel = 0)) %>% 
+      spread(receiver, nrel) %>% 
+      as.data.frame() %>% 
+      set_rownames(.$sender) %>% 
+      select(-sender) %>% 
+      as.matrix()
+  } 
+  
+  css <- c("HRD-Dup", "HRD-Del", "FBI")
+  lr_mat_list <- setNames(lapply(css, get_lr_mat), css)
+  node_names <- unique(c(unlist(lapply(lr_mat_list, colnames), use.names = F), unlist(lapply(lr_mat_list, rownames), use.names = F)))
+  
+  lr_mat <- matrix(nrow = length(node_names), ncol = length(node_names)) %>% 
+    set_colnames(node_names) %>% 
+    set_rownames(node_names)
+  
+  lr_mat[rownames(lr_mat_list[[cs]]), colnames(lr_mat_list[[cs]])] <- lr_mat_list[[cs]]
+  lr_mat[is.na(lr_mat)] <- 0
+  
+  lr_lig_pct <- lr_spectrum %>% 
+    filter(ligand %in% loi, receptor %in% roi, pct.lig > min.pct, pct.rec > min.pct) %>% 
+    filter(ct_receiver %in% c("T.cell")) %>%  
+    filter(ct_sender %in% c("Ovarian.cancer.cell", "Myeloid.cell")) %>% 
+    filter(consensus_signature %in% cs) %>% 
+    group_by(sender) %>% 
+    summarise(pct.expr = mean(pct.lig)) %>% 
+    rename(node = sender)
+
+  lr_rec_pct <- lr_spectrum %>% 
+    filter(ligand %in% loi, receptor %in% roi, pct.lig > min.pct, pct.rec > min.pct) %>% 
+    filter(ct_receiver %in% c("T.cell")) %>%  
+    filter(ct_sender %in% c("Ovarian.cancer.cell", "Myeloid.cell")) %>% 
+    filter(consensus_signature %in% cs) %>% 
+    group_by(receiver) %>% 
+    summarise(pct.expr = mean(pct.rec)) %>% 
+    rename(node = receiver)
+  
+  lr_size <- bind_rows(lr_lig_pct, lr_rec_pct) %>% 
+    mutate(node = ordered(node, levels = ct_clr_tbl$cluster_label)) %>% 
+    complete(node, fill = list(pct.expr = min.pct)) %>% 
+    deframe
+  
+  lr_graph <- graph_from_adjacency_matrix(lr_mat, weighted = T)
+  
+  E(lr_graph)$width <- (E(lr_graph)$weight*2)^2
+  
+  V(lr_graph)$color <- deframe(select(ct_clr_tbl, cluster_label, ct_color))[names(V(lr_graph))]
+  
+  V(lr_graph)$frame.color <- NA
+  V(lr_graph)$label.font <- 1
+  V(lr_graph)$label.family <- "sans"
+  V(lr_graph)$label.color <- "black"
+  
+  V(lr_graph)$size <- lr_size[names(V(lr_graph))]*100
+  # E(lr_graph)$width <- lr_width[names(E(lr_graph))]*200
+  
+  # V(lr_graph)$name <- V(lr_graph)$size
+  
+  par(mar = c(0.5, 0.5, 0.5, 0.5))
+  plot(lr_graph, edge.arrow.size = 0.3, layout = layout_in_circle)
+  
+}
+
+plot_graph_grid <- function(loi, roi, nm) {
+  layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
+  plot_graph(loi, roi, "HRD-Dup", nm)
+  plot_graph(loi, roi, "HRD-Del", nm)
+  plot_graph(loi, roi, "FBI", nm)
+}
+
+# plot_graph_grid("FN1", 5)
+# plot_graph_grid("COL1A1", 5)
+# plot_graph_grid("SPP1", 5)
+# plot_graph_grid("ADAM9", 5)
+# plot_graph_grid("TGFB1", 5)
+# plot_graph_grid("DUSP18", 5)
+
+pd1_graph <- ggplotify::base2grob(~plot_graph_grid("CD274", "PDCD1", 0.2))
+
+
+```
+
+```{r chunk_090, fig.width=25, fig.height=15}
+
+pd1_graph_legend <- tibble(label = c("PDL1 expr. sender\n(Cancer/Myeloid)", "PD1 expr. receiver\n(T cell)", NA, NA), x = c(0, 1, 0, 1), y = c(0, 0, 0.1, 0.1), xend = c(1, NA, 1, NA), yend = c(0, NA, 0.1, NA), color = c("Myeloid.cell", "T.cell", "Ovarian.cancer.cell", "T.cell"), size = c("A", NA, "B", NA)) %>% 
+  ggplot() +
+  geom_segment(aes(x, y, xend = xend, yend = yend), 
+               color = "grey", arrow = arrow(type = "closed")) +
+  geom_segment(aes(x, y, xend = xend, yend = yend, size = size), 
+               color = "grey") +
+  scale_size_manual(values = c(1.8, 0.1)) +
+  geom_point(aes(x, y, color = color), size = 7) +
+  geom_text(aes(x, y, label = label), nudge_y = -0.25) +
+  scale_color_manual(values = clrs$cell_type) +
+  theme_void() +
+  annotate(geom = "text", label = "Co-expr. in 20% of p.", x = 0.5, y = 0.17) +
+  annotate(geom = "text", label = "Co-expr. in 100% of p.", x = 0.5, y = -0.07) +
+  guides(color = F, size = F) +
+  coord_cartesian(clip = "off", ylim = c(-0.5, 0.5))
+
+
+pd1_size_legend <- tibble(x = seq(10, 50, length.out = 5), y = 1:5) %>% 
+  ggplot() + 
+  scale_size_continuous(breaks = c(10, 30, 50)) + 
+  guides(size = guide_legend(override.aes = list(size = c(seq(2, 12, length.out = 3))))) +
+  theme(legend.title = element_text(size = 10), legend.text = element_text(size = 10))
+  
+pd1_size_legend_cc <- pd1_size_legend +
+  geom_point(aes(x, y, size = x), color = clrs$cell_type["Ovarian.cancer.cell"]) +
+  labs(size = "Mean PDL1 expr.\nCancer cells [%]")
+#pd1_size_legend_cc
+
+pd1_size_legend_mc <- pd1_size_legend +
+  geom_point(aes(x, y, size = x), color = clrs$cell_type["Myeloid.cell"]) +
+  labs(size = "Mean PDL1 expr.\nMyeloid cells [%]")
+
+pd1_size_legend_tc <- pd1_size_legend +
+  geom_point(aes(x, y, size = x), color = clrs$cell_type["T.cell"]) +
+  labs(size = "Mean PD1 expr.\nT cells [%]")
+
+
+ggdraw() +
+  draw_grob(pd1_graph) +
+  draw_label("HRD-Dup", x = 0.2, y = 0.68) +
+  draw_label("HRD-Del", x = 0.52, y = 0.68) +
+  draw_label("FBI", x = 0.84, y = 0.68) +
+  draw_plot(pd1_graph_legend, x = 0.1, y = 0.13, width = 0.25, height = 0.3) +
+  draw_grob(get_legend(pd1_size_legend_mc), x = 0.5, y = -0.25) +
+  draw_grob(get_legend(pd1_size_legend_cc), x = 0.65, y = -0.25) +
+  draw_grob(get_legend(pd1_size_legend_tc), x = 0.8, y = -0.25)
+
+ggsave_pdf("figures/710_Nichenet_plotting/007_PDL1_PD1_network.pdf", width = 8, height = 8)
+
+
+```
+
+
+# Standard nichnet plots
+
+```{r chunk_200, fig.width=25, fig.height=15}
+
+nichnet_plot_wrapper <- function(x) {
+  
+  p1 <- plot_grid(x$HRD_Dup_FBI$ligand_receptor_heatmap_bonafide + labs(title = "HRD_Dup_FBI"),
+                  x$HRD_Dup_HRD_Del$ligand_receptor_heatmap_bonafide + labs(title = "HRD_Dup_HRD_Del"),
+                  x$HRD_Del_FBI$ligand_receptor_heatmap_bonafide + labs(title = "HRD_Del_FBI"), ncol = 3)
+  
+  p2 <- plot_grid(x$HRD_Dup_FBI$ligand_activity_target_heatmap + labs(title = "HRD_Dup_FBI"),
+                  x$HRD_Dup_HRD_Del$ligand_activity_target_heatmap + labs(title = "HRD_Dup_HRD_Del"),
+                  x$HRD_Del_FBI$ligand_activity_target_heatmap + labs(title = "HRD_Del_FBI"), ncol = 3)
+  
+  return(plot_grid(p1, p2, ncol = 1))
+  
+}
+
+```
+
+## T.cell => Ovarian.cancer.cell
+
+```{r chunk_210, fig.width=15, fig.height=8}
+
+nichnet_plot_wrapper(nichenet_output_cell_type_pw$T.cell$Ovarian.cancer.cell)
+
+```
+
+## Ovarian.cancer.cell => T.cell
+
+```{r chunk_220, fig.width=15, fig.height=8}
+
+nichnet_plot_wrapper(nichenet_output_cell_type_pw$Ovarian.cancer.cell$T.cell)
+
+```
+
+## T.cell => Myeloid.cell
+
+```{r chunk_230, fig.width=15, fig.height=8}
+
+#nichnet_plot_wrapper(nichenet_output_cell_type_pw$T.cell$Myeloid.cell)
+
+```
+
+## Myeloid.cell => T.cell
+
+```{r chunk_240, fig.width=15, fig.height=8}
+
+#nichnet_plot_wrapper(nichenet_output_cell_type_pw$Myeloid.cell$T.cell)
+
+```
+
+## Myeloid.cell => Ovarian.cancer.cell
+
+```{r chunk_250, fig.width=25, fig.height=15}
+
+#nichnet_plot_wrapper(nichenet_output_cell_type_pw$Myeloid.cell$Ovarian.cancer.cell)
+
+```
+
+## Ovarian.cancer.cell => Myeloid.cell
+
+```{r chunk_260, fig.width=25, fig.height=15}
+
+#nichnet_plot_wrapper(nichenet_output_cell_type_pw$Ovarian.cancer.cell$Myeloid.cell)
+
+```
+
+## any => CD8.T.CXCL13
+
+```{r chunk_270, fig.width=5, fig.height=10}
+
+nichenet_output_cluster_label$CD8.T.CXCL13$HRD_Dup_FBI$ligand_activity_target_heatmap + labs(title = "HRD_Dup_FBI")
+nichenet_output_cluster_label$CD8.T.CXCL13$HRD_Dup_HRD_Del$ligand_activity_target_heatmap + labs(title = "HRD_Dup_HRD_Del")
+
+```
+
+# Interesting observations
+
+```{r chunk_300, fig.width=8, fig.height=6}
+
+get_data_wrapper <- function(seu_obj) as_tibble(FetchData(seu_obj, c("umapharmony_1", "umapharmony_2", "cell_type", "cluster_label", "IL27", "IL6R", "CD274", "PDCD1")))
+
+plot_data <- lapply(list(seu_cc, seu_fb, seu_ml, seu_tc), get_data_wrapper) %>% 
+  bind_rows
+
+plot_wrapper <- function(gene) {
+  gene <- enquo(gene)
+  ggplot(plot_data, aes(umapharmony_1, umapharmony_2, color = !!gene)) +
+    geom_point(size = 0.1) + 
+    facet_wrap(~cell_type) +
+    scale_color_viridis() + 
+    theme_void()
+}
+
+plot_wrapper(IL27)
+plot_wrapper(IL6R)
+plot_wrapper(CD274)
+plot_wrapper(PDCD1)
+
+```
+
+```{r chunk_310, fig.width=8, fig.height=6}
+
+ligand_target_matrix[,"CD274"] %>% 
+  .[.>0.001] %>% 
+  sort
+
+```
+
+
+
+
