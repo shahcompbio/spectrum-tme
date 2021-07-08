@@ -90,13 +90,25 @@ tumor_supersite:
   UQ: "#009E73" # palette_OkabeIto[5]
   Other: "#999999" # grey60
   Unknown: "#999999" # grey60
+tumor_supersite_adnexa:
+  Adnexa: "#ff0000"
+  Ovary: "#ff0000"
+  Fallopian Tube: "#ff0000"
+  Ascites: "#E69F00" # palette_OkabeIto[1]
+  Bowel: "#56B4E9" # palette_OkabeIto[2]
+  Omentum: "#0072B2" # palette_OkabeIto[3]
+  Peritoneum: "#F0E442" # palette_OkabeIto[4]
+  Upper Quadrant: "#009E73" # palette_OkabeIto[5]
+  UQ: "#009E73" # palette_OkabeIto[5]
+  Other: "#999999" # grey60
+  Unknown: "#999999" # grey60
 tumor_site:
   Left Adnexa: "#ff0000"
   Right Adnexa: "#ff0000"
   Ascites: "#E69F00" # palette_OkabeIto[1]
   Bowel: "#56B4E9" # palette_OkabeIto[2]
   Omentum: "#0072B2" # palette_OkabeIto[3]
-  Pelvic Peritoneum: "#F0E442" # palette_OkabeIto[4]
+  Peritoneum: "#F0E442" # palette_OkabeIto[4]
   Left Upper Quadrant: "#009E73" # palette_OkabeIto[5]
   Right Upper Quadrant: "#009E73" # palette_OkabeIto[5]
   Other: "#999999" # grey60
@@ -104,6 +116,10 @@ tumor_site:
 tumor_type:
   Primary: "#ff0000"
   Metastasis: "#56B4E9" # palette_OkabeIto[2]
+  Unknown: "#999999" # grey60
+tumor_type_adnexa:
+  Adnexa: "#ff0000"
+  Other: "#56B4E9" # palette_OkabeIto[2]
   Unknown: "#999999" # grey60
 patient_id: 
   SPECTRUM-OV-002: "#ee2f00"
@@ -153,11 +169,18 @@ patient_id:
   SPECTRUM-OV-118: "#b00000" ######### updated in v7
 cluster_label_super:
   T.super:
+    CD4.T: "#ff8a8a"
+    CD8.T: "#43a047"
+    NK: "4FC3F7"
+    Cycling: "#d58805"
+    Other: "#b3b3b3"
+  T.naive.dysfunctional:
     CD4.T.naive.mem: "#ff8a8a"
     CD4.T.dysfunctional: "#891417"
     CD8.T.naive.mem: "#43a047"
     CD8.T.dysfunctional: "#8bc34a"
     NK: "4FC3F7"
+    Cycling: "#d58805"
     Other: "#b3b3b3"
   Myeloid.super:
     M1: "#77a1cd"
@@ -400,10 +423,19 @@ cell_state_mpif:
   PDL1-: "#999999"
   TOX+: "#8BC34A"
   TOX-: "#999999"
+channel_mpif:
+  panCK: "#e31a1c"
+  CD8: "#33a02c"
+  CD68: "#ff7f00"
+  PD1: "#8ED8EE"
+  PDL1: "#3285BC"
+  TOX: "#8BC34A"
+  Other: "#999999"
+  Unknown: "#dedede"
 cell_phenotype_mpif:
   CD8+PD1-TOX-: "#33a02c"
   CD8+PD1+TOX-: "#6da02c"
-  CD8+PD1-TOX+: "#2ca05f"
+  # CD8+PD1-TOX+: "#2ca05f"
   CD8+PD1+TOX+: "#95cfaf"
   CD68+PDL1-: "#ff7f00"
   # CD68+PD1+: "#3285bc"
@@ -442,14 +474,30 @@ cell_phenotype_pair_mpif:
   panCK+PDL1-:CD68+PDL1-: "#f18c8d"
   panCK+PDL1+:CD68+PDL1+: "#f18c8d"
   panCK+PDL1+:CD68+PDL1-: "#f18c8d"
+  CD8+PD1-TOX-:panCK+PDL1+: "#f18c8d"
+  CD8+PD1-TOX-:panCK+PDL1-: "#f18c8d"
   CD8+PD1+TOX-:panCK+PDL1+: "#f18c8d"
   CD8+PD1+TOX-:panCK+PDL1-: "#f18c8d"
   CD8+PD1+TOX+:panCK+PDL1+: "#f18c8d"
   CD8+PD1+TOX+:panCK+PDL1-: "#f18c8d"
+  CD8+PD1-TOX-:CD68+PDL1+: "#f18c8d"
+  CD8+PD1-TOX-:CD68+PDL1-: "#f18c8d"
   CD8+PD1+TOX-:CD68+PDL1+: "#f18c8d"
   CD8+PD1+TOX-:CD68+PDL1-: "#f18c8d"
   CD8+PD1+TOX+:CD68+PDL1+: "#f18c8d"
   CD8+PD1+TOX+:CD68+PDL1-: "#f18c8d"
+  panCK+PDL1+:CD8+PD1-TOX-: "#f18c8d"
+  panCK+PDL1-:CD8+PD1-TOX-: "#f18c8d"
+  panCK+PDL1+:CD8+PD1+TOX-: "#f18c8d"
+  panCK+PDL1-:CD8+PD1+TOX-: "#f18c8d"
+  panCK+PDL1+:CD8+PD1+TOX+: "#f18c8d"
+  panCK+PDL1-:CD8+PD1+TOX+: "#f18c8d"
+  CD68+PDL1+:CD8+PD1-TOX-: "#f18c8d"
+  CD68+PDL1-:CD8+PD1-TOX-: "#f18c8d"
+  CD68+PDL1+:CD8+PD1+TOX-: "#f18c8d"
+  CD68+PDL1-:CD8+PD1+TOX-: "#f18c8d"
+  CD68+PDL1+:CD8+PD1+TOX+: "#f18c8d"
+  CD68+PDL1-:CD8+PD1+TOX+: "#f18c8d"
 cell_state_if:
   cGAS+: "#e31a1c"
   cGAS-: "#999999"
@@ -522,17 +570,17 @@ cn_state:
   Gain: "#ff0000"
   Loss: "#0072B2"
 ascn_state_short:
-  Balanced: "#3182BD"
-  Imbalanced: "#9ECAE1"
-  LOH: "#CCCCCC"
+  Balanced: "#d5d5d4"
+  Imbalanced: "#53AFC0"
+  LOH: "#025767"
 ascn_state:
-  A-Gained: "#53AFC0"
   A-Hom: "#025767"
   A-LOH: "#025767"
-  B-Gained: "#FF9E41"
+  A-Gained: "#53AFC0"
   B-Hom: "#A75200"
-  B-LOH: "#9ECAE1"
-  Balanced: "#999999"
+  B-LOH: "#A75200"
+  B-Gained: "#FF9E41"
+  Balanced: "#d5d5d4"
 pathology_stage:
   IIB: "#f1eef6" #
   # III: "#C7E9B4"
