@@ -80,7 +80,9 @@ plot_data <- cbind(cell_id = colnames(seu_obj_cc), FetchData(seu_obj_cc, c("umap
   left_join(scrna_meta_tbl, by = "sample") %>% 
   filter(!is.na(consensus_signature)) %>% 
   mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super)),
-         cluster_number = as.numeric(cluster_label))
+         cluster_number = as.numeric(cluster_label)) %>% 
+  mutate(umapscaled_1 = scales::rescale(umapharmony_1),
+         umapscaled_2 = scales::rescale(umapharmony_2))
 
 base_umap <- ggplot(plot_data) +
   coord_fixed() +
@@ -109,12 +111,16 @@ dpi <- 150
 median_tbl <- plot_data %>%
   group_by(patient_id_short) %>% 
   summarise(umappca_1 = median(umappca_1), 
-            umappca_2 = median(umappca_2))
+            umappca_2 = median(umappca_2),
+            umapscaled_1 = median(umapscaled_1),
+            umapscaled_2 = median(umapscaled_2))
 
 median_tbl_cluster <- plot_data %>%
   group_by(cluster_label, cluster_number) %>% 
   summarise(umapharmony_1 = median(umapharmony_1), 
-            umapharmony_2 = median(umapharmony_2))
+            umapharmony_2 = median(umapharmony_2),
+            umapscaled_1 = median(umapscaled_1),
+            umapscaled_2 = median(umapscaled_2))
 
 umap_pca_mutsig <- base_umap + 
   ggrastr::geom_point_rast(aes(umappca_1, umappca_2, color = consensus_signature), 
@@ -337,6 +343,76 @@ ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_pathways.pdf",
 
 [figures/320_cancer_cell_plotting_umap/003_umap_pathways.pdf](figures/320_cancer_cell_plotting_umap/003_umap_pathways.pdf)
 
+## Kernel density UMAPs
+
+```{r chunk_320_073}
+
+source("src/umap_kernel.R")
+
+rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
+
+kernel_umap_wrapper <- function(kernel_subsets_a = c("FBI"),
+                                kernel_subsets_b = c("HRD-Dup", "HRD-Del", "TD"),
+                                quench = 0.015) {
+  
+  kernel_tbl <- kde2d_contrast(
+    data_tbl = plot_data %>% filter(tumor_supersite != "Ascites"),
+    x = umapharmony_1, y = umapharmony_2, kernel_group = consensus_signature,
+    kernel_subsets_a = kernel_subsets_a, kernel_subsets_b = kernel_subsets_b,
+    quench = quench
+  ) %>%
+    filter(value.x > 0.001 & value.y > 0.001)
+  
+  kernel_umap <- ggplot() +
+    ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), 
+                             color = "grey80", size = 0.01, alpha = 0.02, data = plot_data,
+                             raster.dpi = 50, raster.width = 10, raster.height = 10) +
+    ggrastr::geom_point_rast(aes(x, y, color = value_scaled), data = kernel_tbl, size = 0.01, 
+                             raster.dpi = 50, raster.width = 10, raster.height = 10) +
+    geom_point(aes(umapscaled_1, umapscaled_2), color = "white",
+               data = median_tbl_cluster, alpha = 0.1, size = 6) +
+    geom_text(aes(umapscaled_1, umapscaled_2, label = cluster_number), 
+              color = "black",
+              data = median_tbl_cluster) +
+    scale_color_gradientn(colours = rdbu,
+                          values = scales::rescale(c(min(kernel_tbl$value_scaled), 0,
+                                                     max(kernel_tbl$value_scaled)))) +
+    guides(color = guide_colorbar(label.position = "right",
+                                  title.position = "top",
+                                  title.hjust = 0,
+                                  title.vjust = 1,
+                                  direction = "vertical")) +
+    theme(aspect.ratio = 1,
+          legend.key.height = unit(0.05, "npc"),
+          legend.key.width = unit(0.03, "npc"),
+          legend.position = c(-0.1, 0.95),
+          legend.justification = c("left", "top"),
+          plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)) + 
+    labs(color = paste0("Enrichm."),
+         title = kernel_subsets_a) +
+    remove_xaxis +
+    remove_yaxis
+  
+  return(kernel_umap)
+}
+
+k1 <- kernel_umap_wrapper("HRD-Dup", c("FBI", "HRD-Del", "TD"), 0.015)
+k2 <- kernel_umap_wrapper("HRD-Del", c("FBI", "HRD-Dup", "TD"), 0.015) + remove_guides
+k3 <- kernel_umap_wrapper("FBI", c("HRD-Dup", "HRD-Del", "TD"), 0.015) + remove_guides
+k4 <- kernel_umap_wrapper("TD", c("FBI", "HRD-Dup", "HRD-Del"), 0.015) + remove_guides
+
+kernel_grid <- ggdraw() +
+  draw_plot(plot_grid(k1 + remove_guides, k2, k3, k4, ncol = 2, align = "hv"), 
+            width = 0.8, height = 1) +
+  draw_grob(get_legend(k1), x = 0.88, y = -0.25)
+
+kernel_grid
+
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/320_umap_cancer_kernels.pdf", width = 4.5, height = 4)
+ggsave_png("figures/320_cancer_cell_plotting_umap/320_umap_cancer_kernels.png", width = 4.5, height = 4)
+
+```
+
 ## Cluster marker heatmap
 
 ```{r chunk_320_075}
@@ -473,7 +549,7 @@ my_comparisons2 <- list(
 )
 
 
-boxplot_wrapper <- function(group_column, group_var_label, keys, comps, y_label, ylims, ncol) {
+boxplot_wrapper <- function(group_column, group_var_label, keys, comps, y_label, ylims, ncol, plabel = "p.signif") {
   
   group_column <- enquo(group_column)
   yrange <- ylims[2]-ylims[1]
@@ -505,7 +581,7 @@ boxplot_wrapper <- function(group_column, group_var_label, keys, comps, y_label,
       stat_compare_means(comparisons = comps, 
                          data = filter(plot_data_vio_summary, 
                                        key %in% keys),
-                         label = "p.signif", label.y = ylabels, 
+                         label = plabel, label.y = ylabels, 
                          tip.length = 0.01,
                          hide.ns = F)
   }
@@ -517,7 +593,7 @@ boxplot_wrapper <- function(group_column, group_var_label, keys, comps, y_label,
                          data = filter(plot_data_vio_summary,
                                        key %in% keys), 
                          label.y = ylabels[1], hide.ns = T,
-                         label = "p.signif")
+                         label = plabel)
   }
   
   return(p)
@@ -536,6 +612,14 @@ ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pw_violins.pdf",
 ggsave_png("figures/320_cancer_cell_plotting_umap/003_pw_violins.png", 
            violins_pw_mutsig, width = 6, height = 3)
 
+violins_pw_mutsig_pval <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", pois_short, my_comparisons, "PROGENy score", c(-1,5), 10, "p.format")
+
+violins_pw_mutsig_pval
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pw_violins_pval.pdf", 
+           violins_pw_mutsig_pval, width = 6, height = 3)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_pw_violins_pval.png", 
+           violins_pw_mutsig_pval, width = 6, height = 3)
+
 ```
 
 ```{r chunk_320_084, fig.width=6, fig.height=3}
@@ -547,6 +631,14 @@ ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pw_violins_short.pdf",
            violins_pw_mutsig_short, width = 6, height = 2.75)
 ggsave_png("figures/320_cancer_cell_plotting_umap/003_pw_violins_short.png", 
            violins_pw_mutsig_short, width = 6, height = 2.75)
+
+violins_pw_mutsig_short_pval <- boxplot_wrapper(consensus_signature_short, "Mutational\nsignature", pois_short, my_comparisons2, "PROGENy score", c(-1,5), 10, "p.format")
+
+violins_pw_mutsig_short_pval
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pw_violins_short_pval.pdf", 
+           violins_pw_mutsig_short_pval, width = 6, height = 2.75)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_pw_violins_short_pval.png", 
+           violins_pw_mutsig_short_pval, width = 6, height = 2.75)
 
 ```
 
@@ -560,6 +652,14 @@ ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pw_violins_cluster.pdf",
 ggsave_png("figures/320_cancer_cell_plotting_umap/003_pw_violins_cluster.png", 
            violins_pw_cluster, width = 8, height = 3)
 
+violins_pw_cluster_pval <- boxplot_wrapper(cluster_label, "Cluster", pois_short, ".all.", "Expression", c(-1,8), 10, "p.format")
+
+violins_pw_cluster_pval
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_pw_violins_cluster_pval.pdf", 
+           violins_pw_cluster_pval, width = 8, height = 3)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_pw_violins_cluster_pval.png", 
+           violins_pw_cluster_pval, width = 8, height = 3)
+
 ```
 
 
@@ -572,6 +672,13 @@ violins_hla_mutsig
 ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins.pdf", width = 7.5, height = 3.5)
 ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins.png", width = 7.5, height = 3.5)
 
+violins_hla_mutsig_pval <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", gois[-7], my_comparisons, "Expression", c(0,6.1), 10, "p.format")
+
+violins_hla_mutsig_pval
+
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins_pval.pdf", width = 7.5, height = 3.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins_pval.png", width = 7.5, height = 3.5)
+
 ```
 
 ```{r chunk_320_087, fig.width=9, fig.height=3.5}
@@ -583,6 +690,13 @@ violins_hla_mutsig_short
 ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins_mutsig_short.pdf", width = 7.5, height = 2.75)
 ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins_mutsig_short.png", width = 7.5, height = 2.75)
 
+violins_hla_mutsig_short_pval <- boxplot_wrapper(consensus_signature_short, "Mutational\nsignature", gois[-7], my_comparisons2, "Expression", c(0,6.1), 10, "p.format")
+
+violins_hla_mutsig_short_pval
+
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins_mutsig_short_pval.pdf", width = 7.5, height = 2.75)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins_mutsig_short_pval.png", width = 7.5, height = 2.75)
+
 ```
 
 ```{r chunk_320_088, fig.width=10, fig.height=3.5}
@@ -593,6 +707,13 @@ violins_hla_cluster
 
 ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins_cluster.pdf", width = 10, height = 3.5)
 ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins_cluster.png", width = 10, height = 3.5)
+
+violins_hla_cluster_pval <- boxplot_wrapper(cluster_label, "Cluster", gois[-7], ".all.", "Expression", c(0,6.1), 10, "p.format")
+
+violins_hla_cluster_pval
+
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_hla_violins_cluster_pval.pdf", width = 10, height = 3.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_hla_violins_cluster_pval.png", width = 10, height = 3.5)
 
 
 
@@ -655,6 +776,25 @@ umap_cd274_grid
 ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_cd274.pdf", 
            width = 7, height = 3.5)
 ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_cd274.png", 
+           width = 7, height = 3.5)
+
+## pval
+
+violins_cd274_cluster_pval <- boxplot_wrapper(cluster_label, "Cluster", "CD274", ".all.", "Expression", c(0,0.2), 10, "p.format") + scale_y_continuous(breaks = c(0, 0.1, 0.2))
+violins_cd274_mutsig_pval <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", "CD274", my_comparisons, "Expression", c(0, 0.2), 10, "p.format") + scale_y_continuous(breaks = c(0, 0.1, 0.2))
+
+umap_cd274_grid_pval <- ggdraw() +
+  draw_plot(add_umap_coord(umap_cd274, x_offset = -0.075, textsize = 3), 
+            x = 0, y = 0.33, width = 0.4, height = 0.66) +
+  draw_plot(plot_grid(violins_cd274_cluster_pval, violins_cd274_mutsig_pval, 
+                      rel_widths = c(0.55, 0.45), align = "h"),
+            x = 0.4, y = 0, width = 0.6, height = 1)
+
+umap_cd274_grid_pval
+
+ggsave_pdf("figures/320_cancer_cell_plotting_umap/003_umap_cd274_pval.pdf", 
+           width = 7, height = 3.5)
+ggsave_png("figures/320_cancer_cell_plotting_umap/003_umap_cd274_pval.png", 
            width = 7, height = 3.5)
 
 ```
