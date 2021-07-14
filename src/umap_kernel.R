@@ -37,7 +37,11 @@ kde2d_contrast <- function(data_tbl, x, y, kernel_group, kernel_subsets_a, kerne
   kernel_tbl <- kernel_a %>% 
     left_join(kernel_b, by = c("x", "y")) %>% 
     mutate(value = value.x - value.y) %>% 
-    mutate(value_quenched = scales::rescale(ifelse(value > quench, quench, ifelse(value < -quench, -quench, value)), c(-1, 1)))
+    mutate(delta_group = value > 0) %>% 
+    group_by(delta_group) %>% 
+    mutate(value_quenched = ifelse(value > quench, quench, ifelse(value < -quench, -quench, value))) %>% 
+    mutate(value_scaled = ifelse(delta_group, scales::rescale(value_quenched, c(0, 1)), scales::rescale(value_quenched, c(-1, 0)))) %>% 
+    ungroup()
   
   return(kernel_tbl)
   
