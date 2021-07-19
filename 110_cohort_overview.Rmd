@@ -24,7 +24,7 @@ library(data.table)
 library(openxlsx)
 library(gtable)
 library(cowplot)
-library(grid)
+library(grid) 
 library(ComplexHeatmap)
 library(viridis)
 library(RColorBrewer)
@@ -360,7 +360,7 @@ mat <- data %>%
 
 ## OncoPrint (main)
 
-```{r, fig.width = 8, fig.height = 4.25}
+```{r, fig.width = 8, fig.height = 4.5}
 
 snv_cna_fusions_wide_tbl <- snv_cna_fusions_tbl %>%
   filter(patient_id %in% scrna_patients) %>%
@@ -409,10 +409,10 @@ top_df <- db$mutational_signatures %>%
                 gyn_diagnosis_figo_stage) %>%
   as.data.frame
 
-colnames(top_df) <- c("Signature", "Age", "Surgery", "Stage")
+colnames(top_df) <- c("Mutational\nsignature", "Age", "Surgery", "Stage")
 colours <-
   list(
-    "Signature" = clrs$consensus_signature[names(clrs$consensus_signature)!="NA"],
+    "Mutational\nsignature" = clrs$consensus_signature[names(clrs$consensus_signature)!="NA"],
     "Age" = circlize::colorRamp2(seq(30, 90, 20), brewer.pal(4, "RdPu")),
     "Surgery" = clrs$chemo_intent[names(clrs$chemo_intent)!="Salvage"],
     "Stage" = clrs$pathology_stage
@@ -462,7 +462,7 @@ oncoprint_main_ht <-
     top_annotation = top_annotation,
     bottom_annotation = bottom_annotation,
     right_annotation = right_annotation,
-    column_split = top_df$Signature
+    column_split = top_df$`Mutational\nsignature`
   )
 
 oncoprint_main_lgd_list <- plot_oncoprint_legend()
@@ -479,11 +479,11 @@ rownames(oncoprint_main_ht@matrix)
 
 colnames(oncoprint_main_ht@matrix)
 
-cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.pdf", width = 13.5, height = 4.4)
+cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.pdf", width = 13.5, height = 4.5)
 print(oncoprint_main_ht)
 dev.off()
 
-png("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.png", width = 13.5, height = 4.4, res = 300)
+png("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.png", width = 13.5, height = 4.5, res = 300)
 print(oncoprint_main_ht)
 dev.off()
 
@@ -491,7 +491,7 @@ dev.off()
 
 ## OncoPrint (supplement)
 
-```{r, fig.width = 13.5, fig.height = 4.4}
+```{r, fig.width = 13.5, fig.height = 4.5}
 
 snv_cna_fusions_wide_tbl <- snv_cna_fusions_tbl %>%
   filter(patient_id %in% included_patients) %>%
@@ -542,10 +542,10 @@ top_df <- db$mutational_signatures %>%
                 gyn_diagnosis_figo_stage) %>%
   as.data.frame
 
-colnames(top_df) <- c("Signature", "Age", "Surgery", "Stage")
+colnames(top_df) <- c("Mutational\nsignature", "Age", "Surgery", "Stage")
 colours <-
   list(
-    "Signature" = clrs$consensus_signature[names(clrs$consensus_signature) !=
+    "Mutational\nsignature" = clrs$consensus_signature[names(clrs$consensus_signature) !=
                                                "NA"],
     "Age" = circlize::colorRamp2(seq(30, 90, 20), brewer.pal(4, "PuRd")),
     "Surgery" = clrs$chemo_intent[names(clrs$chemo_intent) != "Salvage"],
@@ -583,7 +583,7 @@ oncoprint_supp_ht <-
     top_annotation = top_annotation,
     bottom_annotation = bottom_annotation,
     right_annotation = right_annotation,
-    column_split = top_df$Signature
+    column_split = top_df$`Mutational\nsignature`
   )
 
 print(nrow(oncoprint_supp_ht@matrix))
@@ -599,11 +599,11 @@ oncoprint_supp_ht <- ComplexHeatmap::draw(
   heatmap_legend_list = oncoprint_supp_lgd_list
 )
 
-cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients.pdf", width = 13.5, height = 4.4)
+cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients.pdf", width = 13.5, height = 4.5)
 print(oncoprint_supp_ht)
 dev.off()
 
-png("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients.png", width = 13.5, height = 4.4, res = 300)
+png("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients.png", width = 13.5, height = 4.5, res = 300)
 print(oncoprint_supp_ht)
 dev.off()
 
@@ -675,7 +675,7 @@ ComplexHeatmap::draw(inventory_ht,
 
 ```
 
-```{r, fig.width = 9, fig.height = 8.75}
+```{r, fig.width = 9, fig.height = 8.8}
 
 ht_list <- oncoprint_main_ht %v% inventory_ht 
 
@@ -696,11 +696,11 @@ cohort_ht <- ComplexHeatmap::draw(
   # column_order = column_order)#, column_split = ann)
 
 
-cairo_pdf("figures/110_cohort_overview/110_cohort_overview.pdf", width = 9, height = 8.75)
+cairo_pdf("figures/110_cohort_overview/110_cohort_overview.pdf", width = 9, height = 8.8)
 print(cohort_ht)
 dev.off()
 
-png("figures/110_cohort_overview/110_cohort_overview.png", width = 9, height = 8.75, res = 300)
+png("figures/110_cohort_overview/110_cohort_overview.png", width = 9, height = 8.8, res = 300)
 print(cohort_ht)
 dev.off()
 
