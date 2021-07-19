@@ -1,7 +1,7 @@
 consensus_signature:
   HRD-Dup: "#5890c0"
   HRD-Del: "#62a766"
-  HRD: "#4ac4b9"
+  HRD-Other: "#4ac4b9"
   FBI: "#833216"
   TD: "#d1352d"
   Undetermined: "#7f7f7f" # grey50
