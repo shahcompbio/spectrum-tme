@@ -289,46 +289,66 @@ ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel.png", 
 
 ```{r chunk_510_63, fig.width=5, fig.height=5}
 
-kernel_tbl_fbi <- kde2d_contrast(
-  data_tbl = plot_data_sub %>% filter(tumor_supersite != "Ascites"),
-  x = umapharmony_1, y = umapharmony_2, kernel_group = consensus_signature,
-  kernel_subsets_a = c("FBI"), kernel_subsets_b = c("HRD-Dup", "HRD-Del", "TD")
-) %>%
-  filter(value.x > 0.001 & value.y > 0.001)
+kernel_umap_wrapper <- function(kernel_subsets_a = c("FBI"),
+                                kernel_subsets_b = c("HRD-Dup", "HRD-Del", "TD"),
+                                quench = 0.015,
+                                color_title = paste0("Enrichm.\nin ", kernel_subsets_a)) {
+  
+  kernel_tbl <- kde2d_contrast(
+    data_tbl = plot_data_sub %>% filter(tumor_supersite != "Ascites"),
+    x = umapharmony_1, y = umapharmony_2, kernel_group = consensus_signature,
+    kernel_subsets_a = kernel_subsets_a, kernel_subsets_b = kernel_subsets_b,
+    quench = quench
+  ) %>%
+    filter(value.x > 0.001 & value.y > 0.001)
+  
+  kernel_umap <- ggplot() +
+    ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), 
+                             color = "grey80", size = 0.01, alpha = 0.02, data = plot_data_sub,
+                             raster.dpi = 50, raster.width = 10, raster.height = 10) +
+    ggrastr::geom_point_rast(aes(x, y, color = value_scaled), data = kernel_tbl, size = 0.01, 
+                             raster.dpi = 50, raster.width = 10, raster.height = 10) +
+    geom_point(aes(umapscaled_1, umapscaled_2), color = "white",
+               data = plot_data_label, alpha = 0.1, size = 6) +
+    geom_text(aes(umapscaled_1, umapscaled_2, label = cluster_number), 
+              color = "black",
+              data = plot_data_label) +
+    scale_color_gradientn(colours = rdbu,
+                          values = scales::rescale(c(min(kernel_tbl$value_scaled), 0,
+                                                     max(kernel_tbl$value_scaled)))) +
+    guides(color = guide_colorbar(label.position = "right",
+                                  title.position = "top",
+                                  title.hjust = 0,
+                                  title.vjust = 1,
+                                  direction = "vertical")) +
+    theme(aspect.ratio = 1,
+          legend.key.height = unit(0.05, "npc"),
+          legend.key.width = unit(0.03, "npc"),
+          legend.position = c(-0.1, 0.95),
+          legend.justification = c("left", "top"),
+          plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)) + 
+    labs(color = color_title,
+         title = paste0(kernel_subsets_a, collapse = ", ")) +
+    remove_xaxis +
+    remove_yaxis
+  
+  return(kernel_umap)
+}
 
-rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
+k1 <- kernel_umap_wrapper("HRD-Dup", c("FBI", "HRD-Del", "TD"), 0.015, "Enrichm.")
+k2 <- kernel_umap_wrapper("HRD-Del", c("FBI", "HRD-Dup", "TD"), 0.015) + remove_guides
+k3 <- kernel_umap_wrapper("FBI", c("HRD-Dup", "HRD-Del", "TD"), 0.015) + remove_guides
+k4 <- kernel_umap_wrapper("TD", c("FBI", "HRD-Dup", "HRD-Del"), 0.015) + remove_guides
 
-kernel_umap_fbi <- ggplot() +
-  ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), color = "grey80", size = 0.01, alpha = 0.02,
-                           data = plot_data_sub,
-                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
-  ggrastr::geom_point_rast(aes(x, y, color = value_quenched), data = kernel_tbl_fbi, size = 0.01, 
-                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
-  geom_point(aes(umapscaled_1, umapscaled_2), color = "white",
-             data = plot_data_label, alpha = 0.5, size = 6) +
-  geom_text(aes(umapscaled_1, umapscaled_2, label = cluster_number), color = "black",
-            data = plot_data_label) +
-  scale_color_gradientn(colours = rdbu,
-                        values = scales::rescale(c(min(kernel_tbl_fbi$value_quenched), 0,
-                                                   max(kernel_tbl_fbi$value_quenched)))) +
-  guides(color = guide_colorbar(label.position = "right",
-                                title.position = "top",
-                                title.hjust = 0,
-                                title.vjust = 1,
-                                direction = "vertical")) +
-  theme(aspect.ratio = 1,
-        legend.key.height = unit(0.05, "npc"),
-        legend.key.width = unit(0.03, "npc"),
-        legend.position = c(-0.1, 0.95),
-        legend.justification = c("left", "top"),
-        plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)) + 
-  labs(color = "Enrichment\nin FBI") +
-  remove_xaxis +
-  remove_yaxis
+kernel_grid <- ggdraw() +
+  draw_plot(plot_grid(k1 + remove_guides, k2, k3, k4, ncol = 2, align = "hv"),
+            width = 0.8, height = 1) +
+  draw_grob(get_legend(k1), x = 0.88, y = -0.25)
 
-add_umap_coord(kernel_umap_fbi)
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel_fbi.pdf", width = 6, height = 5)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel_fbi.png", width = 6, height = 5)
+kernel_umap_wrapper(c("HRD-Dup", "HRD-Del"), c("FBI", "TD"), 0.01, "Enrichm. in\nHRD vs HRP") + labs(title = "")
+
+ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel_hrd_hrp.pdf", width = 6, height = 5)
+ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel_hrd_hrp.png", width = 6, height = 5)
 
 ```
 

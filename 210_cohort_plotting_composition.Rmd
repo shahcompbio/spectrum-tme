@@ -636,8 +636,8 @@ source("src/global_vars.R")
 names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "\\.", " ")
 names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "Ovarian", "Ov")
 
-# mpif_pixel <- read_tsv("/work/shah/vazquezi/data/transfers/spectrum/results/mpif/v10/integrate/outputs/cohort_merge/patient/SPECTRUM/all/detection.tsv") %>%
-#   select(cell_id, compartment = Parent)
+mpif_pixel <- read_tsv("/work/shah/vazquezi/data/transfers/spectrum/results/mpif/v10/integrate/outputs/cohort_merge/patient/SPECTRUM/all/detection.tsv") %>%
+  select(cell_id, compartment = Parent)
 # 
 # mpif_cell_type <- read_tsv("/work/shah/vazquezi/data/transfers/spectrum/results/mpif/v10/integrate/outputs/cohort_merge/patient/SPECTRUM/all/cell_type_manual.tsv") %>%
 #   left_join(mpif_pixel, by = "cell_id") %>%
