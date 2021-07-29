@@ -218,26 +218,31 @@ snv_cna_fusions_tbl <- bind_rows(snv_tbl, cna_tbl, fusions_tbl) %>%
 ```{r}
 # Remove scRNA samples from unidentified sites
 db$sequencing_scrna <- db$sequencing_scrna %>% 
+  filter(patient_id %in% included_patients) %>%
   filter(tumor_type != "Unknown") %>%
   filter(therapy == "pre-Rx")
 
 # Remove H&E samples that are not adjacent or site-matched slides
 db$he_slide <- db$he_slide %>% 
+  filter(patient_id %in% included_patients) %>%
   filter(is_adjacent == TRUE) %>%
   filter(therapy == "pre-Rx")
 
 # Remove mpIF samples that have not been delivered
 db$mpif_slide <- db$mpif_slide %>% 
+  filter(patient_id %in% included_patients) %>%
   filter(submission_status == "Delivered") %>%
   filter(therapy == "pre-Rx")
 
 # Remove normal WGS samples and failed samples
 db$sequencing_bulk_dna <- db$sequencing_bulk_dna %>% 
+  filter(patient_id %in% included_patients) %>%
   filter(tumor_type %in% c("Primary","Metastasis")) %>% 
   filter(qc_status == "Pass")
 
 # Remove normal IMPACT samples and remove duplicates
 db$sequencing_msk_impact_custom <- db$sequencing_msk_impact_custom %>% 
+  filter(patient_id %in% included_patients) %>%
   left_join(samples %>% dplyr::select(impact_dmp_sample_id, tumor_purity)) %>%
   filter(impact_gene_panel == "IMPACT") %>%
   group_by(impact_dmp_patient_id) %>%
@@ -246,6 +251,7 @@ db$sequencing_msk_impact_custom <- db$sequencing_msk_impact_custom %>%
 
 # Remove Myriad samples not yet delivered
 db$sequencing_myriad <- db$sequencing_myriad %>% 
+  filter(patient_id %in% included_patients) %>%
   filter(status == "Delivered")
 
 patients <- db$patients %>%
@@ -363,7 +369,7 @@ mat <- data %>%
 ```{r, fig.width = 8, fig.height = 4.5}
 
 snv_cna_fusions_wide_tbl <- snv_cna_fusions_tbl %>%
-  filter(patient_id %in% scrna_patients) %>%
+  filter(patient_id %in% Reduce(union, list(scrna_patients, hne_patients, mpif_patients))) %>%
   transform(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
   pivot_wider(
     id_cols = "hugo_symbol",
@@ -397,7 +403,7 @@ oncoprint_main_mat <- snv_cna_fusions_wide_tbl %>%
 
 # Top annotation
 top_df <- db$mutational_signatures %>%
-  filter(patient_id %in% scrna_patients) %>%
+  filter(patient_id %in% Reduce(union, list(scrna_patients, hne_patients, mpif_patients))) %>%
   left_join(patients, by = 'patient_id') %>%
   left_join(gyn_diagnosis, by = 'patient_id') %>%
   mutate(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
@@ -479,11 +485,11 @@ rownames(oncoprint_main_ht@matrix)
 
 colnames(oncoprint_main_ht@matrix)
 
-cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.pdf", width = 13.5, height = 4.5)
+cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_hne_mpif_patients.pdf", width = 13.5, height = 4.5)
 print(oncoprint_main_ht)
 dev.off()
 
-png("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_patients.png", width = 13.5, height = 4.5, res = 300)
+png("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_hne_mpif_patients.png", width = 13.5, height = 4.5, res = 300)
 print(oncoprint_main_ht)
 dev.off()
 
@@ -614,7 +620,7 @@ dev.off()
 ```{r}
 
 data <- inventory %>%
-  filter(patient_id %in% scrna_patients) %>%
+  filter(patient_id %in% Reduce(union, list(scrna_patients, hne_patients, mpif_patients))) %>%
   filter((therapy == "pre-Rx") | (therapy == "post-Rx" & technique == "bulk_dna")) %>%
   get_sample_inventory(., unique = TRUE) %>% 
   dplyr::left_join(patients, by = 'patient_id') %>%
