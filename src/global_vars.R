@@ -201,7 +201,7 @@ hne_meta_tbl <- db$he_slide %>%
 
 mpif_slide_meta_tbl <- db$mpif_slide %>%
   # mutate(slide_id = str_replace_all(pici_id, " ", "_"),
-  mutate(slide_id = paste0(patient_id, "_", surgery, str_replace_all(toupper(tumor_subsite), " ", "_")),
+  mutate(slide_id = paste0(patient_id, "_", procedure, str_replace_all(toupper(tumor_subsite), " ", "_")),
          patient_id_short = str_remove_all(patient_id, "SPECTRUM-OV-"),
          sample_id_short = str_remove_all(sample_id, "OV-"),
          aliquot_id_short = str_remove_all(aliquot_id, "OV-"),
