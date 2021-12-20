@@ -769,18 +769,18 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 
 ## Main text figure
 
-```{r chunk_210_280, fig.width=12, fig.height=6}
+```{r chunk_210_280, fig.width=6, fig.height=9}
 
-# plist1 <- default_comp_grid_list(
-#   filter(comp_tbl_sample, sort_short_x == "CD45-"), 
-#   cell_type, "Ov cancer cell", cell_type)
-# plist1$empty <- ggdraw()
-# 
-# plist2 <- default_comp_grid_list(
-#   filter(comp_tbl_sample, sort_short_x == "CD45+"), 
-#   cell_type, "T cell", cell_type)
-# plist2$empty <- ggdraw()
-# 
+plist1 <- default_comp_grid_list(
+  filter(comp_tbl_sample, sort_short_x == "CD45-"),
+  cell_type, "Ov cancer cell", cell_type)
+plist1$empty <- ggdraw()
+
+plist2 <- default_comp_grid_list(
+  filter(comp_tbl_sample, sort_short_x == "CD45+"),
+  cell_type, "T cell", cell_type)
+plist2$empty <- ggdraw()
+
 # plist3 <- default_comp_grid_list(
 #   filter(hne_cell_type_n_slide_compartment, sort_short_x == "Tumor"), 
 #   cell_type_hne, "Lymphocyte", cell_type_hne, nmax = 2000000)
@@ -800,14 +800,14 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 #   filter(mpif_cell_type_n_slide_compartment, sort_short_x == "Stroma"), 
 #   cell_phenotype_short_mpif, "CD8+", cell_phenotype_short_mpif, nmax = 250000)
 # plist6$empty <- ggdraw()
-# 
-# ## cell type grid w/o mut sig
-# pcomp1 <- plot_grid(plotlist = plist1[-3], ncol = 1, align = "v",
-#                     rel_heights = c(0.13, 0.13, 0.15, 0.59, 0))
-# 
-# pcomp2 <- plot_grid(plotlist = plist2[-3], ncol = 1, align = "v",
-#                     rel_heights = c(0.13, 0.13, 0.15, 0.59, 0))
-# 
+
+## cell type grid w/o mut sig
+pcomp1 <- plot_grid(plotlist = plist1[-3], ncol = 1, align = "v",
+                    rel_heights = c(0.13, 0.13, 0.15, 0.59, 0))
+
+pcomp2 <- plot_grid(plotlist = plist2[-3], ncol = 1, align = "v",
+                    rel_heights = c(0.13, 0.13, 0.15, 0.59, 0))
+
 # pcomp3 <- plot_grid(plotlist = plist3[-3], ncol = 1, align = "v",
 #                     rel_heights = c(0.13, 0.13, 0.15, 0.59, 0))
 # 
@@ -880,6 +880,11 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 # 
 # vec_legend_shape <- get_legend(vec_legend_helper + guides(color = F))
 # vec_legend_color <- get_legend(vec_legend_helper + guides(shape = F))
+
+plot_grid(pcomp1, pcomp2, nrow = 1)
+
+ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.pdf", width = 6, height = 9)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.png", width = 6, height = 9)
 
 ```
 
