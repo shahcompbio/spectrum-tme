@@ -1,7 +1,7 @@
 ## plotting themes --------------------------------
 
 theme_cowplot2 <- function(...) {
-  theme_cowplot(font_size = 16, font_family = "Roboto", ...) %+replace%
+  theme_cowplot(font_size = 16, ...) %+replace%
     theme(strip.background = element_blank(),
           panel.background = element_rect(fill = "transparent", color = NA),
           plot.background = element_rect(fill = "transparent", color = NA),
