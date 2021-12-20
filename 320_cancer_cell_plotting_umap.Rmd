@@ -45,10 +45,10 @@ source("src/global_vars.R")
 ```{r chunk_320_040}
 
 ## load full seurat objects with expression data
-# seu_obj_tc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v5/T.cell_processed_filtered_sub.rds")
-# seu_obj_cc <- read_rds(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v5/Ovarian.cancer.cell_processed_filtered.rds"))
-seu_obj_cc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds")
-marker_tbl <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/Ovarian.cancer.super_marker_table_annotated.tsv")
+# seu_obj_tc <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v5/T.cell_processed_filtered_sub.rds")
+# seu_obj_cc <- read_rds(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v5/Ovarian.cancer.cell_processed_filtered.rds"))
+seu_obj_cc <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds")
+marker_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/Ovarian.cancer.super_marker_table_annotated.tsv")
 
 marker_tbl_top <- marker_tbl %>% 
   filter(avg_logFC > 0.5, 
@@ -169,7 +169,11 @@ umap_cluster <- base_umap +
                               ncol = 1, 
                               label.position = "right")) +
   guides(color = F) + 
-  labs(title = "Cluster")
+  labs(title = "Cluster") +
+  annotate(geom = "text", 
+           x = (max(plot_data$umapharmony_1) + min(plot_data$umapharmony_1))/2,
+           y = min(plot_data$umapharmony_2), color = "black",
+           label = paste0("n = ", nrow(distinct(plot_data, cell_id))))
 
 cluster_legend <- cowplot::get_legend(umap_pca_cluster)
 

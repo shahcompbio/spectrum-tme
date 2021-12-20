@@ -64,15 +64,15 @@ source("src/global_vars.R")
 
 ```{r chunk_610_030}
 
-myfeatures <- c("UMAP_1", "UMAP_2", "umapharmony_1", "umapharmony_2", "sample", "doublet", "nCount_RNA", "nFeature_RNA", "percent.mt", "doublet_score", "cell_type", "cluster_label")
+myfeatures <- c("UMAP_1", "UMAP_2", "umapharmony_1", "umapharmony_2", "sample", "doublet", "nCount_RNA", "nFeature_RNA", "percent.mt", "doublet_score", "cell_type", "cluster_label", "cell_id")
 
-seu_obj_sub <- read_rds(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/", coi, "_processed_filtered_annotated.rds"))
+seu_obj_sub <- read_rds(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/", coi, "_processed_filtered_annotated.rds"))
 
-seu_obj_sub_mp <- read_rds(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Macrophages_processed.rds"))
+seu_obj_sub_mp <- read_rds(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Macrophages_processed.rds"))
 
-seu_obj_sub_dc <- read_rds(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/DCs_processed.rds"))
+seu_obj_sub_dc <- read_rds(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/DCs_processed.rds"))
 
-marker_tbl <- read_tsv(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", coi, "_marker_table_annotated.tsv"))
+marker_tbl <- read_tsv(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", coi, "_marker_table_annotated.tsv"))
 
 marker_tbl_top <- marker_tbl %>% 
   filter(avg_logFC > 0.5,
@@ -84,7 +84,7 @@ marker_tbl_top <- marker_tbl %>%
   group_by(cluster_label) %>% 
   slice(1:50)
 
-marker_sheet <- read_tsv(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", coi, "_marker_sheet.tsv"))
+marker_sheet <- read_tsv(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", coi, "_marker_sheet.tsv"))
 
 my_subtypes <- names(clrs$cluster_label[[coi]])
 
@@ -102,7 +102,8 @@ plot_data_sub <- list(Macrophage = FetchData(seu_obj_sub_mp, c(myfeatures)),
 plot_data_sub <- filter(plot_data_sub, sort_short_x == cell_sort, !is.na(tumor_supersite)) %>% 
   group_by(cell_type_myeloid) %>% 
   mutate(umapscaled_1 = scales::rescale(umapharmony_1),
-         umapscaled_2 = scales::rescale(umapharmony_2))
+         umapscaled_2 = scales::rescale(umapharmony_2)) %>% 
+  ungroup
 
 ```
 
@@ -161,6 +162,12 @@ plot_data_label <- plot_data_sub %>%
             umapscaled_2 = median(umapscaled_2)) %>% 
   mutate(cluster_number = as.numeric(cluster_label))
 
+plot_data_ncell <- plot_data_sub %>% 
+ group_by(cell_type_myeloid) %>% 
+  summarise(x = (max(umapharmony_1) + min(umapharmony_1))/2,
+            y = min(umapharmony_2),
+            label = paste0("n = ", length(cell_id)))
+
 umap_cell_type <- ggplot(plot_data_sub, aes(umapharmony_1, umapharmony_2, color = cluster_label)) + 
   common_layers_disc +
   facet_wrap(~cell_type_myeloid, scales = "free") +
@@ -172,7 +179,8 @@ umap_cell_type <- ggplot(plot_data_sub, aes(umapharmony_1, umapharmony_2, color 
   geom_text(aes(umapharmony_1, umapharmony_2, label = cluster_number), color = "black",
              data = plot_data_label) +
   scale_color_manual(values = clrs$cluster_label[[coi]]) +
-  guides(color = guide_legend(override.aes = list(size = 2, alpha = 1)))
+  guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))) +
+  geom_text(aes(x, y, label = label), data = plot_data_ncell, color = "black")
 
 umap_site <- ggplot(plot_data_sub, aes(umapharmony_1, umapharmony_2, color = tumor_supersite)) + 
   common_layers_disc +

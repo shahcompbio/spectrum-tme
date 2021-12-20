@@ -6,6 +6,14 @@ docs/
 figures/
 tables/
 _bookdown_files/
+index.Rmd
+index.html
+_bookdown.yml
+_output.yml
+_main.Rmd
+style.css
+toc.css
+
 
 # Ignore all html files except:
 !**/header.html
@@ -17,6 +25,7 @@ _bookdown_files/
 .Ruserdata
 .DS_Store
 *.rds
+*.Rproj
 
 # Bookdown specific files
 *.md
