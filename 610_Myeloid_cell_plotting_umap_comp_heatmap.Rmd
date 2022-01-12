@@ -2,17 +2,22 @@
 title: "MSK SPECTRUM freeze major subset deep dives"
 author: "Florian Uhlitz"
 date: "`r Sys.Date()`"
-output:
-  bookdown::html_document2:
-    includes:
-      in_header: header.html
-  bookdown::gitbook:
-    includes:
-      in_header: header.html
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
 editor_options: 
   chunk_output_type: console
 ---
 
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+```
 
 # Figure 6 upper
 
@@ -115,7 +120,7 @@ alpha_lvl <- ifelse(nrow(plot_data_sub) < 20000, 0.2, 0.1)
 pt_size <- ifelse(nrow(plot_data_sub) < 20000, 0.2, 0.05)
 
 common_layers_disc <- list(  
-  ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, raster.dpi = 150),
+  ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, raster.dpi = 50),
   NoAxes(),
   guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))),
   labs(color = ""),
@@ -123,32 +128,11 @@ common_layers_disc <- list(
 )
 
 common_layers_cont <- list(  
-  ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, raster.dpi = 150),
+  ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, raster.dpi = 50),
   NoAxes(),
   scale_color_gradientn(colors = viridis(9)),
   guides(color = guide_colorbar())
 )
-
-umap_coord_anno <- function(size) {
-  ggplot(tibble(group = c("UMAP1", "UMAP2"),
-                x = c(0, 0), xend = c(1, 0),
-                y = c(0, 0), yend = c(0, 1),
-                lx = c(0.5, -0.15), ly = c(-0.15, 0.5),
-                angle = c(0, 90))) +
-    geom_segment(aes(x, y, xend = xend, yend = yend, group = group),
-                 arrow = arrow(angle = 20, type = "closed", length = unit(0.1, "npc")),
-                 size = size/4, lineend = "round") +
-    geom_text(aes(lx, ly, label = group, angle = angle), size = size) +
-    theme_void() +
-    coord_fixed(xlim = c(-0.3, 1), ylim = c(-0.3, 1))
-}
-
-add_umap_coord <- function(gg_obj, x = 0, y = 0, width = 0.3, height = 0.3, size = 4.5) {
-  p <- ggdraw() + 
-    draw_plot(gg_obj, x = 0, y = 0, width = 1, height = 1) +
-    draw_plot(umap_coord_anno(size = size), x = x, y = y, width = width, height = height)
-  return(p)
-}
 
 ```
 
@@ -187,23 +171,23 @@ umap_site <- ggplot(plot_data_sub, aes(umapharmony_1, umapharmony_2, color = tum
   facet_wrap(~cell_type_myeloid, scales = "free") +
   scale_color_manual(values = clrs$tumor_supersite)
 
-umap_cell_type_void <- umap_cell_type + guides(color = F)
-umap_site_void <- umap_site + guides(color = F)
+umap_cell_type_void <- umap_cell_type + guides(color = "none")
+umap_site_void <- umap_site + guides(color = "none")
 
 umap_cell_type_legend <- cowplot::get_legend(umap_cell_type)
 umap_site_legend <- cowplot::get_legend(umap_site)
 
-add_umap_coord(umap_cell_type_void, width = 0.3, height = 0.3, x_offset = -0.05) %>% 
-  add_umap_coord(width = 0.3, height = 0.3, x_offset = 0.4)
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_cell_type_myeloid.pdf", width = 10, height = 5)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_cell_type_myeloid.png", width = 10, height = 5)
+add_umap_coord(umap_cell_type_void, width = 0.3, height = 0.3, x_offset = -0.05)
+
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_cell_type_myeloid.pdf", width = 10, height = 5)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_cell_type_myeloid.png", width = 10, height = 5)
 
 
 ```
 
 ### mini umaps
 
-```{r chunk_610_61, fig.width=7, fig.height=4}
+```{r chunk_610_61, fig.width=3, fig.height=1.5}
 
 
 umap_mini_cluster_label_mp <- ggplot() + 
@@ -211,19 +195,19 @@ umap_mini_cluster_label_mp <- ggplot() +
     aes(umapharmony_1, umapharmony_2),
     data = select(plot_data_sub, -cluster_label) %>% filter(cell_type_myeloid == "Macrophage"),
     alpha = 0.04, size = 0.01, color = "grey80",
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   ggrastr::geom_point_rast(
     aes(umapharmony_1, umapharmony_2, color = cluster_label), 
     data = plot_data_sub %>% filter(cell_type_myeloid == "Macrophage"),
     alpha = 0.04, size = 0.01, 
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   ggrastr::geom_point_rast(
     aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
     data = mutate(plot_data_sub, cluster_label_sub = cluster_label) %>% filter(cluster_label %in% c("M1.S100A8", "M2.SELENOP")),
     alpha = 0.5, size = 0.01,
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   facet_grid(~cluster_label_sub) + 
   theme_void() +
@@ -234,28 +218,32 @@ umap_mini_cluster_label_mp <- ggplot() +
   remove_guides 
 
 umap_mini_cluster_label_mp
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_macrophage.pdf", umap_mini_cluster_label_mp, width = 3, height = 1.5)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_macrophage.png", umap_mini_cluster_label_mp, width = 3, height = 1.5)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_macrophage.pdf", umap_mini_cluster_label_mp, width = 3, height = 1.5)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_macrophage.png", umap_mini_cluster_label_mp, width = 3, height = 1.5)
+
+```
+
+```{r chunk_610_62, fig.width=1.5, fig.height=1.5}
 
 umap_mini_cluster_label_dc <- ggplot() + 
   ggrastr::geom_point_rast(
     aes(umapharmony_1, umapharmony_2),
     data = select(plot_data_sub, -cluster_label) %>% filter(cell_type_myeloid == "DC"),
     alpha = 0.04, size = 0.01, color = "grey80",
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   ggrastr::geom_point_rast(
     aes(umapharmony_1, umapharmony_2, color = cluster_label), 
     data = plot_data_sub %>% filter(cell_type_myeloid == "DC"),
     alpha = 0.04, size = 0.01, 
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   ggrastr::geom_point_rast(
     aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
     data = mutate(plot_data_sub, cluster_label_sub = cluster_label) %>% 
       filter(cell_type_myeloid == "DC"),
     alpha = 0.5, size = 0.01,
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   # facet_grid(~cluster_label_sub) + 
   theme_void() +
@@ -268,8 +256,8 @@ umap_mini_cluster_label_dc <- ggplot() +
   labs(title = "DC")
 
 umap_mini_cluster_label_dc
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_dc.pdf", umap_mini_cluster_label_dc, width = 1.5, height = 1.5)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_dc.png", umap_mini_cluster_label_dc, width = 1.5, height = 1.5)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_dc.pdf", umap_mini_cluster_label_dc, width = 1.5, height = 1.5)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_dc.png", umap_mini_cluster_label_dc, width = 1.5, height = 1.5)
 
 
 ```
@@ -318,8 +306,8 @@ kernel_umap <- ggplot() +
   remove_yaxis
 
 add_umap_coord(kernel_umap, width = 0.3, height = 0.3)
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_kernel.pdf", width = 5, height = 5)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_kernel.png", width = 5, height = 5)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_kernel.pdf", width = 5, height = 5)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_kernel.png", width = 5, height = 5)
 
 
 ```
@@ -499,40 +487,40 @@ comp_grid8 <- plot_grid(plotlist = plist8[-3], ncol = 1, align = "v", rel_height
 ```{r chunk_610_090, fig.width=3, fig.height=9}
 
 comp_grid1
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.pdf", comp_grid1, width = 3, height = 9)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.png", comp_grid1, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.pdf", comp_grid1, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.png", comp_grid1, width = 3, height = 9)
 
 comp_grid2
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.pdf", comp_grid2, width = 3, height = 9)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.png", comp_grid2, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.pdf", comp_grid2, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.png", comp_grid2, width = 3, height = 9)
 
 comp_grid3
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.pdf", comp_grid3, width = 3, height = 9)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.png", comp_grid3, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.pdf", comp_grid3, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.png", comp_grid3, width = 3, height = 9)
 
 comp_grid4
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.pdf", comp_grid4, width = 3, height = 9)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.png", comp_grid4, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.pdf", comp_grid4, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.png", comp_grid4, width = 3, height = 9)
 
 comp_grid5
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.pdf", comp_grid5, width = 3, height = 9)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.png", comp_grid5, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.pdf", comp_grid5, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.png", comp_grid5, width = 3, height = 9)
 
 comp_grid6
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.pdf", comp_grid5, width = 3, height = 9)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.png", comp_grid5, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.pdf", comp_grid5, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.png", comp_grid5, width = 3, height = 9)
 
 ```
 
 ```{r chunk_610_100, fig.width=3, fig.height=9}
 
 comp_grid7
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.pdf", comp_grid7, width = 3, height = 9)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.png", comp_grid7, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.pdf", comp_grid7, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.png", comp_grid7, width = 3, height = 9)
 
 comp_grid8
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.pdf", comp_grid8, width = 3, height = 9)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.png", comp_grid8, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.pdf", comp_grid8, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.png", comp_grid8, width = 3, height = 9)
 
 ```
 
@@ -548,18 +536,15 @@ popViewport(1)
 heatmap_grob_rot <- grid.grab()
 
 umap_heat_grid <- ggdraw() +
-  draw_plot(add_umap_coord(umap_cell_type_void, size = 4.5, x = 0),
+  draw_plot(add_umap_coord(umap_cell_type_void, x_offset = -0.015, y_offset = -0.02, width = 0.4, height = 0.4),
             x = 0, y = 0, width = 0.5, height = 1) +
-  # draw_plot(add_umap_coord(umap_site_void, size = 3.5, x = 0),
-  #           x = 0, y = 0, width = 0.2, height = 0.5) +
   draw_grob(heatmap_grob_rot,
             x = 0.5, y = 0, width = 0.5, height = 1)
-  # draw_plot_label(c("A", "B", "C", "D"), x = c(0, 0.63, 0, 0), y = c(0.995, 0.995, 0.72, 0.45))
 
 umap_heat_grid
 
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_umap_heat.png", umap_heat_grid, width = 16, height = 4)
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_umap_heat.pdf", umap_heat_grid, width = 16, height = 4)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_umap_heat.png", umap_heat_grid, width = 16, height = 4)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_umap_heat.pdf", umap_heat_grid, width = 16, height = 4)
 
 ```
 

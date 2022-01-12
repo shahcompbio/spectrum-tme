@@ -267,12 +267,15 @@ plot_comp_vector <- function(comp_tbl_rank, x, y, shape,
       T ~ "exclude")) %>% 
     distinct(sample_id_lvl, .keep_all = T)
   
-  comp_tbl_vector <- group_by(comp_tbl_rank, !!y) %>% 
-    mutate(median_rank = median(!!x)) %>% 
+  comp_tbl_vector <- comp_tbl_rank %>% 
+    filter(vector_group != "exclude") %>% 
+    group_by(!!y) %>% 
+    mutate(median_rank = median(!!x)) %>%
     group_by(vector_group, median_rank, !!y) %>% 
     summarise(median_group_rank = median(!!x)) %>% 
     ungroup %>% 
     spread(vector_group, median_group_rank) %>% 
+    mutate(median_rank = ifelse(is.na(xstart), median_rank, xstart)) %>%
     mutate(vector_color = ifelse(xend > xstart, vector_value_start[1], vector_value_end[1])) %>% 
     arrange(median_rank) %>% 
     mutate(!!y := ordered(!!y, levels = unique(!!y)))
@@ -313,7 +316,8 @@ plot_comp_vector <- function(comp_tbl_rank, x, y, shape,
           plot.margin = ggplot2::margin(0.02, 0.01, 0.02, 0.01, "npc")) +
     # facet_grid(cols = vars(facet),
     #            space = "free_x", scales = "free_x") +
-    expand_limits(x = c(-1, 1))
+    expand_limits(x = c(-1, 1)) +
+    coord_cartesian(clip = "off")
   return(p)
 }
 

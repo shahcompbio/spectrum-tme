@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
 
 ```
 
-```{r chunk_210_010}
+```{r chunk_215_010}
 
 library(magrittr)
 library(tidyverse)
@@ -39,7 +39,7 @@ library(ggpubr)
 
 ### scRNA
 
-```{r chunk_210_030}
+```{r chunk_215_030}
 
 ## load global vars: 
 source("src/global_vars.R")
@@ -84,7 +84,7 @@ seu_tbl_full <- seu_tbl %>%
 
 ```
 
-```{r chunk_210_040, fig.width=8, fig.height=4}
+```{r chunk_215_040, fig.width=8, fig.height=4}
 
 add_helper_columns <- . %>% 
   mutate(label_supersite = "Site",
@@ -135,7 +135,8 @@ read_comp_wrapper <- function(x, cluster_column) {
     mutate(sort_short_x = ifelse(is.na(sort_short_x), sort_short_x[1], sort_short_x)) %>% 
     mutate(nsum = ifelse(is.na(nsum), nsum[1], nsum)) %>% 
     ungroup %>% 
-    mutate(sample_id = sample_id_x)
+    mutate(sample_id = sample_id_x) %>% 
+    mutate(tumor_supersite = ordered(tumor_supersite, levels = rev(names(clrs$tumor_supersite))))
 }
 
 comp_list <- lapply(cois[-1], read_comp_wrapper, cluster_label) %>% setNames(cois[-1])
@@ -147,7 +148,7 @@ comp_list$T.super <- read_comp_wrapper("T.super", cluster_label_sub) %>%
 
 ### mpIF 
 
-```{r chunk_210_050, fig.width=6, fig.height=3}
+```{r chunk_215_050, fig.width=6, fig.height=3}
 
 # mpif_pixel <- read_tsv("/work/shah/vazquezi/data/transfers/spectrum/results/mpif/v10/integrate/outputs/cohort_merge/patient/SPECTRUM/all/detection.tsv") %>%
 #   select(cell_id, compartment = Parent)
@@ -307,7 +308,7 @@ mpif_cell_state_cd8_n_slide <- mpif_cell_state_n_slide %>%
 
 ### H&E 
 
-```{r chunk_210_060, fig.width=6, fig.height=3}
+```{r chunk_215_060, fig.width=6, fig.height=3}
 
 hne_cell_type <- read_tsv("/work/shah/vazquezi/data/transfers/spectrum/results/hne/v15/qupath/outputs/detection_summary/cohort/SPECTRUM.tsv")
 
@@ -354,7 +355,7 @@ hne_cell_type_n_slide_compartment <- hne_cell_type_expanded %>%
 
 ### Mutsig comp scRNA 
 
-```{r chunk_210_100, fig.width=3, fig.height=4.5}
+```{r chunk_215_100, fig.width=3, fig.height=4.5}
 
 plist_cancer.3 <- default_comp_grid_list(filter(comp_list$Ovarian.cancer.super, 
                                                 sort_short_x == "CD45-"),
@@ -377,7 +378,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_Ovarian.cancer.cell_c
 
 ### Site comp scrna
 
-```{r chunk_210_110, fig.width=6, fig.height=9}
+```{r chunk_215_110, fig.width=6, fig.height=9}
 
 plist1 <- default_comp_grid_list(
   comp_list$T.super, cell_type_naive, "T naive/mem",
@@ -410,7 +411,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_site_
 
 ### Mutsig comp scrna
 
-```{r chunk_210_120, fig.width=3, fig.height=4.5}
+```{r chunk_215_120, fig.width=3, fig.height=4.5}
 
 # source("src/comp_plot.R")
 # 
@@ -420,7 +421,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_site_
 
 ```
 
-```{r chunk_210_125, fig.width=3, fig.height=4.5}
+```{r chunk_215_125, fig.width=3, fig.height=4.5}
 
 comp_grid1 <- plot_grid(plotlist = plist1[-c(4,5)], ncol = 1, align = "v", rel_heights = c(0.3, 0.3, 0.4))
 
@@ -439,7 +440,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_mutsi
 
 ### Site box+vector scrna
 
-```{r chunk_210_130, fig.width=3, fig.height=6.3}
+```{r chunk_215_130, fig.width=3, fig.height=6.3}
 
 comp_grid1 <- plot_grid(plotlist = plist1[c(4,5)], ncol = 1, align = "v", rel_heights = c(0.24, 0.76))
 
@@ -458,7 +459,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 
 ### Site comp mpif
 
-```{r chunk_210_140, fig.width=3, fig.height=9}
+```{r chunk_215_140, fig.width=3, fig.height=9}
 
 # plist1 <- default_comp_grid_list(
 #   filter(mpif_cell_state_cd8_n_slide, sort_short_x == "mpIF"), 
@@ -517,7 +518,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 
 ```
 
-```{r chunk_210_150, fig.width=6, fig.height=9}
+```{r chunk_215_150, fig.width=6, fig.height=9}
 
 # plot_grid(comp_grid6, comp_grid7, nrow = 1)
 # 
@@ -531,7 +532,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 
 ## mpIF x scRNA correlation
 
-```{r chunk_210_190, fig.width=6, fig.height=3}
+```{r chunk_215_190, fig.width=6, fig.height=3}
 
 # seu_cohort <- read_rds("/work/shah/isabl_data_lake/analyses/68/75/6875/RNASCP/outs/integrated_seurat_final.rds")
 # 
@@ -605,7 +606,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 
 ### CD45+ cell type
 
-```{r chunk_210_200, fig.width=16, fig.height=8}
+```{r chunk_215_200, fig.width=16, fig.height=8}
 
 # markers_pos_scrna_mpif <- mpif_cell_state_n_slide_compartment %>%
 #   select(sample = sample_id, cell_type_sc = cell_phenotype_short_mpif,
@@ -646,7 +647,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 
 ### CD45+ cell state
 
-```{r chunk_210_220, fig.width=12, fig.height=12}
+```{r chunk_215_220, fig.width=12, fig.height=12}
 
 # markers_pos_scrna_mpif_state <- mpif_cell_state_n_slide_compartment %>%
 #   group_by(sample_id, sort_short_x, cell_phenotype_short_mpif) %>%
@@ -687,7 +688,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 
 ### CD45- cell type
 
-```{r chunk_210_230, fig.width=16, fig.height=8}
+```{r chunk_215_230, fig.width=16, fig.height=8}
 
 # markers_pos_scrna_mpif_cd45n <- mpif_cell_state_n_slide_compartment %>%
 #   select(sample = sample_id, cell_type_sc = cell_phenotype_short_mpif,
@@ -728,7 +729,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 
 ### CD45- cell state
 
-```{r chunk_210_240, fig.width=12, fig.height=6}
+```{r chunk_215_240, fig.width=12, fig.height=6}
 
 # markers_pos_scrna_mpif_state_cd45n <- mpif_cell_state_n_slide_compartment %>%
 #   group_by(sample_id, sort_short_x, cell_phenotype_short_mpif) %>%
@@ -769,7 +770,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 
 ## Main text figure
 
-```{r chunk_210_280, fig.width=6, fig.height=9}
+```{r chunk_215_280, fig.width=5.5, fig.height=9}
 
 plist1 <- default_comp_grid_list(
   filter(comp_tbl_sample, sort_short_x == "CD45-"),
@@ -883,12 +884,12 @@ pcomp2 <- plot_grid(plotlist = plist2[-3], ncol = 1, align = "v",
 
 plot_grid(pcomp1, pcomp2, nrow = 1)
 
-ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.pdf", width = 6, height = 9)
-ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.png", width = 6, height = 9)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.pdf", width = 5.5, height = 9)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.png", width = 5.5, height = 9)
 
 ```
 
-```{r chunk_210_290, fig.width=14, fig.height=8}
+```{r chunk_215_290, fig.width=14, fig.height=8}
 
 # markers_pos_scrna_mpif_state_cd45p <- mpif_cell_state_n_slide_compartment %>%
 #   group_by(sample_id, sort_short_x, cell_phenotype_short_mpif, cell_phenotype_mpif) %>%
@@ -965,7 +966,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.png", widt
 
 ```
 
-```{r chunk_210_300, fig.width=17, fig.height=10}
+```{r chunk_215_300, fig.width=17, fig.height=10}
 
 # # comp_grid_full <- ggdraw() +
 # #   draw_plot(gcomp1, x = 0, y = 0, width = 1, height = 1) +
@@ -999,7 +1000,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.png", widt
 
 [figures/210_cohort_cell_type_composition/210_comp_grid_site.png](figures/210_cohort_cell_type_composition/210_comp_grid_site.png)
 
-```{r chunk_210_310, fig.width=17, fig.height=11}
+```{r chunk_215_310, fig.width=17, fig.height=11}
 
 # comp_grid_full2 <- plot_grid(gcomp2,
 #                              plot_grid(ggdraw(), vec_legend_shape, vec_legend_color, hne_cell_type_legend, mpif_cell_type_legend, ggdraw(), 
@@ -1020,7 +1021,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.png", widt
 
 [figures/210_cohort_cell_type_composition/210_comp_grid_site_mutsig.png](figures/210_cohort_cell_type_composition/210_comp_grid_site_mutsig.png)
 
-```{r chunk_210_315, fig.width=16, fig.height=8}
+```{r chunk_215_315, fig.width=16, fig.height=8}
 
 # comp_grid_full <- ggdraw() +
 #   draw_plot(gcomp2, x = 0, y = 0, width = 0.69, height = 1) +
@@ -1041,7 +1042,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.png", widt
 
 ```
 
-```{r chunk_210_320, fig.width=14, fig.height=8}
+```{r chunk_215_320, fig.width=14, fig.height=8}
 
 # comp_grid_full <- ggdraw() +
 #   draw_plot(gcomp3, x = 0, y = 0, width = 1, height = 1) +
@@ -1064,7 +1065,7 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.png", widt
 
 ## Supplementary figure
 
-```{r chunk_210_330, fig.width=22, fig.height=18}
+```{r chunk_215_330, fig.width=22, fig.height=18}
 
 # ## scRNA per patient comps
 # plist1 <- default_comp_grid_list(

@@ -19,7 +19,7 @@ remove_yaxis <- theme(axis.title.y = element_blank(),
                       axis.ticks.y = element_blank(),
                       axis.line.y = element_blank())
 
-remove_guides <- guides(color = F, fill = F, shape = F, alpha = F, size = F)
+remove_guides <- guides(color = "none", fill = "none", shape = "none", alpha = "none", size = "none")
 
 ## ggsave wrapper suppressing dingbats symbols 
 ## for adobe illustrator compatibility
