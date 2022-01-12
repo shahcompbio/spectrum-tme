@@ -82,7 +82,6 @@ tumor_megasite:
   Other: "#56B4E9"
 tumor_supersite:
   Adnexa: "#ff0000"
-  Ascites: "#E69F00" # palette_OkabeIto[1]
   Bowel: "#56B4E9" # palette_OkabeIto[2]
   Omentum: "#0072B2" # palette_OkabeIto[3]
   Peritoneum: "#F0E442" # palette_OkabeIto[4]
@@ -90,6 +89,7 @@ tumor_supersite:
   UQ: "#009E73" # palette_OkabeIto[5]
   Other: "#999999" # grey60
   Unknown: "#999999" # grey60
+  Ascites: "#E69F00" # palette_OkabeIto[1]
 tumor_supersite_adnexa:
   Adnexa: "#ff0000"
   Ovary: "#ff0000"
