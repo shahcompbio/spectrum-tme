@@ -1094,46 +1094,95 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_umap_cd274_pval.png",
 
 pw_patient_boxplot_wrapper <- function(pw) {
 
-  plot_data_pw_ranked <- filter(plot_data_pw, pathway == pw) %>%
+  plot_data_pw_ranked_patients <- filter(plot_data_pw, pathway == pw) %>%
+    # filter(patient_id_short %in% c("065", "054")) %>%
     group_by(patient_id_short) %>% 
     mutate(median = median(score)) %>%
     ungroup %>% 
     arrange(median) %>% 
     mutate(patient_id_short = ordered(patient_id_short, levels = unique(patient_id_short)))
   
-  ggplot(plot_data_pw_ranked) +
-    geom_violin(aes(patient_id_short, score, fill = consensus_signature), 
-                color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
-    geom_boxplot(aes(patient_id_short, score, color = consensus_signature),
-                 width = 0.5, size = 0.75, outlier.shape = NA) +
-    geom_boxplot(aes(patient_id_short, score, fill = consensus_signature),
-                 color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
-    facet_wrap(~pathway) +
-    scale_color_manual(values = clrs$consensus_signature) +
+  plot_data_pw_ranked_samples <- filter(plot_data_pw, pathway == pw) %>%
+    # filter(patient_id_short %in% c("065", "054")) %>%
+    group_by(sample) %>% 
+    mutate(median = median(score),
+           n = n()) %>%
+    filter(n > 10) %>% 
+    ungroup %>% 
+    arrange(median) %>% 
+    mutate(sample = ordered(sample, levels = unique(sample))) %>% 
+    mutate(patient_id_short = ordered(patient_id_short, levels = levels(plot_data_pw_ranked_patients$patient_id_short)))
+  
+  plot_data_tumor_supersite_labels <- plot_data_pw_ranked_samples %>% 
+    distinct(sample, .keep_all = T)
+  
+  upper_ylim <- filter(plot_data_pw, pathway == pw) %>% 
+    # filter(patient_id_short %in% c("065", "054")) %>%
+    group_by(sample) %>% 
+    mutate(upper_whisker = 1.5*(quantile(score, 0.75) - quantile(score, 0.25))+quantile(score, 0.75)) %>% 
+    pull(upper_whisker) %>% 
+    unique %>% 
+    max
+  
+  ggplot(plot_data_pw_ranked_samples) +
+    # geom_violin(aes(patient_id_short, score, fill = consensus_signature), 
+    #             color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+    # geom_boxplot(aes(sample, score, color = consensus_signature),
+    #              width = 0.5, size = 0.75, outlier.shape = NA) +
+    geom_boxplot(aes(sample, score), fill = NA, 
+                 width = 0.1, outlier.shape = NA, size = 0.5) +
+    geom_boxplot(aes(sample, score, fill = consensus_signature), coef = 0,
+                 outlier.shape = NA, size = 0.5, color = NA) +
+    geom_point(aes(sample, median), color = "white", size = 0.35,
+               data = plot_data_tumor_supersite_labels) +
+    # geom_boxplot(aes(sample, score, color = consensus_signature), 
+    #              width = 0.9, outlier.shape = NA, size = 0.5,
+    #              fatten = NULL, fill = NA, coef = 0) +
+    geom_point(aes(sample, color = tumor_supersite), 
+               y = -2, size = 1, shape = 15,
+               data = plot_data_tumor_supersite_labels) +
+    geom_hline(aes(yintercept = median), alpha = 0.65,
+               data = distinct(plot_data_pw_ranked_patients, 
+                               patient_id_short, .keep_all = T)) +
+    facet_grid(~patient_id_short, scales = "free_x", space = "free_x", 
+               switch = "x") +
+    scale_color_manual(values = clrs$tumor_supersite) +
     scale_fill_manual(values = clrs$consensus_signature) +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+    theme(axis.text.x = element_blank(),
+          # strip.placement = "outside",
+          strip.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          # strip.background = element_rect(color = "black", size = 0.1),
+          axis.ticks.x = element_blank(),
+          axis.line.x = element_blank(),
+          plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "plain"),
+          panel.spacing = unit(2, "points")) +
+    coord_cartesian(clip = "off") + 
+    scale_y_continuous(limits = c(-2, upper_ylim), breaks = seq(-3, 9, by = 3)) +
     labs(x = "Patient", y = "PROGENy score",
          fill = "Mutational\nsignature",
-         color = "Mutational\nsignature")
-  
+         color = "Mutational\nsignature",
+         title = str_remove_all(as_label(pw), '"'))
+
 }
 
-pw_patient_plots_list <- lapply(str_remove_all(pois, ".pathway"), pw_patient_boxplot_wrapper) %>% 
-  lapply(add, remove_guides) %>% 
-  lapply(add, ylim(c(-1, 5)))
+# pw_patient_boxplot_wrapper("TGFb") + remove_guides
 
-hla_patient_plots_list <- lapply(gois, pw_patient_boxplot_wrapper) %>% 
-  lapply(add, remove_guides) %>% 
-  lapply(add, ylim(c(-1, 5))) %>% 
+pw_patient_plots_list <- lapply(str_remove_all(pois, ".pathway"), pw_patient_boxplot_wrapper) %>%
+  # lapply(add, ylim(c(-1, 5))) %>%
+  lapply(add, remove_guides)
+
+hla_patient_plots_list <- lapply(gois, pw_patient_boxplot_wrapper) %>%
+  lapply(add, remove_guides) %>%
+  # lapply(add, ylim(c(-1, 5))) %>%
   lapply(add, labs(y = "Expression"))
 
-pw_patient_plots_grid <- plot_grid(plotlist = pw_patient_plots_list, ncol = 1, align = "v")
+pw_patient_plots_grid <- plot_grid(plotlist = pw_patient_plots_list, ncol = 1)
 pw_patient_plots_grid
 
-ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_boxplot_patient_lvl.pdf", 
-            width = 7, height = 12)
-ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_boxplot_patient_lvl.png", 
-       width = 7, height = 12)
+ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_boxplot_patient_lvl.pdf",
+       width = 9, height = 12)
+ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_boxplot_patient_lvl.png",
+       width = 9, height = 12)
 
 ```
 
@@ -1143,13 +1192,13 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_boxplot_patient_lvl.pn
 
 ```{r chunk_320_220, fig.width=7, fig.height=16}
 
-hla_patient_plots_grid <- plot_grid(plotlist = hla_patient_plots_list[-7], ncol = 1, align = "v")
+hla_patient_plots_grid <- plot_grid(plotlist = hla_patient_plots_list[-7], ncol = 1)
 hla_patient_plots_grid
 
 ggsave("figures/320_cancer_cell_plotting_umap/003_hla_boxplot_patient_lvl.pdf", 
-            width = 7, height = 16)
+            width = 9, height = 16)
 ggsave("figures/320_cancer_cell_plotting_umap/003_hla_boxplot_patient_lvl.png", 
-       width = 7, height = 16)
+       width = 9, height = 16)
 
 ```
 
@@ -1162,20 +1211,25 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_hla_boxplot_patient_lvl.png",
 
 violin_grid_sub <- plot_grid(
   violins_pw_cluster + theme(plot.margin = margin(0.01, 0.1, 0.1, 0.01, "npc")), 
-  violins_pw_mutsig_short + theme(plot.margin = margin(0.01, 0.4, 0.01, 0.01, "npc")),
   violins_hla_cluster + theme(plot.margin = margin(0.01, 0.01, 0.01, 0.01, "npc")),
+  violins_pw_mutsig_short + theme(plot.margin = margin(0.01, 0.4, 0.01, 0.01, "npc")),
   violins_hla_mutsig_short + theme(plot.margin = margin(0.01, 0.3, 0.01, 0.01, "npc")), 
-  ncol = 1, align = "h", axis = "tb")
+  ncol = 2, align = "h", axis = "tb")
 
 ggdraw() +
-  draw_plot(pw_patient_plots_grid, x = 0.05, y = 0.52, width = 0.35, height = 0.45) +
-  draw_plot(hla_patient_plots_grid, x = 0.6, y = 0.43, width = 0.35, height = 0.54) +
-  draw_plot(violin_grid_sub, x = 0.05, y = -0.03, width = 0.45, height = 0.5)
+  draw_plot(pw_patient_plots_grid, x = 0.05, y = 0.52, width = 0.45, height = 0.45) +
+  draw_plot(hla_patient_plots_grid, x = 0.52, y = 0.43, width = 0.45, height = 0.54) +
+  draw_plot(violin_grid_sub, x = 0.05, y = 0.1, width = 0.9, height = 0.3)
   
 ggsave("figures/320_cancer_cell_plotting_umap/003_suppl_violins_grid.pdf", width = 20, height = 30)
 
+ggsave("figures/320_cancer_cell_plotting_umap/003_suppl_violins_grid.png", width = 20, height = 30)
+
 ```
 
+[figures/320_cancer_cell_plotting_umap/003_suppl_violins_grid.pdf](figures/320_cancer_cell_plotting_umap/003_suppl_violins_grid.pdf)
+
+[figures/320_cancer_cell_plotting_umap/003_suppl_violins_grid.png](figures/320_cancer_cell_plotting_umap/003_suppl_violins_grid.png)
 
 ## session info 
 
