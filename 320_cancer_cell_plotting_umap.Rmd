@@ -825,6 +825,11 @@ plot_data_summary_cluster <- plot_data_pw %>%
   pathway_summary_wrapper %>% 
   mutate(cluster_label = ordered(cluster_label, levels = str_remove_all(names(clrs$cluster_label$Ovarian.cancer.super), "\\.cell")))
 
+plot_data_summary_site <- plot_data_pw %>%
+  group_by(cluster_label, tumor_supersite, pathway) %>%
+  pathway_summary_wrapper %>% 
+  mutate(cluster_label = ordered(cluster_label, levels = str_remove_all(names(clrs$cluster_label$Ovarian.cancer.super), "\\.cell")))
+
 plot_data_summary_mutsig_patient <- plot_data_pw %>% 
   group_by(consensus_signature, patient_id_short, pathway) %>% 
   pathway_summary_wrapper
@@ -836,7 +841,9 @@ plot_data_summary_mutsig_sample <- plot_data_pw %>%
 
 ```
 
-```{r chunk_320_160, fig.width=10, fig.height=5}
+```{r chunk_320_160, fig.width=8, fig.height=6.5}
+
+major_sites <- c("Adnexa", "Ascites", "Omentum", "Bowel")
 
 common_heat_layers <- list(
   scale_fill_gradient2(low = scales::muted("blue"), high = scales::muted("red"), 
@@ -848,112 +855,128 @@ common_heat_layers <- list(
         axis.ticks = element_blank(),
         axis.line = element_blank(),
         axis.title = element_blank(),
-        plot.margin = margin(0, 0, 0, 0))
+        plot.margin = margin(0, 0, 0, 0),
+        axis.text.y = element_blank(),
+        legend.position = "top", 
+        legend.justification = "center"),
+  guides(fill = guide_colorbar(title.position = "top"))
 )
 
-pw_mean_score <- filter(plot_data_summary_cluster, pathway %in% all_pws_short)$mean_score
+pw_mean_score <- filter(plot_data_summary_site, pathway %in% all_pws_short)$mean_score
 
-pw_breaks <- c(seq(min(pw_mean_score), 0, length.out = 5)[-5], 
-               0, seq(0, max(pw_mean_score), length.out = 5)[-1])
+pw_breaks <- c(seq(min(pw_mean_score), 0.5, length.out = 5)[-5], 
+               0.5, seq(0.5, max(pw_mean_score), length.out = 5)[-1])
 
 rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
 
-pw_plot1 <- plot_data_summary_cluster %>% 
+pw_plot1 <- plot_data_summary_site %>% 
   mutate(facet_helper = "") %>% 
   filter(!str_detect(pathway, "module|HLA|B2M")) %>% 
+  filter(tumor_supersite %in% major_sites) %>% 
   ggplot() +
   geom_tile(aes(pathway, cluster_label, fill = mean_score)) +
   common_heat_layers +
-  facet_grid(~facet_helper, scales = "free", space = "free") + 
+  facet_wrap(~tumor_supersite, ncol = 2) + 
   labs(x = "Cluster", y = "Pathway", fill = "Mean\nPROGENy  \nscore") +
   scale_fill_gradientn(colours = rdbu, 
                        values = scales::rescale(pw_breaks),
                        breaks = c(-0.5, 0.5, 1.5),  
-                       na.value = "grey10") +
-  theme(axis.text.y = element_blank(),
-        legend.position = "top", 
-        legend.justification = "center") +
-  guides(fill = guide_legend(title.position = "top"))
+                       na.value = "grey10")
 
-hla_plot1 <- plot_data_summary_cluster %>% 
+pw_plot1_anno <- plot_data_summary_site %>% 
+  filter(!str_detect(pathway, "module")) %>% 
+  filter(tumor_supersite %in% major_sites[1:2]) %>% 
+  mutate(tumor_supersite = case_when(
+    tumor_supersite == "Adnexa" ~ " ",
+    tumor_supersite == "Ascites" ~ "  ",
+    T ~ " "
+  )) %>% 
+  distinct(cluster_label, tumor_supersite, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(tumor_supersite, cluster_label, fill = cluster_label)) +
+  geom_point(aes(tumor_supersite, cluster_label), color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(tumor_supersite, cluster_label, label = as.numeric(cluster_label))) +
+  common_heat_layers + 
+  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super %>% setNames(str_remove_all(names(.), "\\.cell"))) +
+  facet_wrap(~tumor_supersite, ncol = 1, scales = "free_x") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_text()) +
+  guides(fill = F)
+
+pw_heat_grid <- plot_grid(pw_plot1_anno, pw_plot1 + remove_guides, ncol = 2, align = "h", axis = "tb", rel_widths = c(0.22, 0.78))
+
+ggdraw() +
+  draw_plot(pw_heat_grid, width = 1, height = 0.85, x = 0, y = 0.15) +
+  draw_plot(get_legend(pw_plot1), x = -0.4, y = -0.35)
+
+ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap.pdf", width = 8, height = 6.5)
+ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap.png", width = 8, height = 6.5)
+
+```
+
+[figures/320_cancer_cell_plotting_umap/003_pathway_heatmap.pdf](figures/320_cancer_cell_plotting_umap/003_pathway_heatmap.pdf)
+
+[figures/320_cancer_cell_plotting_umap/003_pathway_heatmap.png](figures/320_cancer_cell_plotting_umap/003_pathway_heatmap.png)
+
+
+```{r chunk_320_170, fig.width=6, fig.height=6.5}
+
+hla_plot1 <- plot_data_summary_site %>% 
   mutate(facet_helper = "") %>% 
   filter(str_detect(pathway, "HLA|B2M")) %>% 
+  filter(tumor_supersite %in% major_sites) %>% 
   ggplot() +
   geom_tile(aes(pathway, cluster_label, fill = mean_score)) +
   common_heat_layers +
-  facet_grid(~facet_helper, scales = "free", space = "free") + 
-  labs(x = "Cluster", y = "Pathway", fill = "Expression\n\n") +
+  facet_wrap(~tumor_supersite, ncol = 2) + 
+  labs(x = "Cluster", y = "Pathway", fill = "Expression") +
   scale_fill_gradientn(colours = rdbu, 
                        values = scales::rescale(pw_breaks),
-                       # breaks = c(-signif(min(pw_breaks),1)+0.1, 0, signif(max(pw_breaks),1)-0.1),  
-                       na.value = "grey10") +
-  theme(axis.text.y = element_blank(),
-        legend.position = "top", 
-        legend.justification = "center")
+                       na.value = "grey10")
 
-pw_plot1_anno <- plot_data_summary_cluster %>% 
-  mutate(facet_helper = "") %>% 
-  filter(!str_detect(pathway, "module")) %>% 
-  distinct(cluster_label, facet_helper, .keep_all = T) %>% 
-  ggplot() +
-  geom_tile(aes(facet_helper, cluster_label, fill = cluster_label)) +
-  geom_point(aes(facet_helper, cluster_label), color = "white", alpha = 0.5, size = 5) +
-  geom_text(aes(facet_helper, cluster_label, label = as.numeric(cluster_label))) +
-  common_heat_layers + 
-  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super %>% setNames(str_remove_all(names(.), "\\.cell"))) +
-  facet_grid(facet_helper~., scales = "free", space = "free") +
-  theme(axis.text.x = element_blank(),
-        strip.text = element_blank()) +
-  guides(fill = F)
-
-hla_grid_left <- plot_grid(hla_plot1, pw_plot1, pw_plot1_anno, ggdraw(),
-                           ncol = 1, align = "v", axis = "lrtb",
-                           rel_heights = c(0.29, 0.47, 0.24, 0))
-
-heatmap_grid <- plot_grid(pw_plot1_anno, 
-                          pw_plot1 + remove_guides, 
-                          ggdraw(), 
-                          pw_plot1_anno + remove_yaxis,
-                          hla_plot1 + remove_guides,
-                          nrow = 1, align = "h", axis = "lrtb",
-                          rel_widths =  c(0.29, 0.45, 0.02, 0.04, 0.2))
+hla_heat_grid <- plot_grid(pw_plot1_anno, hla_plot1 + remove_guides, ncol = 2, align = "h", axis = "tb", rel_widths = c(0.4, 0.6))
 
 ggdraw() +
-  draw_plot(heatmap_grid, x = 0, y = 0.03, height = 0.8, width = 1) +
-  draw_grob(get_legend(pw_plot1), x = -0.15, y = 0.38) +
-  draw_grob(get_legend(hla_plot1), x = 0.3, y = 0.38) 
+  draw_plot(hla_heat_grid, width = 1, height = 0.85, x = 0, y = 0.15) +
+  draw_plot(get_legend(hla_plot1), x = -0.3, y = -0.28)
 
-ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap.pdf", width = 6.5, height = 3.75)
-ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_heatmap.png", width = 6.5, height = 3.75)
+ggsave("figures/320_cancer_cell_plotting_umap/003_hla_heatmap.pdf", width = 4.5, height = 6.5)
+ggsave("figures/320_cancer_cell_plotting_umap/003_hla_heatmap.png", width = 4.5, height = 6.5)
 
+```
 
+[figures/320_cancer_cell_plotting_umap/003_hla_heatmap.pdf](figures/320_cancer_cell_plotting_umap/003_hla_heatmap.pdf)
+
+[figures/320_cancer_cell_plotting_umap/003_hla_heatmap.pdf](figures/320_cancer_cell_plotting_umap/003_hla_heatmap.pdf)
+
+```{r chunk_320_175, fig.width=10, fig.height=5}
               
-comparison_data_pw <- filter(plot_data_summary_mutsig_sample, pathway %in% str_remove_all(pois, "\\.pathway")) %>% 
-  mutate(pathway = ordered(pathway, levels = str_remove_all(pois, "\\.pathway"))) %>% 
-  rename(score = mean_score) %>% 
-  ungroup
-
-pw_boxplot_mutsig_pw <- filter(plot_data_pw, pathway %in% str_remove_all(pois, "\\.pathway")) %>% 
-  mutate(pathway = ordered(pathway, levels = str_remove_all(pois, "\\.pathway"))) %>% 
-  ggplot(aes(consensus_signature, score)) +
-  geom_violin(aes(consensus_signature, score, fill = consensus_signature), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
-  geom_boxplot(aes(consensus_signature, score, color = consensus_signature),
-               width = 0.5, size = 0.75, outlier.shape = NA) +
-  geom_boxplot(aes(consensus_signature, score, fill = consensus_signature),
-               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
-  stat_compare_means(aes(consensus_signature, score, color = "red"), 
-                     ref.group = ".all.", data = comparison_data_pw,
-                     label = "p.signif", label.y = 3.5, hide.ns = T) +
-  # stat_pvalue_manual(test_result_jakstat, label = "p.adj") +
-  stat_compare_means(aes(consensus_signature, score),
-                     data = comparison_data_pw,
-                     label.y = 4.3, label.x = 1.5, label.sep = "\n\n") +
-  facet_wrap(~pathway) +
-  scale_color_manual(values = clrs$consensus_signature) +
-  scale_fill_manual(values = clrs$consensus_signature) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-  labs(x = "", y = "PROGENy score") +
-  coord_cartesian(ylim = c(-1, 5))
+# comparison_data_pw <- filter(plot_data_summary_mutsig_sample, pathway %in% str_remove_all(pois, "\\.pathway")) %>% 
+#   mutate(pathway = ordered(pathway, levels = str_remove_all(pois, "\\.pathway"))) %>% 
+#   rename(score = mean_score) %>% 
+#   ungroup
+# 
+# pw_boxplot_mutsig_pw <- filter(plot_data_pw, pathway %in% str_remove_all(pois, "\\.pathway")) %>% 
+#   mutate(pathway = ordered(pathway, levels = str_remove_all(pois, "\\.pathway"))) %>% 
+#   ggplot(aes(consensus_signature, score)) +
+#   geom_violin(aes(consensus_signature, score, fill = consensus_signature), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+#   geom_boxplot(aes(consensus_signature, score, color = consensus_signature),
+#                width = 0.5, size = 0.75, outlier.shape = NA) +
+#   geom_boxplot(aes(consensus_signature, score, fill = consensus_signature),
+#                color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+#   stat_compare_means(aes(consensus_signature, score, color = "red"), 
+#                      ref.group = ".all.", data = comparison_data_pw,
+#                      label = "p.signif", label.y = 3.5, hide.ns = T) +
+#   # stat_pvalue_manual(test_result_jakstat, label = "p.adj") +
+#   stat_compare_means(aes(consensus_signature, score),
+#                      data = comparison_data_pw,
+#                      label.y = 4.3, label.x = 1.5, label.sep = "\n\n") +
+#   facet_wrap(~pathway) +
+#   scale_color_manual(values = clrs$consensus_signature) +
+#   scale_fill_manual(values = clrs$consensus_signature) +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+#   labs(x = "", y = "PROGENy score") +
+#   coord_cartesian(ylim = c(-1, 5))
 
 # comparison_data_module <- filter(plot_data_summary_mutsig_sample, pathway %in% c("IFNg.signaling.module", "ISG.module")) %>% 
 #   mutate(pathway = c(`IFNg.signaling.module` = "IFNg", `ISG.module` = "IFNa")[pathway]) %>% 
@@ -1001,23 +1024,7 @@ pw_boxplot_mutsig_pw <- filter(plot_data_pw, pathway %in% str_remove_all(pois, "
 
 ```
 
-[figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.pdf](figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.pdf)
 
-[figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.png](figures/320_cancer_cell_plotting_umap/003_pathway_heatmap_boxplot.png)
-
-```{r chunk_320_180, fig.width=4.5, fig.height=7.5}
-
-hla_grid_left
-ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.pdf", hla_grid_left, 
-       width = 4.5, height = 7.5)
-ggsave("figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.png", hla_grid_left, 
-       width = 4.5, height = 7.5)
-
-```
-
-[figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.pdf](figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.pdf)
-
-[figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.png](figures/320_cancer_cell_plotting_umap/003_pathway_hla_heatmap.png)
 
 ## CD274 grid main text
 
