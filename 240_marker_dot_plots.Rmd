@@ -1,0 +1,115 @@
+---
+title: "MSK SPECTRUM data freeze: cell type markers"
+author: "Florian Uhlitz"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+```
+
+```{r chunk_240_010}
+
+library(magrittr)
+library(tidyverse)
+library(Seurat)
+library(readxl)
+library(cowplot)
+library(colorblindr)
+library(viridis)
+# library(magick, lib.loc = "/home/uhlitzf/miniconda3/lib/R/library")
+library(ggpubr)
+
+```
+
+# Composition plots
+
+## load data modalities
+
+### scRNA
+
+```{r chunk_240_030}
+
+## load global vars: 
+source("src/global_vars.R")
+source("src/comp_plot.R")
+
+# scrna_meta_tbl
+# clrs
+# markers_v7
+# markers_v7_super
+# cell_type_super_lookup
+
+names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "\\.", " ")
+names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "Ovarian", "Ov")
+
+## load data --------------------------------------
+
+## load cohort embeddings
+seu_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/cells.tsv") %>% 
+  mutate(cell_type = ifelse(cell_type == "Monocyte", "Myeloid.cell", cell_type)) %>% 
+  mutate(cell_type = ifelse(cell_type == "Ovarian.cancer.cell", "Ov.cancer.cell", cell_type))
+
+## load consensus data
+consOV_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/consensusOV/SPECTRUM_freeze_v7_consensusOV.tsv") %>%
+  mutate(consensusOV = ordered(consensusOV, levels = names(clrs$consensusOV))) %>% 
+  select(cell_id, consensusOV)
+
+## join data
+seu_tbl_full <- seu_tbl %>% 
+  left_join(scrna_meta_tbl, by = "sample") %>% 
+  filter(therapy == "pre-Rx", cell_type != "Other", tumor_supersite != "Unknown") %>% 
+  rename(UMAP_1 = umap50_1, UMAP_2 = umap50_2) %>% 
+  mutate(cell_type_super = cell_type_super_lookup[cell_type]) %>% 
+  mutate(cell_type = ordered(str_replace_all(cell_type, "\\.", " "), 
+                             levels = names(clrs$cell_type))) %>% 
+  mutate(sort_short_x = ifelse(sort_short == "U" & cell_type_super == "Immune", 
+                               "CD45+", ifelse(sort_short == "U" & cell_type_super == "Stromal", 
+                                               "CD45-", sort_short))) %>% 
+  left_join(consOV_tbl, by = "cell_id")
+
+# seu_tbl_full <- seu_tbl_full %>%
+#   sample_n(10000)
+
+sois <- c("Adnexa", "Omentum", "Ascites")
+mois <- c("HRD-Dup", "HRD-Del", "FBI")
+
+```
+
+
+```{r chunk_240_075}
+
+plot_data_markers <- as_tibble(FetchData(seu_obj_cc, c("cluster_label", myfeatures, unique(marker_tbl_top$gene)))) %>% 
+  gather(gene, value, -c(1:(length(myfeatures)+1))) %>% 
+  left_join(scrna_meta_tbl, by = "sample") %>% 
+  mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super))) %>% 
+  group_by(cluster_label, gene) %>% 
+  summarise(value = mean(value, na.rm = T)) %>% 
+  group_by(gene) %>% 
+  mutate(value = scales::rescale(value)) %>% 
+  left_join(select(marker_tbl_top, cluster_label_x = cluster_label, gene), by = "gene") %>% 
+  ## reverse names vector to flip row-order in heatmap
+  mutate(cluster_label_x = ordered(cluster_label_x, levels = names(clrs$cluster_label$Ovarian.cancer.super))) %>% 
+  na.omit()
+
+```
+
+## session info 
+
+```{r chunk_240_999}
+
+devtools::session_info()
+
+```
+

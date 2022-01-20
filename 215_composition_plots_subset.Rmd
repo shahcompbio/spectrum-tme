@@ -82,6 +82,9 @@ seu_tbl_full <- seu_tbl %>%
 # seu_tbl_full <- seu_tbl_full %>%
 #   sample_n(10000)
 
+sois <- c("Adnexa", "Omentum", "Ascites")
+mois <- c("HRD-Dup", "HRD-Del", "FBI")
+
 ```
 
 ```{r chunk_215_040, fig.width=8, fig.height=4}
@@ -355,21 +358,45 @@ hne_cell_type_n_slide_compartment <- hne_cell_type_expanded %>%
 
 ### Mutsig comp scRNA 
 
-```{r chunk_215_100, fig.width=3, fig.height=4.5}
+```{r chunk_215_100, fig.width=3, fig.height=4}
 
-plist_cancer.3 <- default_comp_grid_list(filter(comp_list$Ovarian.cancer.super, 
-                                                sort_short_x == "CD45-"),
-                                         cluster_label, "Cancer.cell.3", cluster_label,
-                                         vec_plot = F, site_box = F, yaxis = T,
-                                         super_type = "Ovarian.cancer.super", nmax = 10000)
+plist_cancer.3 <- comp_list$Ovarian.cancer.super %>% 
+  filter(consensus_signature %in% mois) %>% 
+  filter(sort_short_x == "CD45-") %>% 
+  default_comp_grid_list(cluster_label, "Cancer.cell.3", cluster_label,
+                         vec_plot = F, site_box = F, yaxis = T, facet = sort_short_x,
+                         super_type = "Ovarian.cancer.super", nmax = 8000)
 
 pgrid_cancer.3 <- plot_grid(plotlist = plist_cancer.3,
                             ncol = 1, align = "v",
-                            rel_heights = c(0.3, 0.3, 0.4))
+                            rel_heights = c(0.33, 0.33, 0.34))
 
 pgrid_cancer.3
-ggsave("figures/215_composition_plots_subset/215_comp_plot_Ovarian.cancer.cell_cluster3_mutsig.pdf", pgrid_cancer.3, width = 3, height = 4.5)
-ggsave("figures/215_composition_plots_subset/215_comp_plot_Ovarian.cancer.cell_cluster3_mutsig.png", pgrid_cancer.3, width = 3, height = 4.5)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Ovarian.cancer.cell_cluster3_mutsig.pdf", pgrid_cancer.3, width = 3, height = 4)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Ovarian.cancer.cell_cluster3_mutsig.png", pgrid_cancer.3, width = 3, height = 4)
+
+
+```
+
+```{r chunk_215_105, fig.width=4, fig.height=4.25}
+
+plist_cancer.3_site <- comp_list$Ovarian.cancer.super %>% 
+  filter(sort_short_x == "CD45-", consensus_signature %in% mois) %>% 
+  mutate(tumor_megasite = str_replace_all(tumor_megasite, "Other", "Non-adnexa")) %>% 
+  mutate(label_supersite = "Site") %>% 
+  default_comp_grid_list(cluster_label, "Cancer.cell.3", cluster_label,
+                         vec_plot = F, site_box = F, site_tiles = T, yaxis = T, 
+                         super_type = "Ovarian.cancer.super", nmax = 8000,
+                         facet = tumor_megasite)
+
+pgrid_cancer.3_site <- plot_grid(plotlist = plist_cancer.3_site,
+                                 ncol = 1, align = "v",
+                                 rel_heights = c(0.32, 0.32, 0.05, 0.31))
+
+pgrid_cancer.3_site
+
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Ovarian.cancer.cell_cluster3_mutsig_site.pdf", pgrid_cancer.3_site, width = 4, height = 4.25)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Ovarian.cancer.cell_cluster3_mutsig_site.png", pgrid_cancer.3_site, width = 4, height = 4.25)
 
 
 ```
