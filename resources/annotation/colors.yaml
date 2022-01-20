@@ -78,8 +78,9 @@ cell_type:
 #   Other: "#b3b3b3" # grey70
 tumor_megasite:
   Adnexa: "#ff0000"
-  Ascites: "#56B4E9"
   Other: "#56B4E9"
+  Non-adnexa: "#56B4E9"
+  Ascites: "#56B4E9"
 tumor_supersite:
   Adnexa: "#ff0000"
   Bowel: "#56B4E9" # palette_OkabeIto[2]
@@ -121,6 +122,9 @@ tumor_type_adnexa:
   Adnexa: "#ff0000"
   Other: "#56B4E9" # palette_OkabeIto[2]
   Unknown: "#999999" # grey60
+sort_short_x:
+  CD45+: "#ff0000"
+  CD45-: "#56B4E9"
 patient_id: 
   SPECTRUM-OV-002: "#ee2f00"
   SPECTRUM-OV-003: "#ee2f24"
