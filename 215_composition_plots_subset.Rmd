@@ -1286,3 +1286,13 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_main_scRNA.png", widt
 [figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.pdf](figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.pdf)
 
 [figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.png](figures/210_cohort_cell_type_composition/210_comp_grid_per_patient.png)
+
+
+## session info 
+
+```{r chunk_215_999}
+
+devtools::session_info()
+
+```
+

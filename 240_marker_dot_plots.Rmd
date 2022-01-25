@@ -33,79 +33,152 @@ library(ggpubr)
 
 ```
 
-# Composition plots
-
-## load data modalities
-
-### scRNA
+# Dot plots
 
 ```{r chunk_240_030}
 
 ## load global vars: 
 source("src/global_vars.R")
-source("src/comp_plot.R")
+source("src/marker_dot_plot.R")
 
-# scrna_meta_tbl
-# clrs
-# markers_v7
-# markers_v7_super
-# cell_type_super_lookup
+## load data helper -----------------------------------
 
-names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "\\.", " ")
-names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "Ovarian", "Ov")
+load_super_set <- function(super_set, cluster_var) {
+  
+  cluster_var <- enquo(cluster_var)
+  
+  cois <- names(clrs[[as_label(cluster_var)]][[super_set]])
+  seu_obj <- read_rds(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/", super_set, "_processed_filtered_annotated.rds"))
+  
+  marker_tbl_full <- read_tsv(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", super_set, "_marker_table_annotated.tsv"))
+  
+  if (as_label(cluster_var) == "cluster_label_sub") {
+    
+    marker_tbl_full <- read_tsv(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", super_set, "_marker_table_annotated_full.tsv"))
+  
+  }
+  
+  marker_tbl <- marker_tbl_full %>% 
+    group_by(!!cluster_var) %>% 
+    arrange(-avg_logFC) %>% 
+    filter(p_val_adj < 0.01) %>% 
+    slice(1:5) %>% 
+    filter(!!cluster_var %in% cois) %>% 
+    select(cluster_marker = !!cluster_var, gene) %>% 
+    mutate(cluster_marker = ordered(cluster_marker, levels = cois)) %>% 
+    arrange(cluster_marker)
+  
+  return(list(seu_obj = seu_obj, marker_tbl = marker_tbl))
+  
+}
 
-## load data --------------------------------------
+```
 
-## load cohort embeddings
-seu_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/cells.tsv") %>% 
-  mutate(cell_type = ifelse(cell_type == "Monocyte", "Myeloid.cell", cell_type)) %>% 
-  mutate(cell_type = ifelse(cell_type == "Ovarian.cancer.cell", "Ov.cancer.cell", cell_type))
+## Cancer cell clusters
 
-## load consensus data
-consOV_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/consensusOV/SPECTRUM_freeze_v7_consensusOV.tsv") %>%
-  mutate(consensusOV = ordered(consensusOV, levels = names(clrs$consensusOV))) %>% 
-  select(cell_id, consensusOV)
+```{r chunk_240_040, fig.width=15, fig.height=3.75}
 
-## join data
-seu_tbl_full <- seu_tbl %>% 
-  left_join(scrna_meta_tbl, by = "sample") %>% 
-  filter(therapy == "pre-Rx", cell_type != "Other", tumor_supersite != "Unknown") %>% 
-  rename(UMAP_1 = umap50_1, UMAP_2 = umap50_2) %>% 
-  mutate(cell_type_super = cell_type_super_lookup[cell_type]) %>% 
-  mutate(cell_type = ordered(str_replace_all(cell_type, "\\.", " "), 
-                             levels = names(clrs$cell_type))) %>% 
-  mutate(sort_short_x = ifelse(sort_short == "U" & cell_type_super == "Immune", 
-                               "CD45+", ifelse(sort_short == "U" & cell_type_super == "Stromal", 
-                                               "CD45-", sort_short))) %>% 
-  left_join(consOV_tbl, by = "cell_id")
+dot_plot_input_cancer <- load_super_set("Ovarian.cancer.super", cluster_label)
 
-# seu_tbl_full <- seu_tbl_full %>%
-#   sample_n(10000)
+dot_plot_data_cancer <- marker_dot_plot_preprocess(dot_plot_input_cancer$seu_obj, dot_plot_input_cancer$marker_tbl, cluster_label)
 
-sois <- c("Adnexa", "Omentum", "Ascites")
-mois <- c("HRD-Dup", "HRD-Del", "FBI")
+pdots_cancer <- plot_marker_dots(dot_plot_data_cancer, "Ovarian.cancer.super", cluster_label)
+
+pdots_cancer
+ggsave("figures/240_marker_dot_plots/240_marker_dot_plot_Ovarian.cancer.super.pdf", width = 15, height = 3.75)
+
+rm(dot_plot_input_cancer)
+
+```
+
+## Myeloid cell clusters
+
+```{r chunk_240_050, fig.width=18, fig.height=4.5}
+
+dot_plot_input_myeloid <- load_super_set("Myeloid.super", cluster_label)
+
+dot_plot_data_myeloid <- marker_dot_plot_preprocess(dot_plot_input_myeloid$seu_obj, dot_plot_input_myeloid$marker_tbl, cluster_label)
+
+pdots_myeloid <- plot_marker_dots(dot_plot_data_myeloid, "Myeloid.super", cluster_label)
+
+pdots_myeloid
+ggsave("figures/240_marker_dot_plots/240_marker_dot_plot_Myeloid.super.pdf", width = 18, height = 4.5)
+
+rm(dot_plot_input_myeloid)
+
+```
+
+## T cell clusters
+
+```{r chunk_240_060, fig.width=15, fig.height=4}
+
+dot_plot_input_tcell <- load_super_set("T.super", cluster_label)
+
+dot_plot_data_tcell <- marker_dot_plot_preprocess(dot_plot_input_tcell$seu_obj, dot_plot_input_tcell$marker_tbl, cluster_label)
+
+pdots_tcell <- plot_marker_dots(dot_plot_data_tcell, "T.super", cluster_label)
+
+pdots_tcell
+ggsave("figures/240_marker_dot_plots/240_marker_dot_plot_T.super.pdf", width = 15, height = 4)
+
+rm(dot_plot_input_tcell)
+
+```
+
+## T cell sub clusters
+
+```{r chunk_240_070, fig.width=30, fig.height=11}
+
+dot_plot_input_tcell_sub <- load_super_set("T.super", cluster_label_sub)
+
+dot_plot_data_tcell_sub <- marker_dot_plot_preprocess(dot_plot_input_tcell_sub$seu_obj, dot_plot_input_tcell_sub$marker_tbl, cluster_label_sub, top_n = 3)
+
+pdots_tcell_sub <- plot_marker_dots(dot_plot_data_tcell_sub, "T.super", cluster_label_sub)
+
+pdots_tcell_sub
+ggsave("figures/240_marker_dot_plots/240_marker_dot_plot_T.super_sub.pdf", width = 30, height = 11)
+
+rm(dot_plot_input_tcell_sub)
+
+```
+
+## Fibroblast clusters
+
+```{r chunk_240_080, fig.width=13, fig.height=4}
+
+dot_plot_input_fibroblast <- load_super_set("Fibroblast.super", cluster_label)
+
+dot_plot_data_fibroblast <- marker_dot_plot_preprocess(dot_plot_input_fibroblast$seu_obj, dot_plot_input_fibroblast$marker_tbl, cluster_label)
+
+pdots_fibroblast <- plot_marker_dots(dot_plot_data_fibroblast, "Fibroblast.super", cluster_label)
+
+pdots_fibroblast
+ggsave("figures/240_marker_dot_plots/240_marker_dot_plot_Fibroblast.super.pdf", width = 13, height = 4)
+
+rm(dot_plot_input_fibroblast)
+
+```
+
+## Endothelial cell clusters
+
+```{r chunk_240_090, fig.width=14, fig.height=4}
+
+dot_plot_input_endo <- load_super_set("Endothelial.super", cluster_label)
+
+dot_plot_data_endo <- marker_dot_plot_preprocess(dot_plot_input_endo$seu_obj, dot_plot_input_endo$marker_tbl, cluster_label)
+
+pdots_endo <- plot_marker_dots(dot_plot_data_endo, "Endothelial.super", cluster_label)
+
+pdots_endo
+ggsave("figures/240_marker_dot_plots/240_marker_dot_plot_Endothelial.super.pdf", width = 14, height = 4)
+
+rm(dot_plot_input_endo)
+
 
 ```
 
 
-```{r chunk_240_075}
-
-plot_data_markers <- as_tibble(FetchData(seu_obj_cc, c("cluster_label", myfeatures, unique(marker_tbl_top$gene)))) %>% 
-  gather(gene, value, -c(1:(length(myfeatures)+1))) %>% 
-  left_join(scrna_meta_tbl, by = "sample") %>% 
-  mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super))) %>% 
-  group_by(cluster_label, gene) %>% 
-  summarise(value = mean(value, na.rm = T)) %>% 
-  group_by(gene) %>% 
-  mutate(value = scales::rescale(value)) %>% 
-  left_join(select(marker_tbl_top, cluster_label_x = cluster_label, gene), by = "gene") %>% 
-  ## reverse names vector to flip row-order in heatmap
-  mutate(cluster_label_x = ordered(cluster_label_x, levels = names(clrs$cluster_label$Ovarian.cancer.super))) %>% 
-  na.omit()
-
-```
-
-## session info 
+# session info 
 
 ```{r chunk_240_999}
 

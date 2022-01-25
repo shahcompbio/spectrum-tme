@@ -239,11 +239,13 @@ cluster_label:
   Endothelial.super:
     Arterial.EC: "#9c0a00"
     Venous.EC: "#110080"
-    Microvascular.EC: "#660080"
+    Vascular.EC: "#77a1cd"
+    Microvascular.EC: "#8c6168"
+    Sprouting.EC: "#ff8a8a"
+    Quiescent.EC: "#660080"
     CD36.EC: "#b42dd6"
     Migrating.EC: "#cf7cbe"
     Lymphatic.EC: "#a37800"
-    Quiescent.EC: "#8c6168"
     Cycling.EC: "#FF8F00"
   Fibroblast.super:
     Early.CAF.1: "#e057f7" ######### updated in v7
