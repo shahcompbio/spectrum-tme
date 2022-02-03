@@ -206,6 +206,7 @@ plot_hyper <- function(hyper_tbl) {
 
 plot_hyper(get_hyper_tbl("Zheng", "CD4", "CD4"))
 ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Zheng_CD4.pdf", width = 10, height = 7)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Zheng_CD4.png", width = 10, height = 7)
 
 ```
 
@@ -213,26 +214,31 @@ ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Zheng_CD
 
 plot_hyper(get_hyper_tbl("Zheng", "CD8", "CD8"))
 ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Zheng_CD8.pdf", width = 8, height = 6)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Zheng_CD8.png", width = 8, height = 6)
 
 ```
 
-```{r chunk_530_120, fig.width=6, fig.height=5}
+```{r chunk_530_120, fig.width=5, fig.height=6}
 
 plot_hyper(get_hyper_tbl("Hornburg", "CD4", "CD4"))
 ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_CD4.pdf", width = 5, height = 6)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_CD4.png", width = 5, height = 6)
 
 ```
 
-```{r chunk_530_130, fig.width=10, fig.height=5}
+```{r chunk_530_130, fig.width=5, fig.height=4.5}
 
 plot_hyper(get_hyper_tbl("Hornburg", "CD8", "CD8"))
 ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_CD8.pdf", width = 5, height = 4.5)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_CD8.png", width = 5, height = 4.5)
 
 ```
 
-```{r chunk_530_140, fig.width=10, fig.height=5}
+```{r chunk_530_140, fig.width=4.25, fig.height=5}
 
 plot_hyper(get_hyper_tbl("Hornburg", "Macrophage", "Macrophage"))
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_Macrophage.pdf", width = 4.25, height = 5)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_Macrophage.png", width = 4.25, height = 5)
 
 ```
 
