@@ -2,17 +2,22 @@
 title: "MSK SPECTRUM freeze CD8 T cells"
 author: "Florian Uhlitz"
 date: "`r Sys.Date()`"
-output:
-  bookdown::html_document2:
-    includes:
-      in_header: header.html
-  bookdown::gitbook:
-    includes:
-      in_header: header.html
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
 editor_options: 
   chunk_output_type: console
 ---
 
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+```
 
 # Figure 5 lower
 
@@ -289,8 +294,8 @@ module_curves_module <- plot_data_smooth %>%
   scale_y_continuous(breaks = c(0, 1))
 
 module_curves_module
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_modules.pdf", module_curves_module, width = 6, height = 4)
-ggsave_png("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_modules.png", module_curves_module, width = 6, height = 4)
+ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_modules.pdf", module_curves_module, width = 6, height = 4)
+ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_modules.png", module_curves_module, width = 6, height = 4)
 
 module_curves_gois <- plot_data_smooth %>% 
   filter(key %in% gois) %>%
@@ -307,8 +312,8 @@ module_curves_gois <- plot_data_smooth %>%
   scale_y_continuous(breaks = c(0, 1))
 
 module_curves_gois
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_genes.pdf", module_curves_gois, width = 6, height = 4)
-ggsave_png("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_genes.png", module_curves_gois, width = 6, height = 4)
+ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_genes.pdf", module_curves_gois, width = 6, height = 4)
+ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_genes.png", module_curves_gois, width = 6, height = 4)
 
 ```
 
@@ -332,8 +337,8 @@ ggdraw() +
   draw_plot(module_curves_module_megasite + remove_guides) +
   draw_plot(get_legend(module_curves_module_megasite), x = 0.72, y = -0.2)
 
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_megasite.pdf", width = 8, height = 4)
-ggsave_png("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_megasite.png", width = 8, height = 4)
+ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_megasite.pdf", width = 8, height = 4)
+ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_megasite.png", width = 8, height = 4)
 
 module_curves_module_mutsig <- plot_data_smooth_mutsig %>% 
   filter(consensus_signature %in% sois) %>% 
@@ -353,8 +358,8 @@ module_curves_module_mutsig <- plot_data_smooth_mutsig %>%
 
 module_curves_module_mutsig
 
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_mutsig.pdf", width = 8, height = 3)
-ggsave_png("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_mutsig.png", width = 8, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_mutsig.pdf", width = 8, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_mutsig.png", width = 8, height = 3)
 
 ```
 
@@ -436,8 +441,8 @@ mutsig_boxplot_grid <- plot_grid(
 
 mutsig_boxplot_grid
 
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_violins_mutsig.pdf", width = 4.5, height = 3)
-ggsave_png("figures/520_T_cell_CD8_diffusion/005_violins_mutsig.png", width = 4.5, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig.pdf", width = 4.5, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig.png", width = 4.5, height = 3)
 
 ```
 
@@ -450,8 +455,8 @@ mutsig_boxplot_grid_short <- plot_grid(
 
 mutsig_boxplot_grid_short
 
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_violins_mutsig_short.pdf", width = 4, height = 3)
-ggsave_png("figures/520_T_cell_CD8_diffusion/005_violins_mutsig_short.png", width = 4, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig_short.pdf", width = 4, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig_short.png", width = 4, height = 3)
 
 ```
 
@@ -494,9 +499,9 @@ patient_plots_list[[3]] <- patient_boxplot_wrapper("JAK/STAT\npathway", "PROGENy
 
 plot_grid(plotlist = patient_plots_list, ncol = 1, align = "v")
 
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/005_violins_patient_lvl.pdf", 
+ggsave("figures/520_T_cell_CD8_diffusion/005_violins_patient_lvl.pdf", 
             width = 6, height = 8)
-ggsave_png("figures/520_T_cell_CD8_diffusion/005_violins_patient_lvl.png", 
+ggsave("figures/520_T_cell_CD8_diffusion/005_violins_patient_lvl.png", 
        width = 6, height = 8)
 
 ```
@@ -520,8 +525,8 @@ ggdraw() +
   # draw_plot(dc_plot_cxcl13 + guides(color = F), x = 0.35, y = 0.05, width = 0.125, height = 0.3) +
   # draw_plot(box_grid, x = 0.5, y = 0, width = 0.5, height = 1)
   
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.pdf", width = 22, height = 4)
-ggsave_png("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.png", width = 22, height = 4)
+ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.pdf", width = 22, height = 4)
+ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.png", width = 22, height = 4)
 
 
 ```
@@ -577,8 +582,8 @@ cor_plot_grid <- plot_grid(cor_plot1 + guides(color = F), cor_plot2,
 
 cor_plot_grid
 
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.pdf", cor_plot_grid, width = 8, height = 3)
-ggsave_png("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.png", cor_plot_grid, width = 8, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.pdf", cor_plot_grid, width = 8, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.png", cor_plot_grid, width = 8, height = 3)
 
 
 ```
@@ -652,8 +657,8 @@ comp_grid8 <- plot_grid(plotlist = plist8, ncol = 1, align = "v", rel_heights = 
 pg <- plot_grid(comp_grid1, comp_grid2, comp_grid3, comp_grid4, comp_grid5, comp_grid6, comp_grid7, comp_grid8, ncol = 8)
 pg
 
-ggsave_pdf("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.pdf", pg, width = 24, height = 6)
-ggsave_png("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.png", pg, width = 24, height = 6)
+ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.pdf", pg, width = 24, height = 6)
+ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.png", pg, width = 24, height = 6)
 
 ```
 
