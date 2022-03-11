@@ -1,0 +1,103 @@
+---
+title: "MSK SPECTRUM freeze: T cell atlas"
+author: "Florian Uhlitz"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+```
+
+# Public data
+
+```{r chunk_530_010}
+
+library(magrittr)
+library(tidyverse)
+library(Seurat)
+library(readxl)
+library(cowplot)
+library(colorblindr)
+library(viridis)
+
+```
+
+```{r chunk_530_020}
+
+## load global vars: 
+source("src/global_vars.R")
+
+# scrna_meta_tbl
+# clrs
+# markers_v7
+# markers_v7_super
+# cell_type_super_lookup
+
+seu_obj <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/T.super_processed_filtered_annotated.rds")
+
+cd4_clusters <- unique(seu_obj$cluster_label_sub)[str_detect(unique(seu_obj$cluster_label_sub), "^CD4")]
+cd8_clusters <- unique(seu_obj$cluster_label_sub)[str_detect(unique(seu_obj$cluster_label_sub), "^CD8")]
+cd4_cells <- colnames(seu_obj)[seu_obj@meta.data$cluster_label_sub %in% cd4_clusters]
+cd8_cells <- colnames(seu_obj)[seu_obj@meta.data$cluster_label_sub %in% cd8_clusters]
+
+seu_obj_cd4 <- subset(seu_obj, cells = cd4_cells)
+seu_obj_cd8 <- subset(seu_obj, cells = cd8_cells)
+
+seu_cd4_norm <- read_rds("/work/shah/users/uhlitzf/data/SCOPE/TCELL_ONTOLOGY/zheng_seurat_cd4_norm.rds")
+seu_cd8_norm <- read_rds("/work/shah/users/uhlitzf/data/SCOPE/TCELL_ONTOLOGY/zheng_seurat_cd8_norm.rds")
+
+```
+
+
+```{r chunk_530_030}
+
+ref_anchors_cd4 <- FindTransferAnchors(reference = seu_cd4_norm, query = seu_obj_cd4,
+    dims = 1:20, reference.reduction = "harmony")
+
+label_transfers_cd4 <- TransferData(anchorset = ref_anchors_cd4, refdata = seu_cd4_norm$meta_cluster,
+    dims = 1:20)
+
+ref_anchors_cd8 <- FindTransferAnchors(reference = seu_cd8_norm, query = seu_obj_cd8,
+    dims = 1:20, reference.reduction = "harmony")
+
+label_transfers_cd8 <- TransferData(anchorset = ref_anchors_cd8, refdata = seu_cd8_norm$meta_cluster,
+    dims = 1:20)
+
+label_transfers <- rbind(label_transfers_cd4[,c(1,ncol(label_transfers_cd4))], label_transfers_cd8[,c(1,ncol(label_transfers_cd8))]) %>% 
+  as_tibble(rownames = "cell_id")
+
+seu_obj@meta.data <- seu_obj@meta.data %>% 
+  left_join(label_transfers, by = "cell_id") %>% 
+  as.data.frame(row.names = .$cell_id)
+
+write_tsv(label_transfers, "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/zheng_tcell_label_transfer.tsv")
+
+```
+
+```{r chunk_530_040, fig.width=15, fig.height=10}
+
+DimPlot(seu_obj, reduction = "umapharmony", group.by = "predicted.id", label = T) + NoAxes() + coord_fixed()
+# FeaturePlot(seu_obj, "prediction.score.max", reduction = "umapharmony") + NoAxes() + NoLegend()
+
+```
+
+## session info
+
+```{r chunk_530_999}
+
+devtools::session_info()
+
+```
+
+

@@ -41,7 +41,7 @@ rank_by <- function(comp_tbl, rank_column = cell_type, rank_value = "T cell", fi
     mutate(sample_id_lvl = ordered(sample_id, levels = rev(unique(sample_id))),
            alpha_highlight = ifelse(!!rank_column == rank_value, T, F))
   
-  if (!is.na(as_label(facet)) != F) {
+  if (as_label(facet) != "F" & as_label(facet) != "FALSE") {
     
   comp_rank <- comp_lvl %>% 
     distinct(!!rank_column, sample_id_lvl, .keep_all = T) %>% 

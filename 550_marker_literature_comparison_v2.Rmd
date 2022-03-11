@@ -1,0 +1,402 @@
+---
+title: "MSK SPECTRUM freeze: comparison with cell type markers from literature"
+author: "Florian Uhlitz"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+```
+
+```{r chunk_550_010}
+
+library(magrittr)
+library(tidyverse)
+library(Seurat)
+library(readxl)
+library(cowplot)
+library(colorblindr)
+library(viridis)
+
+```
+
+```{r chunk_550_020}
+
+## load global vars: 
+source("src/global_vars.R")
+
+# scrna_meta_tbl
+# clrs
+# markers_v7
+# markers_v7_super
+# cell_type_super_lookup
+
+seu_obj <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/T.super_processed_filtered_annotated.rds")
+
+```
+
+# hypergeometric test for diff expressed genes
+
+```{r chunk_550_030}
+
+## reference markers ------------------------------------------
+
+ref_markers_facets <- yaml::read_yaml("/work/shah/users/uhlitzf/projects/spectrum_cin_shared/resources/signatures/literature_super_clusters.yaml") %>% 
+  lapply(function(x) lapply(x, enframe, "cluster_ref", "cluster_ref_facet") %>% 
+           lapply(function(y) unnest(y, cluster_ref_facet))) %>% 
+  lapply(bind_rows, .id = "comp_ref") %>% 
+  lapply(function(x) mutate(x, cluster_ref_facet = ordered(cluster_ref_facet, levels = unique(cluster_ref_facet))))
+
+ref_markers_facets$SPECTRUM <- ref_markers_facets$SPECTRUM %>% 
+  rename(comp_test = comp_ref, cluster_test = cluster_ref, cluster_test_facet = cluster_ref_facet) %>% 
+  mutate(cluster_test_facet = ordered(cluster_test_facet, levels = rev(levels(cluster_test_facet))))
+
+nmax_genes <- 50
+
+ref_markers <- list()
+ref_markers$Zheng <- list()
+
+ref_markers$Zheng$CD4 <- read_excel("/work/shah/users/uhlitzf/projects/spectrum_cin_shared/resources/signatures/science.abe6474_table_s3.xlsx", sheet = 3, skip = 1)
+ref_markers$Zheng$CD8 <- read_excel("/work/shah/users/uhlitzf/projects/spectrum_cin_shared/resources/signatures/science.abe6474_table_s3.xlsx", sheet = 2, skip = 1) %>% 
+  mutate(ES.max.p.adj = as.numeric(ES.max.p.adj))
+
+ref_markers$Zheng <- bind_rows(ref_markers$Zheng, .id = "comp_ref") %>% 
+  filter(comb.ES > 0) %>% 
+  select(comp_ref, cluster_ref = cluster.name, gene = geneSymbol) %>% 
+  group_by(cluster_ref, comp_ref) %>% 
+  slice(1:nmax_genes) %>% 
+  ungroup() %>% 
+  filter(!str_detect(cluster_ref, "NK-like"))
+
+ref_markers$Hornburg <- list()
+ref_markers$Hornburg$CD4 <- read_excel("/work/shah/users/uhlitzf/projects/spectrum_cin_shared/resources/signatures/1-s2.0-S1535610821002129-mmc2.xlsx", skip = 2) %>% 
+    filter(str_detect(cluster, "^CD4"))
+ref_markers$Hornburg$CD8 <- read_excel("/work/shah/users/uhlitzf/projects/spectrum_cin_shared/resources/signatures/1-s2.0-S1535610821002129-mmc2.xlsx", skip = 2) %>% 
+  filter(str_detect(cluster, "^CD8"))
+ref_markers$Hornburg$Macrophage <- read_excel("/work/shah/users/uhlitzf/projects/spectrum_cin_shared/resources/signatures/1-s2.0-S1535610821002129-mmc4.xlsx", skip = 2)
+
+ref_markers$Hornburg <- bind_rows(ref_markers$Hornburg, .id = "comp_ref") %>% 
+  filter(avg_logFC > 0) %>% 
+  select(comp_ref, cluster_ref = cluster, gene) %>% 
+  group_by(cluster_ref, comp_ref) %>% 
+  slice(1:nmax_genes) %>% 
+  ungroup() %>% 
+  filter(!str_detect(cluster_ref, "proliferative|NK"))
+
+ref_markers <- bind_rows(ref_markers, .id = "source_ref")
+
+```
+
+```{r chunk_550_040}
+
+## spectrum markers ------------------------------------------
+
+spectrum_marker_wrapper <- . %>% 
+  filter(avg_logFC > 0) %>% 
+  select(cluster_test = cluster_label, gene) %>% 
+  filter(!str_detect(cluster_test, "specific|doublet|Cycling|dissociated")) %>% 
+  group_by(cluster_test) %>% 
+  slice(1:nmax_genes) %>% 
+  ungroup()
+  
+spectrum_markers <- list()
+
+spectrum_markers$CD4 <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/T.super_marker_table_annotated_full.tsv") %>% 
+  filter(str_detect(cluster_label_sub, "^CD4")) %>% 
+  rename(cluster_label = cluster_label_sub) %>% 
+  spectrum_marker_wrapper
+
+spectrum_markers$CD8 <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/T.super_marker_table_annotated_full.tsv") %>% 
+  filter(str_detect(cluster_label_sub, "^CD8")) %>% 
+  rename(cluster_label = cluster_label_sub) %>% 
+  spectrum_marker_wrapper
+
+# spectrum_markers$T.super <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/T.super_marker_table_annotated_full.tsv") %>% 
+#   rename(cluster_label = cluster_label_sub) %>% 
+#   spectrum_marker_wrapper
+
+spectrum_markers$Macrophage <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/Myeloid.super_marker_table_annotated.tsv") %>% 
+  filter(str_detect(cluster_label, "^M1|^M2|Clearing")) %>% 
+  spectrum_marker_wrapper
+
+spectrum_markers <- bind_rows(spectrum_markers, .id = "comp_test")
+
+```
+
+```{r chunk_550_050}
+
+get_hyper_tbl <- function(source_ref_value, comp_ref_value, comp_test_value) {
+  
+  test_set <- spectrum_markers %>% 
+    filter(comp_test %in% comp_test_value) %>% 
+    group_by(cluster_test) %>% 
+    mutate(k = length(cluster_test)) %>% 
+    ungroup %>%
+    mutate(join_helper = 1) %>% 
+    group_by(cluster_test, join_helper, k) %>%
+    nest(test_set = gene)
+  
+  ref_set <- ref_markers %>% 
+    filter(source_ref %in% source_ref_value,
+           comp_ref %in% comp_ref_value)
+  
+  ngenes <- length(unique(c(unlist(test_set$test_set), ref_set$gene)))
+  
+  ref_set <- ref_set %>% 
+    group_by(source_ref, comp_ref, cluster_ref) %>% 
+    mutate(m = length(gene),
+           n = ngenes-m,
+           join_helper = 1) %>% 
+    group_by(cluster_ref, m, n, join_helper) %>%
+    nest(ref_set = gene) %>% 
+    ungroup() %>% 
+    mutate(cluster_ref = ordered(cluster_ref, levels = unique(cluster_ref)))
+  
+  hyper_tbl <- test_set %>% 
+    left_join(ref_set, by = "join_helper") %>% 
+    group_by(source_ref, comp_ref, comp_test, cluster_test, cluster_ref, m, n, k) %>%
+    do(q = length(intersect(unlist(.$ref_set), unlist(.$test_set)))) %>%
+    mutate(q = unlist(q), pval = 1-phyper(q = q, m = m, n = n, k = k)) %>%
+    ungroup %>%
+    mutate(qval = p.adjust(pval, "BH"),
+           sig = qval < 0.01,
+           q_over_k = q/k) %>% 
+    left_join(ref_markers_facets$SPECTRUM, 
+              by = c("comp_test" , "cluster_test")) %>% 
+    left_join(ref_markers_facets[[source_ref_value]], 
+              by = c("comp_ref" , "cluster_ref")) %>% 
+    mutate(cluster_test = ordered(cluster_test, levels = unique(ref_markers_facets$SPECTRUM$cluster_test)),
+           cluster_ref = ordered(cluster_ref, levels = unique(ref_markers_facets[[source_ref_value]]$cluster_ref)))
+  
+  return(hyper_tbl)
+  
+}
+
+plot_hyper <- function(hyper_tbl, size_var = q_over_k, size_label = "Marker list\noverlap [%]") {
+
+  size_var <- enquo(size_var)
+  
+  ggplot() + 
+    geom_point(aes(cluster_ref, cluster_test, color = qval, size = !!size_var), 
+               data = hyper_tbl) +
+    facet_grid(cluster_test_facet~cluster_ref_facet, scales = "free", space = "free") + 
+    theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1),
+          axis.line = element_blank(),
+          axis.ticks = element_blank(),
+          strip.text.y = element_blank()) +
+    labs(x = paste0(hyper_tbl$source_ref[1], " et al. ", hyper_tbl$comp_ref[1], " clusters"), 
+         y = paste0("SPECTRUM ", hyper_tbl$comp_test[1], " clusters"),
+         size = size_label, color = "Hypergeom.\ntest q-val") +
+    scale_color_gradientn(colors = magma(9)[-c(1,9)])
+
+}
+
+```
+
+```{r chunk_550_100, fig.width=10, fig.height=7}
+
+hyper_plot_zheng_cd4 <- plot_hyper(get_hyper_tbl("Zheng", "CD4", "CD4"))
+hyper_plot_zheng_cd4
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD4.pdf", width = 10, height = 7)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD4.png", width = 10, height = 7)
+
+```
+
+```{r chunk_550_110, fig.width=8, fig.height=6}
+
+hyper_plot_zheng_cd8 <- plot_hyper(get_hyper_tbl("Zheng", "CD8", "CD8"))
+hyper_plot_zheng_cd8
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD8.pdf", width = 8, height = 6)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD8.png", width = 8, height = 6)
+
+```
+
+```{r chunk_550_120, fig.width=5, fig.height=6}
+
+plot_hyper(get_hyper_tbl("Hornburg", "CD4", "CD4"))
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Hornburg_CD4.pdf", width = 5, height = 6)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Hornburg_CD4.png", width = 5, height = 6)
+
+```
+
+```{r chunk_550_130, fig.width=5, fig.height=4.5}
+
+plot_hyper(get_hyper_tbl("Hornburg", "CD8", "CD8"))
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Hornburg_CD8.pdf", width = 5, height = 4.5)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Hornburg_CD8.png", width = 5, height = 4.5)
+
+```
+
+```{r chunk_550_140, fig.width=4.25, fig.height=5}
+
+plot_hyper(get_hyper_tbl("Hornburg", "Macrophage", "Macrophage"))
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Hornburg_Macrophage.pdf", width = 4.25, height = 5)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Hornburg_Macrophage.png", width = 4.25, height = 5)
+
+```
+
+# label transfer
+
+```{r chunk_550_200, fig.width=4.25, fig.height=5}
+
+label_transfers <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/zheng_tcell_label_transfer.tsv")
+
+seu_obj@meta.data$predicted.id <- NULL
+seu_obj@meta.data$prediction.score.max <- NULL
+
+seu_obj@meta.data <- seu_obj@meta.data %>% 
+  left_join(label_transfers, by = "cell_id") %>% 
+  as.data.frame(row.names = .$cell_id)
+
+```
+
+## umap of transferred labels
+
+```{r chunk_550_210, fig.width=20, fig.height=10}
+
+plot_data <- FetchData(seu_obj, c("sample", "umapharmony_1", "umapharmony_2", "cluster_label_sub", "predicted.id")) %>% as_tibble()
+
+labels_cluster_label_sub <- group_by(plot_data, cluster_label_sub) %>% 
+  summarise(umapharmony_1 = median(umapharmony_1, na.rm = T), 
+            umapharmony_2 = median(umapharmony_2, na.rm = T))
+
+labels_predicted.id <- group_by(plot_data, predicted.id) %>% 
+  summarise(umapharmony_1 = median(umapharmony_1, na.rm = T), 
+            umapharmony_2 = median(umapharmony_2, na.rm = T))
+
+p1 <- plot_data %>% 
+  # filter(!is.na(predicted.id)) %>% 
+  ggplot() +
+  ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2,
+                               color = cluster_label_sub),
+                           size = 1, raster.dpi = 10, scale = 0.1) +
+  # geom_point(aes(umapharmony_1, umapharmony_2, 
+  #                color = cluster_label_sub),
+  #            size = 0.01) +
+  scale_color_manual(values = clrs$cluster_label_sub$T.super) +
+  ggrepel::geom_label_repel(aes(umapharmony_1, umapharmony_2, 
+                                label = cluster_label_sub, color = cluster_label_sub),
+                           alpha = 0.8,
+                           data = labels_cluster_label_sub) + 
+  remove_xaxis + 
+  remove_yaxis + 
+  remove_guides +
+  coord_fixed()
+
+p2 <- plot_data %>% 
+  # filter(!is.na(predicted.id)) %>% 
+  ggplot() +
+  ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2,
+                               color = predicted.id),
+                           size = 1, raster.dpi = 10, scale = 0.1) +
+  # geom_point(aes(umapharmony_1, umapharmony_2, 
+  #                color = predicted.id),
+  #            size = 0.01) +
+  ggrepel::geom_label_repel(aes(umapharmony_1, umapharmony_2, 
+                                label = predicted.id, color = predicted.id),
+                           alpha = 0.8,
+                           data = labels_predicted.id) + 
+  remove_xaxis + 
+  remove_yaxis + 
+  remove_guides +
+  coord_fixed()
+
+plot_grid(p1, p2, nrow = 1)
+
+ggsave("figures/550_marker_literature_comparison/550_label_transfer_tcell_umap.pdf",
+       width = 20, height = 10)
+
+```
+
+## cluster composition
+
+```{r chunk_550_220, fig.width=10, fig.height=7}
+
+cluster_comp <- plot_data %>% 
+  group_by(predicted.id, cluster_label_sub) %>% 
+  summarise(ncells = n()) %>% 
+  group_by(cluster_label_sub) %>% 
+  mutate(ntotal = sum(ncells),
+         nrel = ncells/ntotal*100) %>% 
+  arrange(cluster_label_sub, -nrel) %>% 
+  ungroup() %>% 
+  rename(cluster_ref = predicted.id, cluster_test = cluster_label_sub) %>% 
+  mutate(cluster_ref_join = str_sub(cluster_ref, 0, 7))
+
+hyper_tbl_zheng_cd4 <- get_hyper_tbl("Zheng", "CD4", "CD4") %>% 
+  mutate(cluster_ref_join = str_sub(cluster_ref, 0, 7))
+
+hyper_plot_zheng_cd4_transfer <- hyper_tbl_zheng_cd4 %>% 
+  left_join(select(cluster_comp, -cluster_ref), 
+            by = c("cluster_test", "cluster_ref_join")) %>% 
+  replace_na(list(nrel = 0)) %>% 
+  mutate(cluster_test = ordered(cluster_test,
+                                levels = levels(hyper_tbl_zheng_cd4$cluster_test)),
+         cluster_ref = ordered(cluster_ref,
+                               levels = levels(hyper_tbl_zheng_cd4$cluster_ref))) %>%
+  plot_hyper(size_var = nrel, size_label = "Ref. labels\nin cluster [%]")
+
+hyper_plot_zheng_cd4_transfer
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD4_transfer.pdf", width = 10, height = 7)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD4_transfer.png", width = 10, height = 7)
+
+```
+
+```{r chunk_550_230, fig.width=10, fig.height=14}
+
+plot_grid(hyper_plot_zheng_cd4, hyper_plot_zheng_cd4_transfer, ncol = 1, labels = c("Cluster-level label transfer", "Cell-level label transfer"), label_size = 10, hjust = -0.1, vjust = 2)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD4_grid.pdf", width = 10, height = 14)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD4_grid.png", width = 10, height = 14)
+
+```
+
+
+```{r chunk_550_240, fig.width=8, fig.height=6}
+
+hyper_tbl_zheng_cd8 <- get_hyper_tbl("Zheng", "CD8", "CD8") %>% 
+  mutate(cluster_ref_join = str_sub(cluster_ref, 0, 7))
+
+hyper_plot_zheng_cd8_transfer <- hyper_tbl_zheng_cd8 %>% 
+  left_join(select(cluster_comp, -cluster_ref), 
+            by = c("cluster_test", "cluster_ref_join")) %>% 
+  replace_na(list(nrel = 0)) %>% 
+  mutate(cluster_test = ordered(cluster_test,
+                                levels = levels(hyper_tbl_zheng_cd8$cluster_test)),
+         cluster_ref = ordered(cluster_ref,
+                               levels = levels(hyper_tbl_zheng_cd8$cluster_ref))) %>%
+  plot_hyper(size_var = nrel, size_label = "Ref. labels\nin cluster [%]")
+
+hyper_plot_zheng_cd8_transfer
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD8_transfer.pdf", width = 8, height = 6)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD8_transfer.png", width = 8, height = 6)
+
+```
+
+```{r chunk_550_240, fig.width=8, fig.height=12}
+
+plot_grid(hyper_plot_zheng_cd8, hyper_plot_zheng_cd8_transfer, ncol = 1, labels = c("Cluster-level label transfer", "Cell-level label transfer"), label_size = 10, hjust = -0.1, vjust = 2)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD8_grid.pdf", width = 8, height = 12)
+ggsave("figures/550_marker_literature_comparison/550_cluster_comparison_Zheng_CD8_grid.png", width = 8, height = 12)
+
+```
+
+## session info
+
+```{r chunk_550_999}
+
+devtools::session_info()
+
+```
+
+
