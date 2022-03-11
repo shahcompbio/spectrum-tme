@@ -174,7 +174,8 @@ for(i in 1:length(cell_types_immune)){
   cat(' \n \n')
   
   print(knitr::kable(wilcoxon_tests(filter(comp_tbl_sample, sort_short_x == "CD45+"), 
-                              cell_type, cell_types_immune, tumor_supersite)))
+                                    cell_type, cell_types_immune, tumor_supersite, 
+                                    facet = sort_short_x)))
   
   cat(' \n \n')
   
@@ -198,7 +199,8 @@ for(i in 1:length(cell_types_stromal)){
   cat(' \n \n')
   
   print(knitr::kable(wilcoxon_tests(filter(comp_tbl_sample, sort_short_x == "CD45-"), 
-                                    cell_type, cell_types_stromal, tumor_supersite)))
+                                    cell_type, cell_types_stromal, tumor_supersite, 
+                                    facet = sort_short_x)))
 
   cat(' \n \n')
   
@@ -236,7 +238,8 @@ for(i in 1:length(cell_types_immune)){
   
   print(knitr::kable(wilcoxon_tests(filter(comp_tbl_sample, sort_short_x == "CD45+", 
                                            consensus_signature %in% sois), 
-                                    cell_type, cell_types_immune, consensus_signature)))
+                                    cell_type, cell_types_immune, consensus_signature, 
+                                    facet = sort_short_x)))
   
   cat(' \n \n')
   
@@ -261,7 +264,8 @@ for(i in 1:length(cell_types_stromal)){
 
   print(knitr::kable(wilcoxon_tests(filter(comp_tbl_sample, sort_short_x == "CD45-", 
                                            consensus_signature %in% sois), 
-                                    cell_type, cell_types_stromal, consensus_signature)))
+                                    cell_type, cell_types_stromal, consensus_signature, 
+                                    facet = sort_short_x)))
   
   cat(' \n \n')
 
@@ -294,7 +298,8 @@ for(i in 1:length(tcga_subtypes)){
   cat(' \n \n')
   
   print(knitr::kable(wilcoxon_tests(filter(comp_tbl_consOV, sort_short_x == "CD45+"), 
-                                    consensusOV, tcga_subtypes, tumor_supersite)))
+                                    consensusOV, tcga_subtypes, tumor_supersite, 
+                                    facet = sort_short_x)))
   
   cat(' \n \n')
   
@@ -317,7 +322,8 @@ for(i in 1:length(tcga_subtypes)){
   cat(' \n \n')
 
   print(knitr::kable(wilcoxon_tests(filter(comp_tbl_consOV, sort_short_x == "CD45-"), 
-                                    consensusOV, tcga_subtypes, tumor_supersite)))
+                                    consensusOV, tcga_subtypes, tumor_supersite, 
+                                    facet = sort_short_x)))
   
   cat(' \n \n')
   
@@ -349,7 +355,8 @@ for(i in 1:length(tcga_subtypes)){
   
   print(knitr::kable(wilcoxon_tests(filter(comp_tbl_consOV, sort_short_x == "CD45+", 
                                            consensus_signature %in% sois), 
-                                    consensusOV, tcga_subtypes, consensus_signature)))
+                                    consensusOV, tcga_subtypes, consensus_signature, 
+                                    facet = sort_short_x)))
   
   cat(' \n \n')
   
@@ -373,7 +380,8 @@ for(i in 1:length(tcga_subtypes)){
   
   print(knitr::kable(wilcoxon_tests(filter(comp_tbl_consOV, sort_short_x == "CD45-", 
                                            consensus_signature %in% sois), 
-                                    consensusOV, tcga_subtypes, consensus_signature)))
+                                    consensusOV, tcga_subtypes, consensus_signature, 
+                                    facet = sort_short_x)))
   
   cat(' \n \n')
 

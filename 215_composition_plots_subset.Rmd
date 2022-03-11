@@ -143,9 +143,16 @@ read_comp_wrapper <- function(x, cluster_column) {
 }
 
 comp_list <- lapply(cois[-1], read_comp_wrapper, cluster_label) %>% setNames(cois[-1])
+
 comp_list$T.super <- read_comp_wrapper("T.super", cluster_label_sub) %>% 
   mutate(cell_type_naive = ifelse(str_detect(cluster_label_sub, "mem"), "T naive/mem", "other")) %>% 
   mutate(cell_type_dysfunc = ifelse(str_detect(cluster_label_sub, "dysfunc"), "T dysfunctional", "other"))
+
+comp_list$Myeloid.super <- comp_list$Myeloid.super %>% 
+  mutate(cell_type_dc = ifelse(str_detect(cluster_label, "DC"), "Dendritic.cell", "other"))
+
+comp_list$B.super <- read_comp_wrapper("B.super", cluster_label)
+comp_list$Endothelial.super <- read_comp_wrapper("Endothelial.super", cluster_label)
 
 ```
 
@@ -403,9 +410,9 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_Ovarian.cancer.cell_c
 
 ### Cluster comp per patient
 
-```{r chunk_215_106, fig.width=4, fig.height=4.25}
+```{r chunk_215_106, fig.width=4, fig.height=2.5}
 
-comp_norm <- comp_list$Ovarian.cancer.super %>% 
+compute_composition_wrapper <- . %>% 
   group_by(patient_id_short, consensus_signature, cluster_label) %>% 
   summarise(n = sum(n)) %>% 
   group_by(patient_id_short) %>% 
@@ -418,6 +425,14 @@ comp_norm <- comp_list$Ovarian.cancer.super %>%
   arrange(cluster_label, nrel) %>% 
   mutate(rank = ordered(rank, levels = rank)) %>% 
   mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super)))
+
+comp_norm <- comp_list$Ovarian.cancer.super %>% 
+  compute_composition_wrapper
+
+comp_norm_mois <- comp_list$Ovarian.cancer.super %>% 
+  filter(consensus_signature %in% mois,
+         tumor_supersite != "Ascites") %>% 
+  compute_composition_wrapper
 
 ggplot(comp_norm) +
   geom_bar(aes(rank, nrel*100, fill = consensus_signature), stat = "identity") +
@@ -433,11 +448,38 @@ ggplot(comp_norm) +
   remove_guides +
   labs(y = "Normalized fraction of\ncells per patient [%]")
 
-ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super.pdf", width = 6, height = 2.5)
-ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super.png", width = 6, height = 2.5)
+
+ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super.pdf", width = 4, height = 2.5)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super.png", width = 4, height = 2.5)
 
 ```
 
+```{r chunk_215_107, fig.width=4, fig.height=2.5}
+
+ggplot(comp_norm_mois) +
+  geom_bar(aes(cluster_label, nrel*100, fill = consensus_signature), 
+           stat = "identity", position = "stack", color = "black",
+           width = 0.8) +
+  # geom_point(aes(color = cluster_label), x = 21, y = 25, size = 8,
+  #            data = distinct(comp_norm, cluster_label)) +
+  # geom_text(aes(label = as.numeric(cluster_label)), x = 21, y = 25, size = 6,
+  #           data = distinct(comp_norm, cluster_label)) +
+  # facet_wrap(~cluster_label, nrow = 2, scales = "free_x", drop = T) +
+  scale_fill_manual(values = clrs$consensus_signature) +
+  # scale_color_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  scale_y_continuous(expand = c(0, 0)) +
+  coord_flip() +
+  theme(strip.text = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.line.y = element_blank()) +
+  remove_guides +
+  labs(y = "Patient composition across clusters [%]",
+       x = "Cluster")
+
+ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super_stacked_barplot.pdf", width = 6, height = 2.5)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super_stacked_barplot.png", width = 6, height = 2.5)
+
+```
 
 ## T cell figure
 
@@ -522,78 +564,129 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_vecto
 
 ```
 
-### Site comp mpif
+## Myeloid cell figure
 
-```{r chunk_215_140, fig.width=3, fig.height=9}
+```{r chunk_215_140, fig.width=9, fig.height=9}
 
-# plist1 <- default_comp_grid_list(
-#   filter(mpif_cell_state_cd8_n_slide, sort_short_x == "mpIF"), 
-#   cell_type_pd1n, "CD8+PD1-", cell_phenotype_mpif, nmax = 50000)
-# 
-# comp_grid1 <- plot_grid(plotlist = plist1[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
-# 
-# comp_grid1
-# 
-# plist2 <- default_comp_grid_list(
-#   filter(mpif_cell_state_cd8_n_slide, sort_short_x == "mpIF"), 
-#   cell_type_pd1p, "CD8+PD1+", cell_phenotype_mpif, nmax = 50000)
-# 
-# comp_grid2 <- plot_grid(plotlist = plist2[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
-# 
-# comp_grid2
-# 
-# plist3 <- default_comp_grid_list(
-#   filter(mpif_cell_state_cd8_n_slide, sort_short_x == "mpIF"), 
-#   cell_type_toxn, "CD8+TOX-", cell_phenotype_mpif, nmax = 50000)
-# 
-# comp_grid3 <- plot_grid(plotlist = plist3[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
-# 
-# comp_grid3
-# 
-# plist4 <- default_comp_grid_list(
-#   filter(mpif_cell_state_cd8_n_slide, sort_short_x == "mpIF"), 
-#   cell_type_toxp, "CD8+TOX+", cell_phenotype_mpif, nmax = 50000)
-# 
-# comp_grid4 <- plot_grid(plotlist = plist4[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
-# 
-# comp_grid4
-# 
-# plist5 <- default_comp_grid_list(
-#   filter(mpif_cell_state_cd8_n_slide, sort_short_x == "mpIF"), 
-#   cell_phenotype_mpif, "CD8+PD1+TOX+", cell_phenotype_mpif, nmax = 50000)
-# 
-# comp_grid5 <- plot_grid(plotlist = plist5[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
-# 
-# comp_grid5
-# 
-# plist6 <- default_comp_grid_list(
-#   filter(mpif_cell_state_cd8_n_slide_compartment, sort_short_x == "Tumor"), 
-#   cell_phenotype_mpif, "CD8+PD1+TOX+", cell_phenotype_mpif, nmax = 50000)
-# 
-# comp_grid6 <- plot_grid(plotlist = plist6[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
-# 
-# comp_grid6
-# 
-# plist7 <- default_comp_grid_list(
-#   filter(mpif_cell_state_cd8_n_slide_compartment, sort_short_x == "Stroma"), 
-#   cell_phenotype_mpif, "CD8+PD1+TOX+", cell_phenotype_mpif, nmax = 50000)
-# 
-# comp_grid7 <- plot_grid(plotlist = plist7[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
+plist_dc <- default_comp_grid_list(
+  comp_list$Myeloid.super, cell_type_dc, "Dendritic.cell",
+  cluster_label, super_type = "Myeloid.super",
+  mutsig_box = T, site_box = T, vec_plot = T,
+  nmax = 5000, highlight = T)
 
+plist_m1 <- default_comp_grid_list(
+  comp_list$Myeloid.super, cluster_label, "M1.S100A8",
+  cluster_label, super_type = "Myeloid.super",
+  mutsig_box = T, site_box = T, vec_plot = T, 
+  nmax = 5000, highlight = T)
+
+plist_m2 <- default_comp_grid_list(
+  comp_list$Myeloid.super, cluster_label, "M2.SELENOP",
+  cluster_label, super_type = "Myeloid.super",
+  mutsig_box = T, site_box = T, vec_plot = T, 
+  nmax = 5000, highlight = T)
+
+comp_grid_dc <- plot_grid(plotlist = plist_dc[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
+
+comp_grid_m1 <- plot_grid(plotlist = plist_m1[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
+
+comp_grid_m2 <- plot_grid(plotlist = plist_m2[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
+
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Myeloid.super_DC.pdf", comp_grid_dc, width = 3, height = 9)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Myeloid.super_DC.png", comp_grid_dc, width = 3, height = 9)
+
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Myeloid.super_M1.pdf", comp_grid_m1, width = 3, height = 9)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Myeloid.super_M1.png", comp_grid_m1, width = 3, height = 9)
+
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Myeloid.super_M2.pdf", comp_grid_m2, width = 3, height = 9)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Myeloid.super_M2.png", comp_grid_m2, width = 3, height = 9)
+
+plot_grid(comp_grid_dc, comp_grid_m1, comp_grid_m2, nrow = 1)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Myeloid.super_site_scrna.pdf", width = 9, height = 9)
+ggsave("figures/215_composition_plots_subset/215_comp_plot_Myeloid.super_site_scrna.png", width = 9, height = 9)
 
 ```
 
-```{r chunk_215_150, fig.width=6, fig.height=9}
+## PCA based on cluster compositions
 
-# plot_grid(comp_grid6, comp_grid7, nrow = 1)
-# 
-# ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_site_mpif.pdf", width = 6, height = 9)
-# ggsave("figures/215_composition_plots_subset/215_comp_plot_T.super_dysfunc_site_mpif.png", width = 6, height = 9)
+```{r chunk_215_150, fig.width=15, fig.height=4}
 
+## PCA input matrix
+comp_mat <- bind_rows(
+  comp_list$Myeloid.super %>%
+    select(sample_id, cluster_label, nrel) %>%
+    spread(sample_id, nrel),
+  comp_list$T.super %>%
+    select(sample_id, cluster_label = cluster_label_sub, nrel) %>%
+    spread(sample_id, nrel),
+  comp_list$B.super %>%
+    select(sample_id, cluster_label, nrel) %>%
+    spread(sample_id, nrel)
+) %>% 
+  as.data.frame %>% 
+  set_rownames(.$cluster_label) %>% 
+  select(-cluster_label) %>% 
+  as.matrix %>% 
+  t
 
+pca_meta_data <- bind_rows(comp_list$Myeloid.super, comp_list$T.super, comp_list$B.super) %>% 
+  distinct(sample_id, tumor_supersite, tumor_megasite, consensus_signature)
+
+comp_mat[is.na(comp_mat)] <- 0
+
+pca_result <- prcomp(comp_mat)
+
+pca_features <- summary(pca_result)$importance %>% 
+  as.data.frame() %>% 
+  as_tibble(rownames = "feature") %>% 
+  gather(PC, value, -feature)
+
+pca_pcs <- pca_result$x %>% 
+  as.data.frame %>% 
+  as_tibble(rownames = "sample_id") %>% 
+  select(sample_id, PC1, PC2) %>% 
+  left_join(pca_meta_data, by = "sample_id")
+
+pca_rot <- pca_result$rotation %>% 
+  as.data.frame %>% 
+  as_tibble(rownames = "cluster_label") %>% 
+  select(cluster_label, PC1, PC2)
+
+pca_rot %>% 
+  arrange(-abs(PC2)) %>% 
+  slice(1:10)
+
+plot_pcs <- function(pcx, pcy) {
+  
+  pcx <- enquo(pcx)
+  pcy <- enquo(pcy)
+  
+  p1 <- ggplot(pca_pcs) +
+    geom_point(aes(!!pcx, !!pcy, color = tumor_supersite)) + 
+    scale_color_manual(values = clrs$tumor_supersite[names(clrs$tumor_supersite) %in% pca_pcs$tumor_supersite]) +
+    theme(aspect.ratio = 1)
+  
+  p2 <- ggplot(pca_pcs) +
+    geom_point(aes(!!pcx, !!pcy, shape = tumor_megasite)) +
+    scale_shape_manual(values = shps$tumor_megasite[names(shps$tumor_megasite) %in% pca_pcs$tumor_megasite]) +
+    theme(aspect.ratio = 1)
+
+  p3 <- ggplot(pca_pcs) +
+    geom_point(aes(!!pcx, !!pcy, color = consensus_signature)) +
+    scale_color_manual(values = clrs$consensus_signature[names(clrs$consensus_signature) %in% pca_pcs$consensus_signature]) +
+    theme(aspect.ratio = 1)
+  
+  plot_grid(p1, p2, p3, nrow = 1, align = "hv")
+  
+}
+
+plot_pcs(PC1, PC2)
+
+ggsave("figures/215_composition_plots_subset/215_comp_PCA.pdf", width = 15, height = 4)
+ggsave("figures/215_composition_plots_subset/215_comp_PCA.png", width = 15, height = 4)
+
+  
 ```
-
-
 
 ## mpIF x scRNA correlation
 
