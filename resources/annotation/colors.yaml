@@ -11,6 +11,13 @@ consensus_signature_short:
   HRP: "#833216" # "#AA3422"
   Undetermined: "#7f7f7f" # grey50
   NA: "#cccccc" # grey80
+wgs_signature:
+  HRD-Dup: "#5890c0"
+  HRD-Del: "#62a766"
+  FBI: "#833216"
+  TD: "#d1352d"
+  Undetermined: "#7f7f7f" # grey50
+  NA: "#cccccc" # grey80
 myriad_signature:
   HRD: "#5890c0"
   HRP: "#833216"
@@ -48,6 +55,32 @@ BRCA_gene_mutation_status:
   sBRCA1: "#5890c0"
   sBRCA2: "#62a766"
   NA: "#cccccc" # grey80
+hr_BRCA_mutation_status:
+  gHRD: "#9fbfdb"
+  HRD: "#5890c0"
+  HRP: "#833216"
+  NA: "#cccccc" # grey80
+consensus_signature_BRCA_mutation_status:
+  gHRD-Dup: "#9fbfdb"
+  ngHRD-Dup: "#5890c0"
+  gHRD-Del: "#b1d3b0"
+  ngHRD-Del: "#62a766"
+  HRD-Other: "#4ac4b9"
+  FBI: "#833216"
+  TD: "#d1352d"
+  Undetermined: "#7f7f7f" # grey50
+  NA: "#cccccc" # grey80
+hrdetect_signature:
+  HRD: "#5890c0"
+  HRP: "#833216"
+  Undetermined: "#7f7f7f" # grey50
+  NA: "#cccccc" # grey80
+chord_signature:
+  BRCA1-like: "#5890c0"
+  BRCA2-like: "#62a766"
+  none: "#833216"
+  Undetermined: "#7f7f7f" # grey50
+  NA: "#cccccc" # grey80
 cell_type:
   T.cell: "#33a02c"
   B.cell: "#1f78b4"
@@ -78,8 +111,8 @@ cell_type:
 #   Other: "#b3b3b3" # grey70
 tumor_megasite:
   Adnexa: "#ff0000"
-  Ascites: "#56B4E9"
-  Other: "#56B4E9"
+  Non-Adnexa: "#0072B2"
+  Ascites: "#E69F00"
 tumor_supersite:
   Adnexa: "#ff0000"
   Ascites: "#E69F00" # palette_OkabeIto[1]
@@ -90,6 +123,7 @@ tumor_supersite:
   UQ: "#009E73" # palette_OkabeIto[5]
   Other: "#999999" # grey60
   Unknown: "#999999" # grey60
+#   Normal: "#999999" # grey60
 tumor_supersite_adnexa:
   Adnexa: "#ff0000"
   Ovary: "#ff0000"
@@ -104,7 +138,7 @@ tumor_supersite_adnexa:
   Unknown: "#999999" # grey60
 tumor_site:
   Left Adnexa: "#ff0000"
-  Right Adnexa: "#ff0000"
+  Right Adnexa: "#ff6666"
   Ascites: "#E69F00" # palette_OkabeIto[1]
   Bowel: "#56B4E9" # palette_OkabeIto[2]
   Omentum: "#0072B2" # palette_OkabeIto[3]
@@ -175,6 +209,14 @@ cluster_label_super:
     Cycling: "#d58805"
     Other: "#b3b3b3"
   T.naive.dysfunctional:
+    T.naive.mem: "#ff8a8a"
+    T.dysfunctional: "#891417"
+    # T.naive.mem: "#43a047"
+    # T.dysfunctional: "#8bc34a"
+    NK: "4FC3F7"
+    Cycling: "#d58805"
+    Other: "#b3b3b3"
+  T.super.naive.dysfunctional:
     CD4.T.naive.mem: "#ff8a8a"
     CD4.T.dysfunctional: "#891417"
     CD8.T.naive.mem: "#43a047"
@@ -338,8 +380,8 @@ til_hne_category:
   Medium: "Orange"
   High: "Red"
 hla_loh:
-  None: "grey80"
-  Any: "cyan"
+  Any: "#025767"
+  None: "#d5d5d4"
 cell_type_hne:
   Lymphocyte: "#33a02c"
   Other: "#b3b3b3"
@@ -409,6 +451,12 @@ cell_type_mpif:
   Monocyte: "#ff7f00"
   Other: "#999999"
   Unknown: "#dedede"
+cell_type_short_mpif:
+  panCK+: "#e31a1c"
+  CD8+: "#33a02c"
+  CD68+: "#ff7f00"
+  Other: "#999999"
+  Unknown: "#dedede"
 cell_state_mpif:
   # CD8.T.dysfunctional: "#8BC34A"
   panCK+: "#e31a1c"
@@ -433,6 +481,8 @@ channel_mpif:
   Other: "#999999"
   Unknown: "#dedede"
 cell_phenotype_mpif:
+  panCK+PDL1-: "#e31a1c"
+  panCK+PDL1+: "#f18c8d"
   CD8+PD1-TOX-: "#33a02c"
   CD8+PD1+TOX-: "#6da02c"
   # CD8+PD1-TOX+: "#2ca05f"
@@ -440,13 +490,8 @@ cell_phenotype_mpif:
   CD68+PDL1-: "#ff7f00"
   # CD68+PD1+: "#3285bc"
   CD68+PDL1+: "#ded372"
-  panCK+PDL1-: "#e31a1c"
-  panCK+PDL1+: "#f18c8d"
   Other: "#999999"
   Unknown: "#dedede"
-  # CD4.T.naive: "#43A047"
-  # CD4.T.dysfunctional: "#8BC34A"
-  # CD4.T.reg: "#C0CA33"
 cell_phenotype_short_mpif:
   CD8+: "#33a02c"
   CD8+PD1+: "#6da02c"
@@ -459,9 +504,6 @@ cell_phenotype_short_mpif:
   panCK+PDL1+: "#f18c8d"
   Other: "#999999"
   Unknown: "#dedede"
-  # CD4.T.naive: "#43A047"
-  # CD4.T.dysfunctional: "#8BC34A"
-  # CD4.T.reg: "#C0CA33"
 cell_type_pair_mpif:
   panCK+:CD8+: "#e31a1c"
   panCK+:CD68+: "#e31a1c"
@@ -569,6 +611,10 @@ ploidy:
 cn_state:
   Gain: "#ff0000"
   Loss: "#0072B2"
+ascn_clonality:
+  Heterozygous: "#d5d5d4"
+  Subclonal LOH: "#53AFC0"
+  Clonal LOH: "#025767"
 ascn_state_short:
   Balanced: "#d5d5d4"
   Imbalanced: "#53AFC0"
@@ -582,18 +628,31 @@ ascn_state:
   B-Gained: "#FF9E41"
   Balanced: "#d5d5d4"
 pathology_stage:
-  IIB: "#f1eef6" #
+  IIB: "#E5F5F9" #
   # III: "#C7E9B4"
-  IIIA1ii: "#d0d1e6" #
-  IIIA2: "#a6bddb" #
-  IIIB: "#74a9cf"
-  IIIC: "#3690c0"
-  IVA: "#0570b0"
-  IVB: "#034e7b"
+  # IIIA1ii: "#E5F5F9" #
+  # IIIA2: "#CCECE6" #
+  IIIB: "#99D8C9"
+  IIIC: "#66C2A4"
+  IVA: "#41AE76"
+  IVB: "#238B45"
+  # IIB: "#f1eef6" #
+  # # III: "#C7E9B4"
+  # IIIA1ii: "#d0d1e6" #
+  # IIIA2: "#a6bddb" #
+  # IIIB: "#74a9cf"
+  # IIIC: "#3690c0"
+  # IVA: "#0570b0"
+  # IVB: "#034e7b"
 chemo_intent:
   Primary: "#66c2a4"
   NACT/IDS: "#2ca25f"
   Salvage: "#006d2c"
+procedure:
+  Primary Debulking: "#a6bddb"
+  Laparoscopic Biopsy: "#0570b0"
+  # Primary Debulking: "#66c2a4"
+  # Laparoscopic Biopsy: "#2ca25f"
 model:
   Well-mixed: "#C7E9B4"
   3D flat front: "#7FCDBB"
