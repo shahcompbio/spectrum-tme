@@ -1,0 +1,355 @@
+---
+title: "MSK SPECTRUM data freeze: inferCNV"
+author: "Florian Uhlitz"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+```
+
+# InferCNV 
+
+```{r chunk_350_010}
+
+library(magrittr)
+library(tidyverse)
+library(Seurat)
+library(readxl)
+library(cowplot)
+library(viridis)
+library(ggpubr)
+library(ggdendro)
+library(dendextend)
+library(infercnv)
+
+```
+
+```{r chunk_350_020}
+
+## load global vars: 
+source("src/global_vars.R")
+
+# scrna_meta_tbl
+# clrs
+# markers_v7
+# markers_v7_super
+# cell_type_super_lookup
+
+```
+
+```{r chunk_350_050}
+
+seu_obj_cc <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds")
+
+inferCNV_dirs <- list.files("/work/shah/users/shih/infercnv_pipeline/data/infercnv", pattern = "20210709", full.names = T) %>% grep("SPECTRUM", ., value = T)
+
+pids_numeric <- 1:length(inferCNV_dirs)
+
+## load infercnv inputs ---------------------------------
+
+## 1. two column cell annotation table: cell_id, cell_type 
+iCNV_cell_anno <- lapply(inferCNV_dirs[pids_numeric], function(x) read_tsv(
+  paste0(x, "/cellAnnotation.txt"),
+  col_names = c("cell_id", "cell_class")
+)) %>% 
+  setNames(str_sub(basename(inferCNV_dirs[pids_numeric]), 13, 15)) %>% 
+  bind_rows(.id = "patient_id_short") %>% 
+  distinct(cell_id, .keep_all = T)
+
+## 2. four column gene location table: gene, chr, start, end
+iCNV_gene_anno <- lapply(inferCNV_dirs[pids_numeric], function(x) read_tsv(
+  paste0(x, "/geneAnnotation.txt"),
+  col_names = c("gene", "chr", "start", "end")
+)) %>% 
+  bind_rows() %>% 
+  distinct(gene, .keep_all = T) %>% 
+  filter(chr %in% paste0(1:22)) %>% 
+  mutate(chr = ordered(paste0(" chr", chr), levels = paste0(" chr", 1:22)))
+
+## load inferCNV outputs -------------------------------
+
+inferCNV_clone_files <- paste0(inferCNV_dirs, "/rand_tree_tumor_subcluters.csv")
+inferCNV_obj_files <- paste0(inferCNV_dirs, "/run.final.infercnv_obj")
+
+inferCNV_clone_tbl <- lapply(inferCNV_clone_files, read_csv) %>% 
+  bind_rows %>% 
+  rename(clone_label = cluster_name)
+
+inferCNV_obj_list <- lapply(inferCNV_obj_files, read_rds)
+
+clrs$clone_label <- magma(length(unique(inferCNV_clone_tbl$clone_label)))
+names(clrs$clone_label) <- sort(unique(inferCNV_clone_tbl$clone_label))
+
+```
+
+# inferCNV heatmaps
+
+```{r chunk_350_060, fig.width=7, fig.height=20}
+
+pids_numeric <- 1:length(inferCNV_dirs)
+# pids_numeric <- which(str_detect(inferCNV_dirs, "OV-007|OV-036|OV-107"))
+
+## custom plotting ---------------------------------
+
+cc_ids <- filter(iCNV_cell_anno, cell_class == "observation")$cell_id
+
+## infercnv expression results
+expr_cc_list <- lapply(inferCNV_obj_list[pids_numeric], function(x) x@expr.data[,colnames(x@expr.data) %in% cc_ids]) 
+common_genes <- Reduce(intersect, lapply(expr_cc_list, rownames))
+expr_cc <- lapply(expr_cc_list, function(x) x[common_genes,]) %>% 
+  do.call(cbind, .)
+rm(inferCNV_obj_list)
+rm(expr_cc_list)
+
+## infercnv dendrogram
+dendro_lines <- lapply(inferCNV_dirs[pids_numeric], function(x) read_lines(paste0(x, "/infercnv.observations_dendrogram.txt")))
+dendro_list <- lapply(dendro_lines, function(x) phylogram::read.dendrogram(text = x))
+
+cell_order <- lapply(dendro_lines, function(x) str_split(x, "\\(|:|,|\\)") %>% unlist %>% .[str_detect(., "SPECTRUM")]) %>% unlist
+
+segments_tbl <- lapply(dendro_list, function(x) segment(dendro_data(x)) %>% mutate(helper_var_d = "Dendrogram")) %>% 
+  setNames(str_sub(basename(inferCNV_dirs[pids_numeric]), 13, 15)) %>% 
+  bind_rows(.id = "patient_id_short") %>% 
+  as_tibble()
+
+## BAF annotation
+baf_tbl_full <- read_tsv("/work/shah/vazquezi/data/transfers/spectrum/results/scrna/v27/ascn/outputs/ascn/cell-type/Ovarian.cancer.cell.tsv")
+baf_tbl <- baf_tbl_full %>% 
+  filter(chrarm == "6p") %>% 
+  select(cell_id, BAF6p = BAF)
+
+## pathway cell annotation
+anno_data <- seu_obj_cc %>% 
+  FetchData(c("sample", "cell_id", "cluster_label", "JAK.STAT.pathway", "NFkB.pathway", "TNFa.pathway", "TGFb.pathway", "Hypoxia.pathway")) %>%
+  as_tibble() %>% 
+  left_join(scrna_meta_tbl, by = "sample") %>% 
+  left_join(inferCNV_clone_tbl, by = "cell_id") %>% 
+  left_join(baf_tbl, by = "cell_id") %>% 
+  filter(cell_id %in% cell_order) %>%
+  mutate(cell_id_order_clone = ordered(cell_id, levels = cell_order)) %>%
+  arrange(consensus_signature, patient_id_short, cluster_label, tumor_supersite, clone_label) %>% 
+  mutate(cell_id_order_cluster = ordered(cell_id, levels = as.character(cell_id))) %>% 
+  arrange(consensus_signature, patient_id_short, tumor_supersite, clone_label, cluster_label) %>%
+  mutate(cell_id_order_cohort = ordered(cell_id, levels = as.character(cell_id))) %>% 
+  mutate(helper_var_p = " Patient",
+         helper_var_s = " Site",
+         helper_var_c = " Cluster",
+         helper_var_i = " CNV Clone",
+         helper_var_m = " MutSig",
+         helper_var_6pBAF = " 6p BAF",
+         helper_var_jakstat = " JAK.STAT",
+         helper_var_nfkb = " NFkB",
+         helper_var_tnfa = " TNFa",
+         helper_var_tgfb = " TGFb",
+         helper_var_hypoxia = " Hypoxia",
+         )
+
+rm(seu_obj_cc)
+
+## add mutsig labels to segments_tbl
+segments_tbl <- segments_tbl %>% 
+  left_join(distinct(anno_data, patient_id_short, consensus_signature), by = "patient_id_short")
+
+## joining data 
+plot_data <- as.data.frame(expr_cc) %>% 
+  as_tibble(rownames = "gene") %>%
+  gather(cell_id, value, -gene) %>%
+  left_join(iCNV_gene_anno, by = "gene") %>% 
+  filter(!is.na(chr)) %>% 
+  # filter(chr %in% c(" chr19", " chr20")) %>%
+  left_join(select(anno_data, cell_id, cell_id_order_clone, cell_id_order_cluster, cell_id_order_cohort, patient_id_short, consensus_signature), 
+            by = "cell_id") %>% 
+  mutate(value_cut = value) %>% 
+  mutate(value_cut = ifelse(value > 1.25, 1.25, ifelse(value < 0.75, 0.75, value))) %>%
+  group_by(chr) %>% 
+  mutate(rank = rank(start)) %>%
+  ungroup %>% 
+  select(-start, -end, -value)
+
+```
+
+```{r chunk_350_070, fig.width=7, fig.height=20}
+
+## sub plot objects -----------------------------------
+
+# pids = "007"
+# group_label = "test"
+# cell_order = "cluster"
+# downsample = 10
+
+plot_anno_helper <- function(var_column, helper_var_column, 
+                             cell_id_order, var_type = "discrete", 
+                             anno_data_sub) {
+  
+  var_column <- enquo(var_column)
+  helper_var_column <- enquo(helper_var_column)
+  cell_id_order <- enquo(cell_id_order)
+  
+  p <- ggplot(anno_data_sub) +
+    ggrastr::geom_tile_rast(aes(!!helper_var_column, !!cell_id_order, fill = !!var_column), raster.dpi = 30, scale = 0.1) +
+    facet_grid(vars(consensus_signature, patient_id_short), vars(!!helper_var_column), 
+               scales = "free", space = "free") +
+    guides(fill = "none") +
+    theme_void() +
+    theme(panel.spacing.x = unit(0, "points"),
+          panel.spacing.y = unit(3, "points"),
+          strip.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
+          strip.text.y = element_blank())
+  
+  if (var_type == "discrete" & as_label(var_column) == "cluster_label") {
+    p <- p + scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super)
+  } 
+  
+  if (var_type == "discrete" & as_label(var_column) != "cluster_label") {
+    p <- p + scale_fill_manual(values = clrs[[as_label(var_column)]])
+  } 
+  
+  if (var_type == "continuous") {
+    p <- p + scale_fill_viridis()
+  } 
+  
+  return(p)
+  
+}
+
+plot_inferCNV_heat_wrapper <- function(pids, group_label = paste0(pids, collapse = "_"), cell_id_order, downsample = F, downsample_var = sample_id) {
+  
+  cell_id_order <- enquo(cell_id_order)
+  downsample_var <- enquo(downsample_var)
+  plot_data_sub <- filter(plot_data, patient_id_short %in% pids)
+  # plot_data_sub <- filter(plot_data_sub, chr %in% c(" chr6", " chr20"))
+  anno_data_sub <- filter(anno_data, patient_id_short %in% pids)
+  segments_tbl_sub <- filter(segments_tbl, patient_id_short %in% pids) %>% 
+    mutate(ycut = quantile(y, 0.8)) %>% 
+    filter(y > ycut) %>% 
+    filter(yend > ycut)
+  
+  ncells <- unique(length(anno_data_sub$cell_id))
+  plotheight <- ncells/2000
+  
+  if (downsample != F) {
+    
+    set.seed(123)
+    cell_ids_sample <- anno_data_sub %>% 
+      group_by(!!downsample_var) %>% 
+      slice_sample(n = downsample) %>% 
+      pull(cell_id)
+    
+    anno_data_sub <- filter(anno_data_sub, cell_id %in% cell_ids_sample)
+    plot_data_sub <- filter(plot_data_sub, cell_id %in% cell_ids_sample)
+    
+    ncells <- unique(length(anno_data_sub$cell_id))
+    plotheight <- ncells/downsample/4
+    
+  }
+  
+  plot_cnv <- ggplot(plot_data_sub) +
+    # geom_tile(aes(rank, cell_id, fill = value_cut)) +
+    ggrastr::geom_tile_rast(aes(rank, !!cell_id_order, fill = value_cut),
+                            raster.dpi = 10, scale = 0.1) +
+    facet_grid(vars(consensus_signature, patient_id_short), vars(chr), scales = "free", space = "free") +
+    theme_void() +
+    theme(panel.spacing.x = unit(2, "points"),
+          panel.spacing.y = unit(3, "points"),
+          strip.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
+          strip.text.y = element_blank()) +
+    labs(fill = "inferCNV\nexpression") +
+    scale_fill_gradient2(midpoint = 1, low = "#3182bd", mid = "#cccccc", high = "#fc8d59") +
+    scale_x_continuous(expand = c(0, 0))
+  
+  patient_label_y_tbl <- anno_data_sub %>% 
+    group_by(patient_id_short, consensus_signature) %>% 
+    summarise(patient_label_y = n()/2) %>% 
+    mutate(helper_var_p = " Patient")
+  
+  plot_anno_patient <- plot_anno_helper(patient_id_short, helper_var_p, !!cell_id_order, "discrete", anno_data_sub) +
+    geom_text(aes(helper_var_p, patient_label_y, label = patient_id_short),
+              color = "white", size = 3, angle = 90,
+              data = patient_label_y_tbl)
+  
+  plot_anno_site <- plot_anno_helper(tumor_supersite, helper_var_s, !!cell_id_order, "discrete", anno_data_sub)
+  plot_anno_cluster <- plot_anno_helper(cluster_label, helper_var_c, !!cell_id_order, "discrete", anno_data_sub)
+  plot_anno_clone <- plot_anno_helper(clone_label, helper_var_i, !!cell_id_order, "discrete", anno_data_sub)
+  plot_anno_mutsig <- plot_anno_helper(consensus_signature, helper_var_m, !!cell_id_order, "discrete", anno_data_sub)
+  plot_anno_6pbaf <- plot_anno_helper(BAF6p, helper_var_6pBAF, !!cell_id_order, "continuous", anno_data_sub)
+  plot_anno_jakstat <- plot_anno_helper(JAK.STAT.pathway, helper_var_jakstat, !!cell_id_order, "continuous", anno_data_sub)
+  plot_anno_nfkb <- plot_anno_helper(NFkB.pathway, helper_var_nfkb, !!cell_id_order, "continuous", anno_data_sub)
+  plot_anno_tnfa <- plot_anno_helper(TNFa.pathway, helper_var_tnfa, !!cell_id_order, "continuous", anno_data_sub)
+  plot_anno_tgfb <- plot_anno_helper(TGFb.pathway, helper_var_tgfb, !!cell_id_order, "continuous", anno_data_sub)
+  plot_anno_hypoxia <- plot_anno_helper(Hypoxia.pathway, helper_var_hypoxia, !!cell_id_order, "continuous", anno_data_sub)
+  
+  if (as_label(cell_id_order) == "cell_id_order_clone") {
+    
+    plot_dendro <- ggplot(segments_tbl_sub) +
+      geom_segment(aes(x = -y, y = x, xend = -yend, yend = xend),
+                   size = 0.5) +
+      facet_grid(patient_id_short~helper_var_d, 
+                 scales = "free", space = "free") +
+      theme_void() +
+      theme(panel.spacing = unit(0, "points"),
+            panel.spacing.x = unit(0, "points"),
+            panel.spacing.y = unit(3, "points"),
+            strip.text = element_blank()) +
+      scale_y_continuous(expand = c(0, 0))
+    
+    pg <- plot_grid(plot_dendro, plot_anno_patient, plot_anno_mutsig, plot_anno_site, plot_anno_clone, plot_anno_6pbaf, plot_anno_cluster, plot_anno_jakstat, plot_anno_nfkb, plot_anno_tnfa, plot_anno_tgfb, plot_anno_hypoxia, ggdraw(), plot_cnv+remove_guides, nrow = 1, align = "h", axis = "tb", rel_widths = c(0.1, rep(0.02, 11), 0.005, 1-0.1-11*0.02-0.005))
+    
+  } else {
+    
+    pg <- plot_grid(ggdraw(), plot_anno_patient, plot_anno_mutsig, plot_anno_site, plot_anno_clone, plot_anno_6pbaf, plot_anno_cluster, plot_anno_jakstat, plot_anno_nfkb, plot_anno_tnfa, plot_anno_tgfb, plot_anno_hypoxia, ggdraw(), plot_cnv+remove_guides, nrow = 1, align = "h", axis = "tb", rel_widths = c(0.1, rep(0.02, 11), 0.005, 1-0.1-11*0.02-0.005))
+    
+  }
+  
+  ggsave(paste0("figures/350_cancer_cell_infercnv/inferCNV_heatmap_", group_label, ".pdf"), pg, width = 7, height = 0.65+plotheight)
+  # ggsave(paste0("figures/350_cancer_cell_infercnv/inferCNV_heatmap_", group_label, ".png"), pg, width = 7, height = 1+ncells/2000)
+  
+  return(print(paste0(group_label, " DONE")))
+  
+}
+
+# plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_upper", "clone")
+# plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_lower", "cluster")
+# 
+# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "Undetermined")$patient_id_short), "Undetermined_clone")
+# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "Undetermined")$patient_id_short), "Undetermined_cluster", "cluster")
+# 
+# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "TD")$patient_id_short), "TD_clone")
+# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "TD")$patient_id_short), "TD_cluster", "cluster")
+# 
+# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "HRD-Del")$patient_id_short), "HRD-Del_clone")
+# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "HRD-Del")$patient_id_short), "HRD-Del_cluster", "cluster")
+# 
+# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "FBI")$patient_id_short), "FBI_clone")
+# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "FBI")$patient_id_short), "FBI_cluster", "cluster")
+# 
+# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "HRD-Dup")$patient_id_short), "HRD-Dup_clone")
+# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "HRD-Dup")$patient_id_short), "HRD-Dup_cluster", "cluster")
+
+# debugonce(plot_inferCNV_heat_wrapper)
+plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_patients_balanced", cell_id_order_cohort, 50, patient_id_short)
+plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_samples_balanced", cell_id_order_cohort, 10, sample_id)
+
+```
+
+
+
+## session info 
+
+```{r chunk_350_999}
+
+devtools::session_info()
+
+```
+

@@ -19,7 +19,6 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
 
 ```
 
-
 # Ectopic gene expression in cancer cell clusters
 
 ```{r chunk_340_010}
@@ -31,6 +30,7 @@ library(readxl)
 library(cowplot)
 library(viridis)
 library(ggpubr)
+library(ggrepel)
 
 ```
 
@@ -55,14 +55,17 @@ marker_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian
 
 ```
 
-```{r chunk_340_050}
+
+```{r chunk_340_100}
+
+marker_tbl_sub <- marker_tbl %>% 
+  filter(pct.1 < 0.5 | pct.2 < 0.5) %>% 
+  arrange(-abs(avg_log2FC)) %>% 
+  filter(comparison == "Other_vs_Adnexa")
 
 ## genes of interest: 
 ## differentially expressed in Adnexa vs Non-Adnexa within a given cluster
-gois_tbl <- marker_tbl %>% 
-  filter(pct.1 < 0.5 | pct.2 < 0.5) %>% 
-  arrange(-abs(avg_log2FC)) %>% 
-  filter(comparison == "Other_vs_Adnexa") %>% 
+gois_tbl <- marker_tbl_sub %>% 
   # filter(cluster_label %in% c("Cancer.cell.1", "Cancer.cell.2", "Cancer.cell.3")) %>%
   group_by(cluster_label) %>% 
   slice(1:50) %>% 
@@ -133,17 +136,101 @@ plot_data_gathered <- plot_data_summarized %>%
     T ~ "NA"
   ))
 
+marker_tbl_delta_sum <- marker_tbl_sub %>% 
+  left_join(plot_data_gathered %>% 
+              distinct(gene, cluster_label, delta_sum),
+            by = c("gene", "cluster_label")) %>% 
+  filter(cluster_label %in% c("Cancer.cell.1", "Cancer.cell.2", "Cancer.cell.3")) %>% 
+  group_by(cluster_label) %>% 
+  mutate(gois = (delta_sum > 0 & avg_log2FC > 0) | (delta_sum < 0 & avg_log2FC < 0)) %>% 
+  arrange(delta_sum)
+
 ```
 
-```{r chunk_340_060, fig.width=10, fig.height=7}
+## Volcano plot
 
-plot_ectopic_genes <- function(cluster_oi) {
+```{r chunk_340_110, fig.width=6, fig.height=3.5}
+
+volcano1 <- ggplot() +
+  geom_point(aes(-avg_log2FC, -log10(p_val_adj)), 
+             color = "grey80", size = 0.1,
+             data = marker_tbl_delta_sum) +
+  # geom_point(aes(-avg_log2FC, -log10(p_val_adj), size = abs(delta_sum)),
+  #            color = "grey80",
+  #            data = filter(marker_tbl_delta_sum, !is.na(delta_sum))) +
+  geom_point(aes(-avg_log2FC, -log10(p_val_adj), color = cluster_label),
+             data = filter(marker_tbl_delta_sum, gois) %>% arrange(-delta_sum) %>% slice(1)) +
+  geom_text_repel(aes(-avg_log2FC, -log10(p_val_adj), label = gene),
+                  max.overlaps = Inf, min.segment.length = 0.2,
+                  # xlim = c(-Inf, Inf), ylim = c(0, Inf),
+                  data = filter(marker_tbl_delta_sum, gois) %>% arrange(-delta_sum) %>% slice(1)) +
+  geom_point(aes(-avg_log2FC, -log10(p_val_adj), color = cluster_label),
+             data = filter(marker_tbl_delta_sum, gois) %>% slice(1)) +
+  geom_text_repel(aes(-avg_log2FC, -log10(p_val_adj), label = gene),
+                  # xlim = c(-Inf, Inf), ylim = c(0, Inf),
+                  max.overlaps = Inf, min.segment.length = 0.2,
+                  data = filter(marker_tbl_delta_sum, gois) %>% slice(1)) +
+  scale_color_manual(values = clrs$cluster_label$Ovarian.cancer.super[c("Cancer.cell.1", "Cancer.cell.2", "Cancer.cell.3")]) +
+  coord_cartesian(clip = "off") +
+  scale_x_continuous() +
+  scale_y_continuous() +
+  labs(x = bquote(log[2] ~fold ~change),
+       y = bquote(-log[10](q-value)),
+       color = "Cluster")
+
+volcano1
+
+```
+
+```{r chunk_340_120, fig.width=6, fig.height=3.5}
+
+volcano2 <- ggplot() +
+  geom_point(aes(-avg_log2FC, -log10(p_val_adj)), 
+             color = "grey80", size = 0.1,
+             data = marker_tbl_delta_sum) +
+  geom_point(aes(-avg_log2FC, -log10(p_val_adj), color = cluster_label),
+             data = filter(marker_tbl_delta_sum, gois, str_detect(gene, "IGF"))) +
+  geom_text_repel(aes(-avg_log2FC, -log10(p_val_adj), label = gene),
+                  max.overlaps = Inf, min.segment.length = 0,
+                  data = filter(marker_tbl_delta_sum, gois, str_detect(gene, "IGF"))) +
+  scale_color_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  coord_cartesian(clip = "off") +
+  scale_x_continuous() +
+  scale_y_continuous() +
+  labs(x = bquote(~log[2] ~fold ~change),
+       y = bquote(-log[10](q-value)),
+       color = "Cluster")
+
+volcano2
+
+```
+
+## Vector plots
+
+```{r chunk_340_130, fig.width=10, fig.height=7}
+
+plot_ectopic_genes <- function(cluster_oi, gois = "top_genes", 
+                               ntop_genes = 5) {
   
-  plot_data_sub <- plot_data_gathered %>% 
-    group_by(cluster_label) %>% 
-    filter(gene %in% unique(gene)[1:5] | gene %in% rev(unique(gene))[1:5]) %>% 
-    filter(cluster_label == cluster_oi) %>% 
-    ungroup()
+  if (gois == "top_genes") {
+    
+    plot_data_sub <- plot_data_gathered %>% 
+      group_by(cluster_label) %>% 
+      filter(gene %in% unique(gene)[1:ntop_genes] | gene %in% rev(unique(gene))[1:ntop_genes]) %>% 
+      filter(cluster_label == cluster_oi) %>% 
+      ungroup()
+    
+  } else {
+    
+    ntop_genes <- length(gois)
+    
+    plot_data_sub <- plot_data_gathered %>% 
+      group_by(cluster_label) %>% 
+      filter(gene %in% gois) %>% 
+      filter(cluster_label == cluster_oi) %>% 
+      ungroup()
+    
+  }
   
   plot_data_vectors <- distinct(plot_data_sub, gene, cluster_label, patient_id_short, .keep_all = T)
   
@@ -154,11 +241,11 @@ plot_ectopic_genes <- function(cluster_oi) {
                      color = vector_color),
                  arrow = arrow(type = "open", length = unit(0.04, "npc")),
                  data = plot_data_vectors) +
-    facet_wrap(~gene_cluster_label, scales = "free", ncol = 5) +
+    facet_wrap(~gene_cluster_label, scales = "free", ncol = ntop_genes) +
     scale_y_discrete(breaks = plot_data_sub$rank_helper, 
                      labels = plot_data_sub$rank_helper_label) +
     scale_color_manual(values = clrs$tumor_megasite[1:2], 
-                       labels = c("Non-adnexa\n(upper row)", "Adnexa\n(lower row)")) +
+                       labels = c("Non-adnexa", "Adnexa")) +
     scale_shape_manual(values = shps$tumor_megasite) +
     theme(axis.title.y = element_blank()) +
     # remove_guides +
@@ -166,7 +253,7 @@ plot_ectopic_genes <- function(cluster_oi) {
   
 }
 
-plot_ectopic_genes("Cancer.cell.1")
+# plot_ectopic_genes("Cancer.cell.1")
 
 cc_cluster_labels <- names(clrs$cluster_label$Ovarian.cancer.super)
 
@@ -183,6 +270,26 @@ for (i in 1:length(ectopic_genes_plot_list)) {
 
 ```
 
+```{r chunk_340_140, fig.width=4, fig.height=3.5}
+
+vector1 <- plot_ectopic_genes("Cancer.cell.1", "IGFBP7")
+# vector1 <- plot_ectopic_genes("Cancer.cell.4", "PEG10")
+# vector1 <- plot_ectopic_genes("Cancer.cell.2", "APOE")
+vector1
+
+```
+
+## arranged grid
+
+```{r chunk_340_160, fig.width=10, fig.height=3.5}
+
+ggdraw() +
+  draw_plot(volcano1, height = 1, width = 0.6, x = 0, y = 0) + 
+  draw_plot(vector1, height = 1, width = 0.4, x = 0.6, y = 0)
+
+ggsave("figures/340_cancer_cell_ectopic_expression/340_IGFBP7_grid.pdf", width = 10, height = 3.5)
+
+```
 
 ## session info 
 
