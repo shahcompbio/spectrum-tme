@@ -2,17 +2,22 @@
 title: "MSK SPECTRUM freeze major subset deep dives"
 author: "Florian Uhlitz"
 date: "`r Sys.Date()`"
-output:
-  bookdown::html_document2:
-    includes:
-      in_header: header.html
-  bookdown::gitbook:
-    includes:
-      in_header: header.html
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
 editor_options: 
   chunk_output_type: console
 ---
 
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+```
 
 # Figure 5 upper
 
@@ -118,9 +123,12 @@ plot_data_genes <- filter(plot_data_genes, sort_short_x == cell_sort, !is.na(tum
 alpha_lvl <- ifelse(nrow(plot_data_sub) < 20000, 0.2, 0.1)
 pt_size <- ifelse(nrow(plot_data_sub) < 20000, 0.2, 0.05)
 
+rdpi <- 100
+rscale <- 0.8
+
 common_layers_disc <- list(  
   ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, 
-                           raster.dpi = 50, raster.width = 10, raster.height = 10),
+                           raster.dpi = rdpi, scale = rscale),
   NoAxes(),
   guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))),
   labs(color = ""),
@@ -129,7 +137,7 @@ common_layers_disc <- list(
 
 common_layers_cont <- list(  
   ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, 
-                           raster.dpi = 50, raster.width = 10, raster.height = 10),
+                           raster.dpi = rdpi, scale = rscale),
   NoAxes(),
   scale_color_gradientn(colors = viridis(9)),
   guides(color = guide_colorbar()),
@@ -199,15 +207,16 @@ umap_site <- ggplot(filter(plot_data_sub, tumor_supersite %in% c("Ascites", "Adn
                     aes(umapharmony_1, umapharmony_2, color = tumor_megasite)) + 
   ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2), color = "grey80",
                            size = 0.01, alpha = 0.1,
-                           raster.dpi = 50, raster.width = 10, raster.height = 10,
+                           raster.dpi = rdpi, scale = rscale,
                            data = select(plot_data_sub, -tumor_supersite)) + 
   common_layers_disc +
   # facet_wrap(~tumor_supersite) + 
   scale_color_manual(values = clrs$tumor_megasite)
 
 add_umap_coord(umap_cell_type_void)
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_cluster_label_sub.pdf", width = 6, height = 5)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_cluster_label_sub.png", width = 6, height = 5)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_cluster_label_sub.pdf", width = 6, height = 5)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_cluster_label_sub.png", width = 6, height = 5)
+
 ```
 
 
@@ -218,11 +227,11 @@ ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_cluster_label
 umap_gois <- ggplot(plot_data_genes) +
   ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2),
                            size = pt_size, alpha = alpha_lvl, color = "grey80",
-                           raster.dpi = 50, raster.width = 10, raster.height = 10,
+                           raster.dpi = rdpi, scale = rscale,
                            data = filter(plot_data_genes, value == 0))  + 
   ggrastr::geom_point_rast(aes(umapharmony_1, umapharmony_2, color = value),
                            size = pt_size, alpha = alpha_lvl, 
-                           raster.dpi = 50, raster.width = 10, raster.height = 10,
+                           raster.dpi = rdpi, scale = rscale,
                            data = filter(plot_data_genes, value > 0)) + 
   NoAxes() + 
   scale_color_gradientn(colors = viridis(9)) +
@@ -232,8 +241,8 @@ umap_gois <- ggplot(plot_data_genes) +
   labs(color = "Expression")
 
 umap_gois
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_gois.pdf", width = 8, height = 4)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_gois.png", width = 8, height = 4)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_gois.pdf", width = 8, height = 4)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_gois.png", width = 8, height = 4)
 
 
 ```
@@ -258,9 +267,9 @@ rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
 kernel_umap <- ggplot() +
   ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), color = "grey80", size = 0.01, alpha = 0.02,
                            data = plot_data_sub,
-                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
+                           raster.dpi = 100, scale = 1) +
   ggrastr::geom_point_rast(aes(x, y, color = value_quenched), data = kernel_tbl, size = 0.01, 
-                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
+                           raster.dpi = 100, scale = 1) +
   geom_point(aes(umapscaled_1, umapscaled_2), color = "white",
              data = plot_data_label, alpha = 0.5, size = 6) +
   geom_text(aes(umapscaled_1, umapscaled_2, label = cluster_number), color = "black",
@@ -284,8 +293,8 @@ kernel_umap <- ggplot() +
   remove_yaxis
 
 add_umap_coord(kernel_umap)
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel.pdf", width = 6, height = 5)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel.png", width = 6, height = 5)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel.pdf", width = 6, height = 5)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel.png", width = 6, height = 5)
 
 ```
 
@@ -309,9 +318,9 @@ kernel_umap_wrapper <- function(kernel_subsets_a = c("FBI"),
   kernel_umap <- ggplot() +
     ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), 
                              color = "grey80", size = 0.01, alpha = 0.02, data = plot_data_sub,
-                             raster.dpi = 50, raster.width = 10, raster.height = 10) +
+                             raster.dpi = 100, scale = 1) +
     ggrastr::geom_point_rast(aes(x, y, color = value_scaled), data = kernel_tbl, size = 0.01, 
-                             raster.dpi = 50, raster.width = 10, raster.height = 10) +
+                             raster.dpi = 100, scale = 1) +
     geom_point(aes(umapscaled_1, umapscaled_2), color = "white",
                data = plot_data_label, alpha = 0.1, size = 6) +
     geom_text(aes(umapscaled_1, umapscaled_2, label = cluster_number), 
@@ -339,20 +348,19 @@ kernel_umap_wrapper <- function(kernel_subsets_a = c("FBI"),
   return(kernel_umap)
 }
 
-k1 <- kernel_umap_wrapper("HRD-Dup", c("FBI", "HRD-Del", "TD"), 0.015, "Enrichm.")
-k2 <- kernel_umap_wrapper("HRD-Del", c("FBI", "HRD-Dup", "TD"), 0.015) + remove_guides
-k3 <- kernel_umap_wrapper("FBI", c("HRD-Dup", "HRD-Del", "TD"), 0.015) + remove_guides
-k4 <- kernel_umap_wrapper("TD", c("FBI", "HRD-Dup", "HRD-Del"), 0.015) + remove_guides
+k1 <- kernel_umap_wrapper("HRD-Dup", c("FBI", "HRD-Del"), 0.015, "Enrichm.")
+k2 <- kernel_umap_wrapper("HRD-Del", c("FBI", "HRD-Dup"), 0.015) + remove_guides
+k3 <- kernel_umap_wrapper("FBI", c("HRD-Dup", "HRD-Del"), 0.015) + remove_guides
 
 kernel_grid <- ggdraw() +
-  draw_plot(plot_grid(k1 + remove_guides, k2, k3, k4, ncol = 2, align = "hv"),
+  draw_plot(plot_grid(k1 + remove_guides, k2, k3, ncol = 3, align = "hv"),
             width = 0.8, height = 1) +
   draw_grob(get_legend(k1), x = 0.88, y = -0.25)
 
 kernel_umap_wrapper(c("HRD-Dup", "HRD-Del"), c("FBI", "TD"), 0.01, "Enrichm. in\nHRD vs HRP") + labs(title = "")
 
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel_hrd_hrp.pdf", width = 6, height = 5)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel_hrd_hrp.png", width = 6, height = 5)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel_hrd_hrp.pdf", width = 8, height = 3)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_umap_kernel_hrd_hrp.png", width = 8, height = 3)
 
 ```
 
@@ -475,8 +483,8 @@ heat_module_grid <- plot_grid(pw_plot1_anno,
 
 heat_module_grid
 
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.pdf", heat_module_grid, width = 4.5, height = 12)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.png", heat_module_grid, width = 4.5, height = 12)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.pdf", heat_module_grid, width = 4.5, height = 12)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap.png", heat_module_grid, width = 4.5, height = 12)
 
 ```
 
@@ -608,10 +616,10 @@ comp_grid2 <- plot_grid(plotlist = plist2[-3], ncol = 1, align = "v", rel_height
 
 comp_grid1
 comp_grid2
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_memory.pdf", comp_grid1, width = 3, height = 9)
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_dysfunc.pdf", comp_grid2, width = 3, height = 9)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_memory.png", comp_grid1, width = 3, height = 9)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_dysfunc.png", comp_grid2, width = 3, height = 9)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_memory.pdf", comp_grid1, width = 3, height = 9)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_dysfunc.pdf", comp_grid2, width = 3, height = 9)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_memory.png", comp_grid1, width = 3, height = 9)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_comp_dysfunc.png", comp_grid2, width = 3, height = 9)
 
 ```
 
@@ -645,8 +653,8 @@ umap_heat_grid <- ggdraw() +
 
 umap_heat_grid
 
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.png", umap_heat_grid, width = 20, height = 8)
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.pdf", umap_heat_grid, width = 20, height = 8)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.png", umap_heat_grid, width = 20, height = 8)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_T.cell_umap_heat.pdf", umap_heat_grid, width = 20, height = 8)
 
 ```
 
@@ -670,19 +678,19 @@ umap_mini_cluster_label_sub <- ggplot() +
     aes(umapharmony_1, umapharmony_2), 
     data = select(plot_data_mini_umap, -cluster_label_super),
     alpha = 0.02, size = 0.01, color = "grey80",
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   ggrastr::geom_point_rast(
     aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
     data = select(plot_data_mini_umap, -cluster_label_super),
     alpha = 0.02, size = 0.01, 
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   ggrastr::geom_point_rast(
     aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
     data = filter(plot_data_mini_umap, cluster_label_super != "Other"),
     alpha = 0.5, size = 0.01,
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   facet_wrap(~cluster_label_super, ncol = 1) + 
   theme_void() +
@@ -693,8 +701,8 @@ umap_mini_cluster_label_sub <- ggplot() +
         strip.text = element_text(size = 14))
 
 umap_mini_cluster_label_sub
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.pdf", umap_mini_cluster_label_sub, width = 1.5, height = 6)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.png", umap_mini_cluster_label_sub, width = 1.5, height = 6)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.pdf", umap_mini_cluster_label_sub, width = 1.5, height = 6)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_cluster_label_sub.png", umap_mini_cluster_label_sub, width = 1.5, height = 6)
 
 ```
 
@@ -705,19 +713,19 @@ umap_mini_dysfunc_naivemem <- ggplot() +
     aes(umapharmony_1, umapharmony_2), 
     data = select(plot_data_mini_umap, -dysfunc_naivemem),
     alpha = 0.02, size = 0.01, color = "grey80",
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   ggrastr::geom_point_rast(
     aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
     data = select(plot_data_mini_umap, -dysfunc_naivemem),
     alpha = 0.02, size = 0.01, 
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   ggrastr::geom_point_rast(
     aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
     data = filter(plot_data_mini_umap, dysfunc_naivemem != "Other"),
     size = 0.01,
-    raster.dpi = 15, raster.width = 40, raster.height = 40
+    raster.dpi = 15, scale = 0.04
   ) +
   facet_grid(~dysfunc_naivemem) + 
   theme_void() +
@@ -729,8 +737,8 @@ umap_mini_dysfunc_naivemem <- ggplot() +
 
 umap_mini_dysfunc_naivemem
 
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_naivemem.pdf", umap_mini_dysfunc_naivemem, width = 3, height = 1)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_naivemem.png", umap_mini_dysfunc_naivemem, width = 3, height = 1)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_naivemem.pdf", umap_mini_dysfunc_naivemem, width = 3, height = 1)
+ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_naivemem.png", umap_mini_dysfunc_naivemem, width = 3, height = 1)
 
 
 ```
@@ -739,14 +747,14 @@ ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/005_umap_mini_dysfunc_
 
 ```{r chunk_510_140, fig.width=6, fig.height=1.5}
 
-ggdraw() +
-  draw_plot(umap_mini_cluster_label_sub, x = -0.05, y = 0.15, width = 3/7.5, height = 0.68) +
-  draw_plot(heat_module_grid, x = 0.3, y = 2/14, width = 4.5/7.5, height = 12/14) + 
-  draw_grob(get_legend(pw_plot2), x = 0.62, y = -0.42) +
-  draw_grob(get_legend(pw_plot1), x = 0.82, y = -0.42)
-
-ggsave_pdf("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap_mini_umap.pdf", width = 7.5, height = 14)
-ggsave_png("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap_mini_umap.png", width = 7.5, height = 14)
+# ggdraw() +
+#   draw_plot(umap_mini_cluster_label_sub, x = -0.05, y = 0.15, width = 3/7.5, height = 0.68) +
+#   draw_plot(heat_module_grid, x = 0.3, y = 2/14, width = 4.5/7.5, height = 12/14) + 
+#   draw_grob(get_legend(pw_plot2), x = 0.62, y = -0.42) +
+#   draw_grob(get_legend(pw_plot1), x = 0.82, y = -0.42)
+# 
+# ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap_mini_umap.pdf", width = 7.5, height = 14)
+# ggsave("figures/510_T_cell_plotting_umap_comp_heatmap/004_module_heatmap_mini_umap.png", width = 7.5, height = 14)
 
 ```
 
