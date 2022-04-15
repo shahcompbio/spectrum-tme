@@ -319,14 +319,14 @@ plot_inferCNV_heat_wrapper <- function(pids, group_label = paste0(pids, collapse
   
 }
 
-# plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_upper", "clone")
-# plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_lower", "cluster")
-# 
+plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_upper", "clone")
+plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_lower", "cluster")
+
 # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "Undetermined")$patient_id_short), "Undetermined_clone")
 # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "Undetermined")$patient_id_short), "Undetermined_cluster", "cluster")
 # 
-# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "TD")$patient_id_short), "TD_clone")
-# plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "TD")$patient_id_short), "TD_cluster", "cluster")
+# # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "TD")$patient_id_short), "TD_clone")
+# # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "TD")$patient_id_short), "TD_cluster", "cluster")
 # 
 # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "HRD-Del")$patient_id_short), "HRD-Del_clone")
 # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "HRD-Del")$patient_id_short), "HRD-Del_cluster", "cluster")
@@ -336,10 +336,9 @@ plot_inferCNV_heat_wrapper <- function(pids, group_label = paste0(pids, collapse
 # 
 # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "HRD-Dup")$patient_id_short), "HRD-Dup_clone")
 # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "HRD-Dup")$patient_id_short), "HRD-Dup_cluster", "cluster")
-
-# debugonce(plot_inferCNV_heat_wrapper)
-plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_patients_balanced", cell_id_order_cohort, 50, patient_id_short)
-plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_samples_balanced", cell_id_order_cohort, 10, sample_id)
+# 
+# plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_patients_balanced", cell_id_order_cohort, 50, patient_id_short)
+# plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_samples_balanced", cell_id_order_cohort, 10, sample_id)
 
 ```
 

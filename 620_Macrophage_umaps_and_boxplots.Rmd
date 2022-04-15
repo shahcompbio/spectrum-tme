@@ -2,17 +2,22 @@
 title: "MSK SPECTRUM freeze Macrophages"
 author: "Florian Uhlitz"
 date: "`r Sys.Date()`"
-output:
-  bookdown::html_document2:
-    includes:
-      in_header: header.html
-  bookdown::gitbook:
-    includes:
-      in_header: header.html
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
 editor_options: 
-  chunk_620_output_type: console
+  chunk_output_type: console
 ---
 
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+```
 
 # Figure 6 lower
 
@@ -53,15 +58,15 @@ source("src/global_vars.R")
 
 ```{r chunk_620_030}
 
-seu_obj_ml <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Myeloid.super_processed_filtered_annotated.rds")
+seu_obj_ml <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Myeloid.super_processed_filtered_annotated.rds")
 
-seu_obj_mp <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Macrophages_processed.rds")
+seu_obj_mp <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Macrophages_processed.rds")
 
-seu_obj_dc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/DCs_processed.rds")
+seu_obj_dc <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/DCs_processed.rds")
 
-seu_obj_cc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds")
+seu_obj_cc <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds")
 
-seu_obj_tc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/T.super_processed_filtered_annotated.rds")
+seu_obj_tc <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/T.super_processed_filtered_annotated.rds")
 
 
 gois_mp <- c("S100A8", "S100A9", "CXCL10", "CD274", "C1QC", "FN1", "MARCO", "SELENOP")

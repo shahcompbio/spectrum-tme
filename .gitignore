@@ -21,7 +21,7 @@ toc.css
 # R and Rstudio specific files
 .Rproj.user
 .Rhistory
-.RData
+.RData*
 .Ruserdata
 .DS_Store
 *.rds

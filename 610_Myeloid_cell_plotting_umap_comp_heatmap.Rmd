@@ -128,7 +128,7 @@ common_layers_disc <- list(
 )
 
 common_layers_cont <- list(  
-  ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, raster.dpi = 50),
+  ggrastr::geom_point_rast(size = pt_size, alpha = alpha_lvl, raster.dpi = 30, scale = 0.1),
   NoAxes(),
   scale_color_gradientn(colors = viridis(9)),
   guides(color = guide_colorbar())
@@ -280,9 +280,9 @@ rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
 kernel_umap <- ggplot() +
   ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), color = "grey80", size = 0.01, alpha = 0.02,
                            data = plot_data_sub %>% filter(cell_type_myeloid == "Macrophage"),
-                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
+                           raster.dpi = 100, scale = 1) +
   ggrastr::geom_point_rast(aes(x, y, color = value_quenched), data = kernel_tbl, size = 0.01, 
-                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
+                           raster.dpi = 100, scale = 1) +
   geom_point(aes(umapscaled_1, umapscaled_2), color = "white",
              data = plot_data_label %>% filter(cell_type_myeloid == "Macrophage"), alpha = 0.5, size = 6) +
   geom_text(aes(umapscaled_1, umapscaled_2, label = cluster_number), color = "black",
@@ -433,6 +433,19 @@ comp_tbl_sample_sort_mp <- plot_data_sub %>%
   mutate(sample_id = sample) %>%
   mutate(tumor_supersite = ordered(tumor_supersite, levels = rev(names(clrs$tumor_supersite))))
 
+comp_tbl_sample_sort_dc <- plot_data_sub %>%
+  mutate(cell_type_super_ml = ifelse(cluster_label %in% grep("DC", names(clrs$cluster_label[[coi]]), value = T), "Dendritic cell", "Macrophage")) %>% 
+  filter(therapy == "pre-Rx", cell_type_super_ml == "Dendritic cell") %>%
+  group_by(sample, tumor_subsite, tumor_supersite, tumor_megasite, patient_id_short,
+           therapy, sort_short_x, consensus_signature, cluster_label, cell_type_super_ml) %>%
+  tally %>%
+  group_by(sample, tumor_subsite, tumor_supersite, tumor_megasite, patient_id_short,
+           therapy, sort_short_x, consensus_signature) %>%
+  mutate(nrel = n/sum(n)*100,
+         log10n = log10(n)) %>%
+  mutate(sample_id = sample) %>%
+  mutate(tumor_supersite = ordered(tumor_supersite, levels = rev(names(clrs$tumor_supersite))))
+
 plist1 <- default_comp_grid_list(
   comp_tbl_sample_sort_mp, cluster_label, "M1.S100A8",
   cluster_label, super_type = "Myeloid.super", nmax = 5000, highlight = T)
@@ -466,6 +479,24 @@ plist8 <- default_comp_grid_list(
   cell_type_super_ml, "Dendritic cell",
   cluster_label, super_type = "Myeloid.super", nmax = 5000, highlight = T)
 
+plist9 <- default_comp_grid_list(
+  comp_tbl_sample_sort_dc, cluster_label, "cDC1",
+  cluster_label, super_type = "Myeloid.super", nmax = 800, highlight = T)
+
+plist10 <- default_comp_grid_list(
+  comp_tbl_sample_sort_dc, cluster_label, "cDC2",
+  cluster_label, super_type = "Myeloid.super", nmax = 800, highlight = T)
+
+plist11 <- default_comp_grid_list(
+  comp_tbl_sample_sort_dc, cluster_label, "pDC",
+  cluster_label, super_type = "Myeloid.super", nmax = 800, highlight = T)
+
+plist12 <- default_comp_grid_list(
+  comp_tbl_sample_sort_dc, cluster_label, "mDC",
+  cluster_label, super_type = "Myeloid.super", nmax = 800, highlight = T)
+
+
+
 comp_grid1 <- plot_grid(plotlist = plist1[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
 comp_grid2 <- plot_grid(plotlist = plist2[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
@@ -481,6 +512,14 @@ comp_grid6 <- plot_grid(plotlist = plist6[-3], ncol = 1, align = "v", rel_height
 comp_grid7 <- plot_grid(plotlist = plist7[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
 comp_grid8 <- plot_grid(plotlist = plist8[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
+
+comp_grid9 <- plot_grid(plotlist = plist9[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
+
+comp_grid10 <- plot_grid(plotlist = plist10[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
+
+comp_grid11 <- plot_grid(plotlist = plist11[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
+
+comp_grid12 <- plot_grid(plotlist = plist12[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
 ```
 
@@ -507,8 +546,8 @@ ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_
 ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.png", comp_grid5, width = 3, height = 9)
 
 comp_grid6
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.pdf", comp_grid5, width = 3, height = 9)
-ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.png", comp_grid5, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.pdf", comp_grid6, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.png", comp_grid6, width = 3, height = 9)
 
 ```
 
@@ -521,6 +560,27 @@ ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_com
 comp_grid8
 ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.pdf", comp_grid8, width = 3, height = 9)
 ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.png", comp_grid8, width = 3, height = 9)
+
+```
+
+```{r chunk_610_105, fig.width=3, fig.height=9}
+
+comp_grid9
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_DC_cDC1_comp.pdf", comp_grid9, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_DC_cDC1_comp.png", comp_grid9, width = 3, height = 9)
+
+comp_grid10
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_DC_cDC2_comp.pdf", comp_grid10, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_DC_cDC2_comp.png", comp_grid10, width = 3, height = 9)
+
+comp_grid11
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_DC_pDC_comp.pdf", comp_grid11, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_DC_pDC_comp.png", comp_grid11, width = 3, height = 9)
+
+comp_grid12
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_DC_mDC_comp.pdf", comp_grid12, width = 3, height = 9)
+ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_DC_mDC_comp.png", comp_grid12, width = 3, height = 9)
+
 
 ```
 
@@ -547,6 +607,7 @@ ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_uma
 ggsave("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_umap_heat.pdf", umap_heat_grid, width = 16, height = 4)
 
 ```
+
 
 
 ## session info

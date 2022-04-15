@@ -40,7 +40,7 @@ cell_type_major <- "T.cell"
 louvain_resolution <- 0.3
 louvain_cluster <- "RNA_snn_res.0.3"
 pcut <- 0.05
-sois <- c("HRD-Dup", "HRD-Del", "FBI", "TD")
+sois <- c("HRD-Dup", "HRD-Del", "FBI")
 
 ```
 
@@ -59,11 +59,11 @@ source("src/global_vars.R")
 
 ```{r chunk_520_030}
 
-seu_obj_cd8_sub <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_processed_filtered.rds")
+seu_obj_cd8_sub <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_processed_filtered.rds")
 
-seu_obj_cc <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds")
+seu_obj_cc <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds")
 
-# seu_obj_ml <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Myeloid.super_processed_filtered_annotated.rds")
+# seu_obj_ml <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Myeloid.super_processed_filtered_annotated.rds")
 
 module_names <- grep("pathway|CD8", colnames(seu_obj_cd8_sub@meta.data), value = T)
 
@@ -250,8 +250,8 @@ plot_data_smooth_wrapper <- function(...) {
 }
 
 # plot_data_smooth <- plot_data_smooth_wrapper(key)
-# write_tsv(plot_data_smooth, "/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves.tsv")
-plot_data_smooth <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves.tsv")
+# write_tsv(plot_data_smooth, "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves.tsv")
+plot_data_smooth <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves.tsv")
 
 # plot_data_smooth_megasite <- plot_data_smooth_wrapper(key, tumor_megasite) %>%
 #   group_by(key) %>%
@@ -261,8 +261,8 @@ plot_data_smooth <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_f
 #   group_by(tumor_megasite) %>%
 #   mutate(DPT1_bin = scales::rescale(DPT1_bin)) %>% 
 #   ungroup()
-# write_tsv(plot_data_smooth_megasite, "/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_megasite.tsv")
-plot_data_smooth_megasite <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_megasite.tsv")
+# write_tsv(plot_data_smooth_megasite, "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_megasite.tsv")
+plot_data_smooth_megasite <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_megasite.tsv")
 
 # plot_data_smooth_mutsig <- plot_data_smooth_wrapper(key, consensus_signature) %>%
 #   group_by(key) %>%
@@ -272,8 +272,8 @@ plot_data_smooth_megasite <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v
 #   group_by(consensus_signature) %>% 
 #   mutate(DPT1_bin = scales::rescale(DPT1_bin)) %>% 
 #   ungroup()
-# write_tsv(plot_data_smooth_mutsig, "/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_mutsig.tsv")
-plot_data_smooth_mutsig <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_mutsig.tsv")
+# write_tsv(plot_data_smooth_mutsig, "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_mutsig.tsv")
+plot_data_smooth_mutsig <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_mutsig.tsv")
 
 
 ```
