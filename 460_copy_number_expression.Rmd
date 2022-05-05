@@ -1,0 +1,534 @@
+---
+title: "Impact of copy number on expression"
+subtitle: "MSK SPECTRUM"
+author:
+  - "Ignacio Vazquez-Garcia"
+  - "Seongmin Choi"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    highlight: tango
+    df_print: paged
+    code_folding: hide
+    fig_align: center
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: yes
+params:
+   rmd: "460_copy_number_expression.Rmd"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+
+library(tidyverse)
+library(devtools)
+library(data.table)
+library(cowplot)
+library(yaml)
+library(RColorBrewer)
+library(yaml)
+library(ggrepel)
+library(ggpubr)
+library(Seurat)
+
+```
+
+# Setup
+
+```{r}
+source("src/global_vars.R")
+
+names(clrs$hlamp) <- str_replace(names(clrs$hlamp), " ", "\n")
+```
+
+# Genes of interest
+
+We first select a set of oncogenes of interest.
+
+```{r}
+
+keep_columns <- c("cell_id", "sample")
+
+# genes_of_interest <- c('PIK3CA', 'MAP3K1', 'MYC', 'KRAS', 'BRCA1', 'BRCA2', 'RB1', 'TP53', 'CCNE1')
+genes_of_interest <- c('PIK3CA', 'MYC', 'KRAS', 'CCNE1')
+
+genes_of_interest
+
+```
+
+# Load data
+
+## scRNA
+
+```{r}
+
+scrna_cancer_cell_seu <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds")
+
+```
+
+```{r}
+
+scrna_cancer_cell_genes_tbl <- as_tibble(FetchData(scrna_cancer_cell_seu, c(keep_columns, genes_of_interest))) %>% 
+  gather(gene_name, expression, -c(1:length(keep_columns))) %>%
+  left_join(scrna_meta_tbl, by = "sample") %>%
+  filter(
+    patient_id %in% scrna_patients,
+    qc_status == "Pass")
+
+```
+
+## WGS
+
+```{r}
+
+wgs_gene_cna <- readr::read_csv("/juno/work/shah/isabl_data_lake/analyses/29/80/22980/results/cn_change.csv")
+
+```
+
+```{r}
+
+# Gene copy number data
+wgs_gene_cna_tbl <- wgs_gene_cna %>% 
+  left_join(
+    db$sequencing_bulk_dna %>% 
+      dplyr::select(isabl_id, sample_id, patient_id, tumor_site, therapy, qc_status), 
+    by = c("sample"="isabl_id")) %>%
+  filter(
+    patient_id %in% bulk_dna_patients,
+    qc_status == "Pass",
+    gene_name %in% genes_of_interest)
+
+```
+
+# Violin plots
+
+## Patient
+
+```{r}
+
+patient_boxplot_wrapper <- function(xkey) {
+
+  xkey <- enquo(xkey)
+
+  patient_lvls <- plot_data %>%
+    mutate(key = !!xkey) %>%
+    group_by(patient_id_short) %>%
+    summarise(median = median(log_change)) %>%
+    ungroup() %>%
+    arrange(median) %>%
+    pull(patient_id_short)
+
+  plot_data %>%
+    mutate(patient_id_short = ordered(patient_id_short, levels = patient_lvls)) %>%
+    ggplot() +
+    geom_violin(aes(patient_id_short, CCNE1, fill = wgs_signature),
+                color = "white") +
+    # geom_boxplot(aes(consensus_signature, value, color = consensus_signature),
+    #              width = 0.2, size = 2) +
+    geom_boxplot(aes(patient_id_short, !!xkey, fill = wgs_signature),
+                 color = "white", width = 0.2, outlier.shape = NA) +
+    scale_color_manual(values = clrs$wgs_signature) +
+    scale_fill_manual(values = clrs$wgs_signature) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          axis.title.x = element_blank()) +
+    # ylim(0, 1) +
+    labs(y = "Expression", color = "Mutational\nsignature", title = xkey)
+}
+
+```
+
+### All samples
+
+```{r}
+
+plot_data <- scrna_cancer_cell_genes_tbl %>%
+  left_join(
+    wgs_gene_cna_tbl, 
+    by = c("patient_id", "gene_name")) %>%
+  # filter(gene_name == "CCNE1") %>%
+  spread(gene_name, expression)
+
+```
+
+```{r, fig.width=12, fig.height=4}
+
+# patient_boxplot_wrapper("PIK3CA")
+
+# test <- c("CCNE1")
+# 
+# patient_boxplot_list <- lapply(test, patient_boxplot_wrapper) %>% 
+#   setNames(test)
+# 
+# patient_boxplot_list
+
+```
+
+### Site-matched samples
+
+## Signature
+
+### All samples
+
+```{r}
+
+plot_data <- scrna_cancer_cell_genes_tbl %>%
+  left_join(
+    wgs_gene_cna_tbl, 
+    by = c("patient_id", "gene_name")) %>%
+  filter(!(wgs_signature %in% c("Undetermined")))
+
+plot_data_stats <- plot_data %>% 
+  group_by(patient_id, gene_name) %>% 
+  mutate(expression = mean(expression)) %>% 
+  distinct(patient_id, gene_name, .keep_all = T)
+
+```
+
+```{r}
+
+mutsig_boxplot <- plot_data %>% 
+  ggplot(aes(wgs_signature, expression)) +
+  geom_violin(aes(wgs_signature, expression, fill = wgs_signature), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+  geom_boxplot(aes(wgs_signature, expression, color = wgs_signature),
+               width = 0.5, size = 0.75, outlier.shape = NA) +
+  geom_boxplot(aes(wgs_signature, expression, fill = wgs_signature),
+               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+  stat_compare_means(ref.group = ".all.",
+                     data = plot_data_stats,
+                     label = "p.signif", label.y = 1.6, hide.ns = T) +
+  stat_compare_means(label.y = 1.9, label.x = 1.5, label.sep = "\n\n",
+                     data = plot_data_stats) +
+  facet_wrap(~gene_name, ncol = 5) +
+  scale_color_manual(values = clrs$wgs_signature) +
+  scale_fill_manual(values = clrs$wgs_signature) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.x = element_blank()) +
+  coord_cartesian(ylim = c(-1, 2)) +
+  labs(y = "Expression", 
+       color = "Mutational\nsignature", 
+       fill = "Mutational\nsignature")
+
+mutsig_boxplot
+
+```
+
+### Site-matched samples
+
+```{r}
+
+plot_data <- scrna_cancer_cell_genes_tbl %>%
+  inner_join(
+    wgs_gene_cna_tbl, 
+    by = c("patient_id", "tumor_site", "gene_name")) #%>%
+  # filter(!(wgs_signature %in% c("Undetermined")))
+
+plot_data_stats <- plot_data %>% 
+  group_by(patient_id, tumor_site, gene_name) %>% 
+  mutate(expression = mean(expression)) %>% 
+  distinct(patient_id, tumor_site, gene_name, .keep_all = T)
+
+```
+
+```{r}
+
+mutsig_boxplot <- plot_data %>% 
+  ggplot(aes(wgs_signature, expression)) +
+  geom_violin(aes(wgs_signature, expression, fill = wgs_signature), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+  geom_boxplot(aes(wgs_signature, expression, color = wgs_signature),
+               width = 0.5, size = 0.75, outlier.shape = NA) +
+  geom_boxplot(aes(wgs_signature, expression, fill = wgs_signature),
+               color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+  stat_compare_means(ref.group = ".all.",
+                     data = plot_data_stats,
+                     label = "p.signif", label.y = 1.6, hide.ns = T) +
+  stat_compare_means(label.y = 1.9, label.x = 1.5, label.sep = "\n\n",
+                     data = plot_data_stats) +
+  facet_wrap(~gene_name, ncol = 5) +
+  scale_color_manual(values = clrs$wgs_signature) +
+  scale_fill_manual(values = clrs$wgs_signature) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.x = element_blank()) +
+  coord_cartesian(ylim = c(-1, 2)) +
+  labs(y = "Expression", 
+       color = "Mutational\nsignature", 
+       fill = "Mutational\nsignature")
+
+mutsig_boxplot
+
+```
+
+## Gene
+
+### All samples
+
+```{r}
+
+plot_data <- scrna_cancer_cell_genes_tbl %>%
+  left_join(
+    wgs_gene_cna_tbl, 
+    by = c("patient_id", "gene_name")) %>%
+  filter(
+    gene_name %in% c("CCNE1", "MYC"),
+    !is.na(is_hlamp)) %>%
+  mutate(
+    hlamp = ifelse(is_hlamp == TRUE, "High-level\namplification", "Wildtype"))
+
+plot_data_stats <- plot_data %>% 
+  group_by(patient_id, gene_name) %>% 
+  mutate(expression = mean(expression)) %>% 
+  distinct(patient_id, gene_name, .keep_all = T)
+
+```
+
+```{r, fig.width=3.25, fig.height=4}
+
+hlamp_boxplot_all_samples <- plot_data %>% 
+  ggplot(aes(hlamp, expression)) +
+  geom_violin(aes(hlamp, expression, fill = hlamp), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+  geom_boxplot(aes(hlamp, expression, color = hlamp),
+               width = 0.25, size = 0.75, outlier.shape = NA) +
+  geom_boxplot(aes(hlamp, expression, fill = hlamp),
+               color = "white", width = 0.25, outlier.shape = NA, size = 0.5) +
+  stat_compare_means(ref.group = ".all.",
+                     data = plot_data_stats,
+                     label = "p.signif", label.y = 1.6, hide.ns = T) +
+  stat_compare_means(label.y = 1.9, label.x = 1, label.sep = "\n\n",
+                     data = plot_data_stats) +
+  facet_wrap(~gene_name, ncol = 5) +
+  scale_color_manual(values = clrs$hlamp) +
+  scale_fill_manual(values = clrs$hlamp) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    axis.title.x = element_blank(),
+    strip.text = element_text(face = "italic"),
+    legend.position = "none") +
+  coord_cartesian(ylim = c(0, 2)) +
+  labs(y = "Expression", 
+       color = "Mutational\nsignature", 
+       fill = "Mutational\nsignature")
+
+hlamp_boxplot_all_samples
+
+ggsave_pdf("figures/460_copy_number_expression/460_hlamp_expression_violin_scrna_wgs_all_samples.pdf",
+           hlamp_boxplot_all_samples, width = 3.25, height = 4)
+ggsave_png("figures/460_copy_number_expression/460_hlamp_expression_violin_scrna_wgs_all_samples.png",
+           hlamp_boxplot_all_samples, width = 3.25, height = 4)
+
+```
+
+### Site-matched samples
+
+```{r}
+
+plot_data <- scrna_cancer_cell_genes_tbl %>%
+  inner_join(
+    wgs_gene_cna_tbl, 
+    by = c("patient_id", "tumor_site", "gene_name")) %>%
+  filter(
+    gene_name %in% c("CCNE1", "MYC"),
+    !is.na(is_hlamp)) %>%
+  mutate(
+    hlamp = ifelse(is_hlamp == TRUE, "High-level\namplification", "Wildtype"))
+
+plot_data_stats <- plot_data %>% 
+  group_by(patient_id, tumor_site, gene_name) %>% 
+  mutate(expression = mean(expression)) %>% 
+  distinct(patient_id, tumor_site, gene_name, .keep_all = T)
+
+```
+
+```{r, fig.width=3.25, fig.height=4}
+
+hlamp_boxplot_site_matched <- plot_data %>% 
+  ggplot(aes(hlamp, expression)) +
+  geom_violin(aes(hlamp, expression, fill = hlamp), color = "white", adjust = 2, alpha = 0.5, width = 1.5) +
+  geom_boxplot(aes(hlamp, expression, color = hlamp),
+               width = 0.25, size = 0.75, outlier.shape = NA) +
+  geom_boxplot(aes(hlamp, expression, fill = hlamp),
+               color = "white", width = 0.25, outlier.shape = NA, size = 0.5) +
+  stat_compare_means(ref.group = ".all.",
+                     data = plot_data_stats,
+                     label = "p.signif", label.y = 1.6, hide.ns = T) +
+  stat_compare_means(label.y = 1.9, label.x = 1, label.sep = "\n\n",
+                     data = plot_data_stats) +
+  facet_wrap(~gene_name, ncol = 5) +
+  scale_color_manual(values = clrs$hlamp) +
+  scale_fill_manual(values = clrs$hlamp) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    axis.title.x = element_blank(),
+    strip.text = element_text(face = "italic"),
+    legend.position = "none") +
+  coord_cartesian(ylim = c(0, 2)) +
+  labs(
+    x = NULL,
+    y = "Expression")
+
+hlamp_boxplot_site_matched
+
+ggsave_pdf("figures/460_copy_number_expression/460_hlamp_expression_violin_scrna_wgs_site_matched.pdf",
+           hlamp_boxplot_site_matched, width = 3.25, height = 4)
+ggsave_png("figures/460_copy_number_expression/460_hlamp_expression_violin_scrna_wgs_site_matched.png",
+           hlamp_boxplot_site_matched, width = 3.25, height = 4)
+
+```
+
+# Correlation
+
+## Gene
+
+### All samples
+
+```{r}
+
+plot_data <- scrna_cancer_cell_genes_tbl %>%
+  inner_join(
+    wgs_gene_cna_tbl, 
+    by = c("patient_id", "gene_name")) %>%
+  filter(!is.na(is_hlamp))
+
+plot_data_stats <- plot_data %>% 
+  group_by(patient_id, gene_name) %>% 
+  mutate(expression_mean = mean(expression),
+         expression_min = quantile(expression, probs = c(0.4)),
+         expression_max = quantile(expression, probs = c(0.6)),
+         log_change = log_change) %>% 
+  distinct(patient_id, gene_name, .keep_all = T)
+
+```
+
+```{r, fig.width=12, fig.height=3}
+
+hlamp_corr_plot_all_samples <- plot_data_stats %>% 
+  ggplot(aes(log_change, expression_mean)) +
+  geom_smooth(
+    method = "lm", 
+    col = "gray50", 
+    fill = "gray90", 
+    linetype = "dashed",
+    size = 0.5
+  ) +
+  # stat_cor(
+  #   aes(log_change, expression_mean),
+  #   method = "spearman", 
+  #   color = "black",
+  #   # label.x = Inf,
+  #   # label.y = Inf
+  #   label.x.npc = 0.2,
+  #   label.y.npc = 0.8,
+  #   position = "identity"
+  # ) +
+  geom_vline(xintercept = 0, col = "black", linetype = "dashed") +
+  # geom_errorbar(
+  #   aes(
+  #     ymin=expression_min,
+  #     ymax=expression_max
+  #     ),
+  #   colour="gray80"
+  # ) +
+  geom_point(alpha = 1, aes(col = wgs_signature)) +
+  geom_text_repel(
+    aes(label = patient_id_short),
+    segment.color = "gray50",
+    data = plot_data_stats %>%
+      filter(is_hlamp == TRUE)
+  ) +
+  facet_wrap(~gene_name, ncol = 4, scales = "free") +
+  # coord_cartesian(ylim = c(0, 2)) +
+  scale_color_manual(values = clrs$wgs_signature) +
+  theme(strip.text = element_text(face = "italic")) +
+  labs(
+    x = "Log copy number change (WGS)",
+    y = "Mean expression (scRNA)", 
+    color = "Mutational\nsignature", 
+    fill = "Mutational\nsignature")
+
+hlamp_corr_plot_all_samples
+
+ggsave_pdf("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_all_samples.pdf",
+           hlamp_corr_plot_all_samples, width = 12, height = 3)
+ggsave_png("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_all_samples.png",
+           hlamp_corr_plot_all_samples, width = 12, height = 3)
+
+```
+
+### Site-matched samples
+
+```{r}
+
+plot_data <- scrna_cancer_cell_genes_tbl %>%
+  inner_join(
+    wgs_gene_cna_tbl, 
+    by = c("patient_id", "tumor_site", "gene_name")) %>%
+  filter(!is.na(is_hlamp))
+
+plot_data_stats <- plot_data %>% 
+  group_by(patient_id, tumor_site, gene_name) %>% 
+  mutate(expression_mean = mean(expression),
+         expression_min = quantile(expression, probs = c(0.4)),
+         expression_max = quantile(expression, probs = c(0.6)),
+         log_change = log_change) %>% 
+  distinct(patient_id, tumor_site, gene_name, .keep_all = T)
+
+```
+
+```{r, fig.width=12, fig.height=3}
+
+hlamp_corr_plot_site_matched <- plot_data_stats %>% 
+  ggplot(aes(log_change, expression_mean)) +
+  geom_smooth(
+    method = "lm", 
+    col = "gray50", 
+    fill = "gray90", 
+    linetype = "dashed",
+    size = 0.5
+  ) +
+  stat_cor(
+    aes(log_change, expression_mean),
+    method = "spearman",
+    color = "black",
+    # label.x = Inf,
+    # label.y = Inf
+    label.x.npc = 0.2,
+    label.y.npc = 0.8,
+    position = "identity"
+  ) +
+  geom_vline(xintercept = 0, col = "black", linetype = "dashed") +
+  # geom_errorbar(
+  #   aes(
+  #     ymin=expression_min,
+  #     ymax=expression_max
+  #     ),
+  #   colour="gray80"
+  # ) +
+  geom_point(alpha = 1, aes(col = wgs_signature)) +
+  geom_text_repel(
+    aes(label = patient_id_short),
+    segment.color = "gray50",
+    data = plot_data_stats %>%
+      filter(is_hlamp == TRUE)
+  ) +
+  facet_wrap(~gene_name, ncol = 4, scales = "free") +
+  # coord_cartesian(ylim = c(0, 2)) +
+  scale_color_manual(values = clrs$wgs_signature) +
+  theme(strip.text = element_text(face = "italic")) +
+  labs(
+    x = "Log copy number change (WGS)",
+    y = "Mean expression (scRNA)", 
+    color = "Mutational\nsignature", 
+    fill = "Mutational\nsignature")
+
+hlamp_corr_plot_site_matched
+
+ggsave_pdf("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_site_matched.pdf",
+           hlamp_corr_plot_site_matched, width = 12, height = 3)
+ggsave_png("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_site_matched.png",
+           hlamp_corr_plot_site_matched, width = 12, height = 3)
+
+```
+
