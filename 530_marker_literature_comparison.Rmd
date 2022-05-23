@@ -202,11 +202,11 @@ plot_hyper <- function(hyper_tbl) {
 
 ```
 
-```{r chunk_530_100, fig.width=10, fig.height=7}
+```{r chunk_530_100, fig.width=10, fig.height=6}
 
 plot_hyper(get_hyper_tbl("Zheng", "CD4", "CD4"))
-ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Zheng_CD4.pdf", width = 10, height = 7)
-ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Zheng_CD4.png", width = 10, height = 7)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Zheng_CD4.pdf", width = 10, height = 6)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Zheng_CD4.png", width = 10, height = 6)
 
 ```
 
@@ -218,11 +218,11 @@ ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Zheng_CD
 
 ```
 
-```{r chunk_530_120, fig.width=5, fig.height=6}
+```{r chunk_530_120, fig.width=4.75, fig.height=5}
 
 plot_hyper(get_hyper_tbl("Hornburg", "CD4", "CD4"))
-ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_CD4.pdf", width = 5, height = 6)
-ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_CD4.png", width = 5, height = 6)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_CD4.pdf", width = 4.75, height = 5)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_CD4.png", width = 4.75, height = 5)
 
 ```
 
@@ -234,11 +234,11 @@ ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg
 
 ```
 
-```{r chunk_530_140, fig.width=4.25, fig.height=5}
+```{r chunk_530_140, fig.width=4.15, fig.height=5}
 
 plot_hyper(get_hyper_tbl("Hornburg", "Macrophage", "Macrophage"))
-ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_Macrophage.pdf", width = 4.25, height = 5)
-ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_Macrophage.png", width = 4.25, height = 5)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_Macrophage.pdf", width = 4.15, height = 5)
+ggsave("figures/530_marker_literature_comparison/530_cluster_comparison_Hornburg_Macrophage.png", width = 4.15, height = 5)
 
 ```
 

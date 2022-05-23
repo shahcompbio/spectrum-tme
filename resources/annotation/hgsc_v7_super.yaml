@@ -29,7 +29,7 @@ T.super:
   - IL2RA
   - TNFRSF4
   - TRAC
-  CD4.Th17:
+  ILC:
   - IL7R
   - KLRB1
   - IL4I1

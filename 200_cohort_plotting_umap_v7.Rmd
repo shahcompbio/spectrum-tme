@@ -28,7 +28,7 @@ library(readxl)
 library(cowplot)
 library(colorblindr)
 library(viridis)
-library(magick, lib.loc = "/home/uhlitzf/miniconda3/lib/R/library")
+# library(magick, lib.loc = "/home/uhlitzf/miniconda3/lib/R/library")
 library(ggpubr)
 library(knitr)
 
@@ -53,7 +53,7 @@ names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "Ovarian", "Ov")
 ## load data --------------------------------------
 
 ## load cohort embeddings
-seu_tbl <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/cells.tsv") %>% 
+seu_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/cells.tsv") %>% 
   mutate(cell_type = ifelse(cell_type == "Monocyte", "Myeloid.cell", cell_type)) %>% 
   mutate(cell_type = ifelse(cell_type == "Ovarian.cancer.cell", "Ov.cancer.cell", cell_type))
 
@@ -62,7 +62,7 @@ seu_tbl <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/cells.t
 #   mutate(cell_type = ifelse(cell_type == "Ovarian.cancer.cell", "Ov.cancer.cell", cell_type))
 
 ## load consensus data
-consOV_tbl <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/consensusOV/SPECTRUM_freeze_v7_consensusOV.tsv") %>%
+consOV_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/consensusOV/SPECTRUM_freeze_v7_consensusOV.tsv") %>%
   mutate(consensusOV = ordered(consensusOV, levels = names(clrs$consensusOV))) %>% 
   select(cell_id, consensusOV)
 
@@ -92,7 +92,7 @@ seu_tbl_full <- seu_tbl %>%
 # 
 # for (i in 1:length(cell_cycle_list)) {
 #   seu_obj <- read_rds(
-#     paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/",
+#     paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/",
 #            names(cell_cycle_list)[i], "_seurat_0.1.rds"))
 #   cell_cycle_list[[i]] <- as_tibble(FetchData(seu_obj, c("cell_id", "S.Score", "G2M.Score", "CC.Diff", "Phase")))
 #   rm(seu_obj)
@@ -100,9 +100,9 @@ seu_tbl_full <- seu_tbl %>%
 # 
 # cell_cycle_tbl <- bind_rows(cell_cycle_list)
 # 
-# write_tsv(cell_cycle_tbl, "/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/cell_cycle_tbl.tsv")
+# write_tsv(cell_cycle_tbl, "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/cell_cycle_tbl.tsv")
 
-cell_cycle_tbl <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/cell_cycle_tbl.tsv")
+cell_cycle_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/cell_cycle_tbl.tsv")
 
 seu_tbl_full <- seu_tbl_full %>%
   left_join(cell_cycle_tbl, by = "cell_id")
@@ -119,6 +119,7 @@ seu_tbl_full <- seu_tbl_full %>%
 dpi <- 72
 rw <- 10
 rh <- 10
+rscale <- 0.5
 
 base_umap <- ggplot(seu_tbl_full) +
   coord_fixed() +
@@ -153,15 +154,14 @@ ncol1_legend <- list(
 )
 
 umap_site <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = tumor_supersite), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = tumor_supersite), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, scale = rscale) +
   scale_color_manual(values = clrs$tumor_supersite) +
   guides(color = guide_legend(override.aes = list(size = 4, alpha = 1),
                               ncol = 2, 
                               label.position = "right"))
 
-
 umap_site_mini <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = tumor_supersite), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = tumor_supersite), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, scale = rscale) +
   scale_color_manual(values = clrs$tumor_supersite) +
   guides(color = F)
 
@@ -169,19 +169,19 @@ umap_site_legend_ncol1 <- cowplot::get_legend(umap_site + ncol1_legend)
 umap_site_legend <- cowplot::get_legend(umap_site)
 
 umap_cell_type <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = fct_rev(cell_type)), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = fct_rev(cell_type)), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, scale = rscale) +
   scale_color_manual(values = clrs$cell_type) +
   ncol1_legend
 
 umap_cell_type_mini <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = cell_type), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = cell_type), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, scale = rscale) +
   scale_color_manual(values = clrs$cell_type) +
   guides(color = F)
 
 umap_cell_type_legend <- cowplot::get_legend(umap_cell_type)
 
 umap_patient <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = patient_id_short), size = pt.size, alpha = pt.alpha, raster.dpi = 200, raster.width = 10, raster.height = 10) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = patient_id_short), size = pt.size, alpha = pt.alpha, raster.dpi = 200, scale = 1) +
   scale_color_manual(values = clrs$patient_id_short) + 
   guides(color = guide_legend(override.aes = list(size = 4, alpha = 1),
                               nrow = 17, 
@@ -190,14 +190,14 @@ umap_patient <- base_umap +
         legend.spacing.x = unit(0, "npc"))
 
 umap_patient_mini <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = patient_id_short), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = patient_id_short), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, scale = rscale) +
   scale_color_manual(values = clrs$patient_id_short) +
   guides(color = F)
 
 # umap_patient_legend <- cowplot::get_legend(umap_patient)
 
 umap_consOV <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = consensusOV), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = consensusOV), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, scale = rscale) +
   scale_color_manual(values = clrs$consensusOV, labels = c("Immuno.", "Mesench.", "Prolif.", "Differen.")) + 
   guides(color = guide_legend(override.aes = list(size = 4, alpha = 1),
                               ncol = 2, 
@@ -206,14 +206,14 @@ umap_consOV <- base_umap +
         legend.spacing.x = unit(0, "npc"))
 
 umap_consOV_mini <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = consensusOV), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = consensusOV), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, scale = rscale) +
   scale_color_manual(values = clrs$consensusOV) +
   guides(color = F)
 
 umap_consOV_legend <- cowplot::get_legend(umap_consOV)
 
 umap_mutsig <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = consensus_signature), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = consensus_signature), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, scale = rscale) +
   scale_color_manual(values = clrs$consensus_signature) + 
   guides(color = guide_legend(override.aes = list(size = 4, alpha = 1),
                               ncol = 2, 
@@ -222,14 +222,14 @@ umap_mutsig <- base_umap +
         legend.spacing.x = unit(0, "npc"))
 
 umap_mutsig_mini <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = consensus_signature), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = consensus_signature), size = pt.size.mini, alpha = pt.alpha.mini, raster.dpi = dpi, scale = rscale) +
   scale_color_manual(values = clrs$consensus_signature) +
   guides(color = F)
 
 umap_mutsig_legend <- cowplot::get_legend(umap_mutsig)
 
 umap_phase <- base_umap +
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = Phase), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = Phase), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, scale = rscale) +
   scale_color_manual(values = clrs$Phase) +
   guides(color = guide_legend(override.aes = list(size = 4, alpha = 1),
                               ncol = 1,
@@ -253,22 +253,22 @@ continuous_umap_layers <- list(
         plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)))
 
 umap_umis <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = log2(nCount_RNA)), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = log2(nCount_RNA)), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, scale = rscale) +
   labs(title = "log2(#UMIs)", color = "") +
   continuous_umap_layers
 
 umap_genes <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = log2(nFeature_RNA)), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = log2(nFeature_RNA)), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, scale = rscale) +
   labs(title = "log2(#Genes)", color = "") +
   continuous_umap_layers
 
 umap_mitos <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = percent.mt), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = percent.mt), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, scale = rscale) +
   labs(title = "MT reads [%]", color = "") +
   continuous_umap_layers
 
 umap_doublet_score <- base_umap + 
-  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = doublet_score), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, raster.width = rw, raster.height = rh) +
+  ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = doublet_score), size = pt.size, alpha = pt.alpha, raster.dpi = dpi, scale = rscale) +
   labs(title = "Doublet score", color = "") +
   continuous_umap_layers
 
@@ -323,7 +323,7 @@ numbers_plot_tumor_supersite <- total_numbers_plot(tumor_supersite)
 
 ```{r chunk_200_110, fig.width=6, fig.height=9}
 
-pm_score_tbl <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/patient_mixing_scores.tsv") %>%
+pm_score_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/patient_mixing_scores.tsv") %>%
   mutate(cell_type = str_replace_all(cell_type, "Monocyte", "Myeloid cell")) %>% 
   mutate(cell_type = str_replace_all(cell_type, "Ovarian.cancer.cell", "Ov cancer cell")) %>% 
   mutate(patient_id_short = str_sub(cell_id, 13, 15)) %>% 
@@ -376,8 +376,8 @@ ggplot(pm_score_tbl) +
   theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1),
         axis.title.x = element_blank())
 
-ggsave_pdf("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig.pdf", width = 6, height = 9)
-ggsave_png("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig.png", width = 6, height = 9)
+ggsave("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig.pdf", width = 6, height = 9)
+ggsave("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig.png", width = 6, height = 9)
 
 ```
 
@@ -406,8 +406,8 @@ ggplot(pm_score_tbl) +
   theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1),
         axis.title.x = element_blank())
 
-ggsave_pdf("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig_patient.pdf", width = 18, height = 9)
-ggsave_png("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig_patient.png", width = 18, height = 9)
+ggsave("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig_patient.pdf", width = 18, height = 9)
+ggsave("figures/200_cohort_plotting_umap_v7/002_patient_mixing_mutsig_patient.png", width = 18, height = 9)
 
 ```
 
@@ -470,8 +470,8 @@ pm_comparisons <- ggplot(ptt_tbl) +
 pm_comparisons
 print(ptt_tbl, n = 100)
 
-ggsave_pdf("figures/200_cohort_plotting_umap_v7/002_patient_mixing_tests.pdf", pm_comparisons, width = 5, height = 4)
-ggsave_png("figures/200_cohort_plotting_umap_v7/002_patient_mixing_tests.png", pm_comparisons, width = 5, height = 4)
+ggsave("figures/200_cohort_plotting_umap_v7/002_patient_mixing_tests.pdf", pm_comparisons, width = 5, height = 4)
+ggsave("figures/200_cohort_plotting_umap_v7/002_patient_mixing_tests.png", pm_comparisons, width = 5, height = 4)
 
 ```
 
@@ -535,7 +535,7 @@ print(consOV_tbl_summary, n = 36)
 
 ## Figure 2 upper panel grid
 
-### v7.1
+### v7.3
 
 ```{r chunk_200_060, fig.width=20, fig.height=10}
 
@@ -585,15 +585,15 @@ full_grid1 <- ggdraw() +
 
 full_grid1
 full_grid1_rds <- list(rds = full_grid1, width = 20, height = 10)
-# write_rds(full_grid1, "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.rds")
-ggsave_png(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.png", full_grid1, width = 20, height = 10)
-ggsave_pdf(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.pdf", full_grid1, width = 20, height = 10)
+# write_rds(full_grid1, "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.rds")
+ggsave(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.png", full_grid1, width = 20, height = 10)
+ggsave(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.pdf", full_grid1, width = 20, height = 10)
 
 ```
 
-[figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.pdf](figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.pdf)
+[figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.pdf](figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.pdf)
 
-[figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.png](figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.1.png)
+[figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.png](figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.png)
 
 ### v7.2
 
@@ -624,8 +624,8 @@ full_grid2 <- ggdraw() +
 full_grid2
 full_grid2_rds <- list(rds = full_grid2, width = 20, height = 10)
 # write_rds(full_grid2, "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.2.rds")
-ggsave_png(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.2.png", full_grid2, width = 20, height = 10)
-ggsave_pdf(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.2.pdf", full_grid2, width = 20, height = 10)
+ggsave(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.2.png", full_grid2, width = 20, height = 10)
+ggsave(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.2.pdf", full_grid2, width = 20, height = 10)
 
 ```
 
@@ -662,8 +662,8 @@ full_grid3 <- ggdraw() +
 full_grid3
 full_grid3_rds <- list(rds = full_grid3, width = 20, height = 10)
 # write_rds(full_grid3, "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.rds")
-ggsave_png(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.png", full_grid3, width = 20, height = 10)
-ggsave_pdf(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.pdf", full_grid3, width = 20, height = 10)
+ggsave(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.png", full_grid3, width = 20, height = 10)
+ggsave(filename = "figures/200_cohort_plotting_umap_v7/002_cohort_umaps_v7.3.pdf", full_grid3, width = 20, height = 10)
 
 ```
 
@@ -756,8 +756,8 @@ figS1_panel <- ggdraw() +
 
 figS1_panel
 figS1_panel_rds <- list(rds = figS1_panel, width = 16, height = 9)
-ggsave_png("figures/200_cohort_plotting_umap_v7/002_supplementary_umap_v7.png", figS1_panel, width = 16, height = 9)
-ggsave_pdf("figures/200_cohort_plotting_umap_v7/002_supplementary_umap_v7.pdf", figS1_panel, width = 16, height = 9)
+ggsave("figures/200_cohort_plotting_umap_v7/002_supplementary_umap_v7.png", figS1_panel, width = 16, height = 9)
+ggsave("figures/200_cohort_plotting_umap_v7/002_supplementary_umap_v7.pdf", figS1_panel, width = 16, height = 9)
 # write_rds(figS1_panel_rds, "figures/200_cohort_plotting_umap_v7/002_supplementary_umap_v7.rds")
 
 

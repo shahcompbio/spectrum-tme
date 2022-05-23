@@ -412,34 +412,48 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_Ovarian.cancer.cell_c
 
 ```{r chunk_215_106, fig.width=4, fig.height=2.5}
 
-compute_composition_wrapper <- . %>% 
-  group_by(patient_id_short, consensus_signature, cluster_label) %>% 
-  summarise(n = sum(n)) %>% 
-  group_by(patient_id_short) %>% 
-  mutate(ntotal = sum(n),
-         nnorm = n/ntotal) %>% 
-  group_by(cluster_label) %>% 
-  mutate(nrel = nnorm/sum(nnorm)) %>% 
-  ungroup %>% 
-  mutate(rank = paste0(patient_id_short, "_", cluster_label)) %>% 
-  arrange(cluster_label, nrel) %>% 
-  mutate(rank = ordered(rank, levels = rank)) %>% 
-  mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super)))
+compute_composition_wrapper <- function(comp_data, clabel, clevel) {
+  clevel <- enquo(clevel)
+  comp_data %>%
+    group_by(patient_id_short, consensus_signature, !!clevel) %>%
+    summarise(n = sum(n)) %>%
+    group_by(patient_id_short) %>%
+    mutate(ntotal = sum(n),
+           nnorm = n/ntotal) %>%
+    group_by(!!clevel) %>%
+    mutate(nrel = nnorm/sum(nnorm)) %>%
+    ungroup %>%
+    mutate(rank = paste0(patient_id_short, "_", !!clevel)) %>%
+    arrange(!!clevel, nrel) %>%
+    mutate(rank = ordered(rank, levels = rank)) %>%
+    mutate(!!clevel := ordered(!!clevel, levels = names(clrs[[as_label(clevel)]][[clabel]]))) %>%
+    mutate(cell_type_super = clabel)
+}
 
-comp_norm <- comp_list$Ovarian.cancer.super %>% 
-  compute_composition_wrapper
+comp_norm_cc <- comp_list$Ovarian.cancer.super %>%
+  compute_composition_wrapper("Ovarian.cancer.super", cluster_label)
+comp_norm_mc <- comp_list$Myeloid.super %>%
+  compute_composition_wrapper("Myeloid.super", cluster_label)
+comp_norm_tc <- comp_list$T.super %>%
+  compute_composition_wrapper("T.super", cluster_label_sub)
+comp_norm_bc <- comp_list$B.super %>%
+  compute_composition_wrapper("B.super", cluster_label)
+comp_norm_fb <- comp_list$Fibroblast.super %>%
+  compute_composition_wrapper("Fibroblast.super", cluster_label)
+comp_norm_ec <- comp_list$Endothelial.super %>%
+  compute_composition_wrapper("Endothelial.super", cluster_label)
 
-comp_norm_mois <- comp_list$Ovarian.cancer.super %>% 
-  filter(consensus_signature %in% mois,
-         tumor_supersite != "Ascites") %>% 
-  compute_composition_wrapper
+# comp_norm_mois <- comp_list$Ovarian.cancer.super %>%
+#   filter(consensus_signature %in% mois,
+#          tumor_supersite != "Ascites") %>%
+#   compute_composition_wrapper
 
-ggplot(comp_norm) +
+ggplot(comp_norm_cc) +
   geom_bar(aes(rank, nrel*100, fill = consensus_signature), stat = "identity") +
   geom_point(aes(color = cluster_label), x = 21, y = 25, size = 8,
-             data = distinct(comp_norm, cluster_label)) +
+             data = distinct(comp_norm_cc, cluster_label)) +
   geom_text(aes(label = as.numeric(cluster_label)), x = 21, y = 25, size = 6,
-            data = distinct(comp_norm, cluster_label)) +
+            data = distinct(comp_norm_cc, cluster_label)) +
   facet_wrap(~cluster_label, nrow = 2, scales = "free_x", drop = T) +
   scale_fill_manual(values = clrs$consensus_signature) +
   scale_color_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
@@ -448,7 +462,6 @@ ggplot(comp_norm) +
   remove_guides +
   labs(y = "Normalized fraction of\ncells per patient [%]")
 
-
 ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super.pdf", width = 4, height = 2.5)
 ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super.png", width = 4, height = 2.5)
 
@@ -456,28 +469,148 @@ ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_O
 
 ```{r chunk_215_107, fig.width=4, fig.height=2.5}
 
-ggplot(comp_norm_mois) +
-  geom_bar(aes(cluster_label, nrel*100, fill = consensus_signature), 
-           stat = "identity", position = "stack", color = "black",
-           width = 0.8) +
-  # geom_point(aes(color = cluster_label), x = 21, y = 25, size = 8,
-  #            data = distinct(comp_norm, cluster_label)) +
-  # geom_text(aes(label = as.numeric(cluster_label)), x = 21, y = 25, size = 6,
-  #           data = distinct(comp_norm, cluster_label)) +
-  # facet_wrap(~cluster_label, nrow = 2, scales = "free_x", drop = T) +
-  scale_fill_manual(values = clrs$consensus_signature) +
-  # scale_color_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
-  scale_y_continuous(expand = c(0, 0)) +
-  coord_flip() +
-  theme(strip.text = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.line.y = element_blank()) +
-  remove_guides +
-  labs(y = "Patient composition across clusters [%]",
-       x = "Cluster")
+# ggplot(comp_norm_mois) +
+#   geom_bar(aes(cluster_label, nrel*100, fill = consensus_signature), 
+#            stat = "identity", position = "stack", color = "black",
+#            width = 0.8) +
+#   # geom_point(aes(color = cluster_label), x = 21, y = 25, size = 8,
+#   #            data = distinct(comp_norm, cluster_label)) +
+#   # geom_text(aes(label = as.numeric(cluster_label)), x = 21, y = 25, size = 6,
+#   #           data = distinct(comp_norm, cluster_label)) +
+#   # facet_wrap(~cluster_label, nrow = 2, scales = "free_x", drop = T) +
+#   scale_fill_manual(values = clrs$consensus_signature) +
+#   # scale_color_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+#   scale_y_continuous(expand = c(0, 0)) +
+#   coord_flip() +
+#   theme(strip.text = element_blank(),
+#         axis.ticks.y = element_blank(),
+#         axis.line.y = element_blank()) +
+#   remove_guides +
+#   labs(y = "Patient composition across clusters [%]",
+#        x = "Cluster")
+# 
+# ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super_stacked_barplot.pdf", width = 6, height = 2.5)
+# ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super_stacked_barplot.png", width = 6, height = 2.5)
 
-ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super_stacked_barplot.pdf", width = 6, height = 2.5)
-ggsave("figures/215_composition_plots_subset/215_comp_plot_cluster_per_patient_Ovarian.cancer.super_stacked_barplot.png", width = 6, height = 2.5)
+```
+
+```{r chunk_215_108, fig.width=4, fig.height=2.5}
+
+cluster_colors <- c(
+  unlist(sapply(2:length(clrs$cluster_label), function(x) clrs$cluster_label[[x]])), 
+  clrs$cluster_label_sub[[1]]
+)
+
+cluster_labels <- names(cluster_colors)
+
+max_entropy <- entropy::entropy.empirical(rep(1/length(scrna_patients), length(scrna_patients)))
+
+entropy_wrapper <- function(comp_norm_tbl, cts) {
+  comp_norm_tbl %>%
+    group_by(cluster_label) %>%
+    summarise(entropy = entropy::entropy.empirical(nrel)) %>%
+    arrange(entropy) %>% 
+    ungroup() %>% 
+    mutate(cluster_label = as.character(cluster_label),
+           cell_type_super = cts,
+           rel_entropy = max_entropy/entropy)
+    
+}
+
+entropy_tbl <- bind_rows(
+  entropy_wrapper(comp_norm_cc, "Ovarian cancer"),
+  entropy_wrapper(rename(comp_norm_tc, cluster_label = cluster_label_sub), "T/NK"),
+  entropy_wrapper(comp_norm_mc, "Myeloid"),
+  entropy_wrapper(comp_norm_bc, "B.super"),
+  entropy_wrapper(comp_norm_fb, "Fibroblast.super"),
+  entropy_wrapper(comp_norm_ec, "Endothelial.super")
+) %>% 
+  mutate(cluster_label = ordered(cluster_label, levels = cluster_labels)) %>% 
+  arrange(cell_type_super, cluster_label) %>% 
+  group_by(cell_type_super) %>% 
+  mutate(cluster_label_numeric = row_number(cell_type_super)) %>% 
+  ungroup() %>% 
+  mutate(inverse_entropy = 1/rel_entropy,
+         patient_specific = inverse_entropy < 0.8)
+
+entropy_tbl_sub <- entropy_tbl %>% 
+  filter(cell_type_super %in% c("Ovarian cancer", "T/NK", "Myeloid")) %>% 
+  mutate(cell_type_super = ordered(cell_type_super, c("Ovarian cancer", "T/NK", "Myeloid"))) %>% 
+  mutate(anno_helper = "Cluster")
+
+comp_wrapper <- function(comp_norm_tbl, cts) {
+  comp_norm_tbl %>%
+    mutate(cluster_label = as.character(cluster_label),
+           cell_type_super = cts) %>% 
+    select(-rank)
+    
+}
+
+patient_comp <- bind_rows(
+  comp_wrapper(comp_norm_cc, "Ovarian cancer"),
+  comp_wrapper(rename(comp_norm_tc, cluster_label = cluster_label_sub), "T/NK"),
+  comp_wrapper(comp_norm_mc, "Myeloid"),
+) %>% 
+  mutate(nrel = nrel*100) %>% 
+  mutate(cluster_label = ordered(cluster_label, levels = cluster_labels)) %>% 
+  arrange(cell_type_super, cluster_label) %>% 
+  group_by(cell_type_super) %>% 
+  mutate(cluster_label_numeric = deframe(select(entropy_tbl_sub, cluster_label, cluster_label_numeric))[as.character(cluster_label)]) %>% 
+  ungroup() %>% 
+  mutate(cell_type_super = ordered(cell_type_super, c("Ovarian cancer", "T/NK", "Myeloid")))
+
+```
+
+```{r chunk_215_109, fig.width=4, fig.height=2.5}
+
+patient_bar <- ggplot(patient_comp) +
+  geom_bar(aes(cluster_label_numeric, nrel, fill = patient_id_short),
+           color = "black", size = 0.1,
+           stat = "identity", position = "stack") +
+  facet_grid(~cell_type_super, scales = "free_x", space = "free_x") +
+  scale_y_continuous(expand = c(0, 0), breaks = c(0, 50, 100)) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = clrs$patient_id_short) + 
+  labs(y = "% cells") + 
+  remove_xaxis +
+  remove_guides
+
+entropy_bar <- ggplot(entropy_tbl_sub, aes(cluster_label_numeric, inverse_entropy, fill = patient_specific)) +
+  geom_bar(stat = "identity") +
+  geom_hline(yintercept = 1, linetype = 1) +
+  geom_hline(yintercept = 0.8, linetype = 2) +
+  facet_grid(~cell_type_super, scales = "free_x", space = "free_x") +
+  scale_fill_manual(values = c(`FALSE` = "grey80", `TRUE` = "red")) +
+  scale_y_continuous(expand = c(0, 0), breaks = c(0, 0.5, 0.8, 1),
+                     labels = c(0, 0.5, 0.8, "max: 1.0")) +
+  scale_x_continuous(expand = c(0, 0)) +
+  theme(strip.background = element_blank(), 
+        strip.text = element_blank()) + 
+  labs(y = "Relative\nentropy") +
+  coord_cartesian(clip = "off") +
+  remove_xaxis +
+  remove_guides
+
+entropy_tile <- ggplot(entropy_tbl_sub) +
+  geom_tile(aes(cluster_label_numeric, anno_helper, fill = cluster_label)) +
+  geom_point(aes(cluster_label_numeric, anno_helper), color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(cluster_label_numeric, anno_helper, label = cluster_label_numeric)) +
+  facet_grid(~cell_type_super, scales = "free_x", space = "free_x") +
+  scale_fill_manual(values = cluster_colors) +
+  theme(strip.background = element_blank(), 
+        strip.text = element_blank(),
+        axis.ticks = element_blank()) +
+  scale_x_continuous(expand = c(0, 0)) +
+  labs(y = "") +
+  remove_xaxis + 
+  remove_guides
+
+plot_grid(patient_bar, entropy_tile, entropy_bar,
+          ncol = 1, rel_heights = c(0.5, 0.1, 0.4), 
+          align = "v", axis = "yx")
+
+ggsave("figures/215_composition_plots_subset/215_cluster_entropy.pdf", width = 12, height = 5)
+ggsave("figures/215_composition_plots_subset/215_cluster_entropy.png", width = 12, height = 5)
 
 ```
 
@@ -652,9 +785,17 @@ pca_rot <- pca_result$rotation %>%
   as_tibble(rownames = "cluster_label") %>% 
   select(cluster_label, PC1, PC2)
 
-pca_rot %>% 
+pc1_loadings <- pca_rot %>% 
+  arrange(-abs(PC1)) %>% 
+  slice(1:10) %>% 
+  select(cluster_label_pc1 = cluster_label, PC1)
+
+pc2_loadings <- pca_rot %>% 
   arrange(-abs(PC2)) %>% 
-  slice(1:10)
+  slice(1:10) %>% 
+  select(cluster_label_pc2 = cluster_label, PC2)
+
+bind_cols(pc1_loadings, pc2_loadings)
 
 plot_pcs <- function(pcx, pcy) {
   

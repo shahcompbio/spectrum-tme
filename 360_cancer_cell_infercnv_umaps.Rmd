@@ -76,6 +76,7 @@ pois_short <- c("JAK.STAT", "NFkB", "TNFa", "TGFb", "Hypoxia")
 pois <- paste0(pois_short, ".pathway")
 all_pws <- grep("pathway", colnames(seu_obj_cc@meta.data), value = T)
 all_pws_short <- str_remove_all(all_pws, "\\.pathway")
+ptois <- c("007", "036", "107")
 
 
 ## load inferCNV outputs -------------------------------
@@ -122,28 +123,28 @@ anno_data <- seu_obj_cc %>%
 
 ## patients
 
-```{r chunk_360_050}
+```{r chunk_360_100}
 
 anno_data_sub <- anno_data %>% 
   filter(patient_id %in% c("SPECTRUM-OV-036", "SPECTRUM-OV-007", "SPECTRUM-OV-107"))
 
 p1 <- ggplot(anno_data_sub, aes(UMAP_1, UMAP_2, color = tumor_supersite)) + 
   ggrastr::geom_point_rast(size = 0.01, scale = 0.2, raster.dpi = 60) +
-  facet_wrap(~patient_id_short, scales = "free") +
+  facet_wrap(~patient_id_short, scales = "free", ncol = 1) +
   scale_color_manual(values = clrs$tumor_supersite) +
   remove_xaxis +
   remove_yaxis
 
 p2 <- ggplot(anno_data_sub, aes(UMAP_1, UMAP_2, color = cluster_label)) + 
   ggrastr::geom_point_rast(size = 0.01, scale = 0.2, raster.dpi = 60) +
-  facet_wrap(~patient_id_short, scales = "free") +
+  facet_wrap(~patient_id_short, scales = "free", ncol = 1) +
   scale_color_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
   remove_xaxis +
   remove_yaxis
 
 p3 <- ggplot(anno_data_sub, aes(UMAP_1, UMAP_2, color = JAK.STAT.pathway)) + 
   ggrastr::geom_point_rast(size = 0.01, scale = 0.2, raster.dpi = 60) +
-  facet_wrap(~patient_id_short, scales = "free") +
+  facet_wrap(~patient_id_short, scales = "free", ncol = 1) +
   scale_color_viridis() +
   remove_xaxis +
   remove_yaxis
@@ -154,181 +155,205 @@ p4 <- ggplot(anno_data_sub) +
   ggrastr::geom_point_rast(aes(UMAP_1, UMAP_2, color = clone_label), size = 0.5,
                            scale = 0.2, raster.dpi = 60,
                            data = filter(anno_data_sub, !is.na(clone_label))) +
-  facet_wrap(~patient_id_short, scales = "free") +
+  facet_wrap(~patient_id_short, scales = "free", ncol = 1) +
   scale_color_manual(values = clrs$clone_label) +
   remove_xaxis +
   remove_yaxis
 
 p5 <- ggplot(anno_data_sub, aes(UMAP_1, UMAP_2, color = BAF6p)) + 
   ggrastr::geom_point_rast(size = 0.01, scale = 0.2, raster.dpi = 60) +
-  facet_wrap(~patient_id_short, scales = "free") +
+  facet_wrap(~patient_id_short, scales = "free", ncol = 1) +
   scale_color_viridis() +
   remove_xaxis +
   remove_yaxis
 
-plot_grid(p1, p2, p3, p4, p5, ncol = 1, align = "hv")
-
-
-```
-
-## cohort
-
-```{r chunk_360_080}
-
-plot_data <- cbind(cell_id = colnames(seu_obj_cc), FetchData(seu_obj_cc, c("umapharmony_1", "umapharmony_2", "umappca_1", "umappca_2", "RNA_snn_res.0.2", "sample", "cluster_label", gois, all_pws))) %>% 
-  as_tibble() %>% 
-  left_join(scrna_meta_tbl, by = "sample") %>% 
-  filter(!is.na(consensus_signature)) %>% 
-  mutate(tumor_megasite = str_replace_all(tumor_megasite, "Other", "Non-adnexa")) %>% 
-  mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super)),
-         cluster_number = as.numeric(cluster_label)) %>% 
-  mutate(umapscaled_1 = scales::rescale(umapharmony_1),
-         umapscaled_2 = scales::rescale(umapharmony_2)) %>% 
-  left_join(inferCNV_clone_tbl, by = "cell_id")
-
-base_umap <- ggplot(plot_data) +
-  coord_fixed() +
-  NoAxes() +
-  theme(legend.position = c(0, 1),
-        legend.justification = c("left", "top"),
-        legend.box.just = "left",
-        legend.margin = margin(1, 1, 1, 1),
-        legend.text = element_text(size = 14, margin = margin(0, 10, 0, 0)),
-        legend.spacing.x = unit(0, "npc"), 
-        legend.title = element_blank(),
-        plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 22))
+umap_grid <- plot_grid(p2 + remove_guides, p4 + remove_guides, ncol = 2, align = "hv")
 
 ```
 
-```{r chunk_360_090}
-
-pt.size <- 0.1
-pt.size2 <- 0.2
-pt.size.mini <- 0.01
-pt.alpha <- 0.05
-pt.alpha.mini <- 0.02
-dpi <- 150
-
-median_tbl <- plot_data %>%
-  group_by(patient_id_short) %>% 
-  summarise(umappca_1 = median(umappca_1), 
-            umappca_2 = median(umappca_2),
-            umapscaled_1 = median(umapscaled_1),
-            umapscaled_2 = median(umapscaled_2))
-
-median_tbl_cluster <- plot_data %>%
-  group_by(cluster_label, cluster_number) %>% 
-  summarise(umapharmony_1 = median(umapharmony_1), 
-            umapharmony_2 = median(umapharmony_2),
-            umapscaled_1 = median(umapscaled_1),
-            umapscaled_2 = median(umapscaled_2))
-
-umap_pca_mutsig <- base_umap + 
-  ggrastr::geom_point_rast(aes(umappca_1, umappca_2, color = consensus_signature), 
-                           size = pt.size, alpha = pt.alpha, raster.dpi = dpi) +
-  # geom_text(aes(umappca_1, umappca_2, label = patient_id_short), data = median_tbl) + 
-  geom_label(aes(umappca_1, umappca_2, label = patient_id_short), color = "black",
-             data = median_tbl, label.size = unit(0, "mm"), label.r = unit(0, "mm"),
-             alpha = 0.5) +
-  scale_color_manual(values = clrs$consensus_signature) +
-  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1),
-                              ncol = 1, 
-                              label.position = "right")) +
-  labs(title = "Uncorrected")
-
-umap_pca_cluster <- base_umap + 
-  ggrastr::geom_point_rast(aes(umappca_1, umappca_2, color = cluster_label), 
-                           size = pt.size, alpha = pt.alpha, raster.dpi = dpi) +
-  geom_label(aes(umappca_1, umappca_2, label = patient_id_short), color = "black",
-             data = median_tbl, label.size = unit(0, "mm"), label.r = unit(0, "mm"),
-             alpha = 0.5) +
-  scale_color_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
-  guides(color = guide_legend(override.aes = list(size = 4, alpha = 1),
-                              ncol = 1, 
-                              label.position = "right")) +
-  labs(title = "Cluster")
-
-cluster_legend <- cowplot::get_legend(umap_pca_cluster)
-
-umap_pca_jak_stat <- base_umap + 
-  # geom_point(aes(umappca_1, umappca_2), color = "grey80",
-  #            size = pt.size, alpha = pt.alpha, 
-  #            data = filter(plot_data, JAK.STAT.pathway <= 0)) +
-  ggrastr::geom_point_rast(aes(umappca_1, umappca_2, color = JAK.STAT.pathway), 
-                           size = pt.size, alpha = pt.alpha, raster.dpi = dpi, 
-             data = mutate(plot_data, JAK.STAT.pathway = ifelse(JAK.STAT.pathway > 4, 4, JAK.STAT.pathway))) +
-  geom_label(aes(umappca_1, umappca_2, label = patient_id_short), color = "black",
-             data = median_tbl, label.size = unit(0, "mm"), label.r = unit(0, "mm"),
-             alpha = 0.5) +
-  scale_color_gradientn(colours = viridis(9), breaks = c(0, 2, 4), limits = c(min(plot_data$JAK.STAT.pathway), 4), labels = c(0, 2, "≥4")) +
-  labs(title = "JAK-STAT signaling")
-
-umap_pca_clone <- base_umap + 
-  ggrastr::geom_point_rast(aes(umappca_1, umappca_2, color = clone_label), 
-                           size = pt.size, alpha = pt.alpha, raster.dpi = dpi, 
-             data = filter(plot_data, !is.na(clone_label))) +
-  geom_label(aes(umappca_1, umappca_2, label = patient_id_short), color = "black",
-             data = median_tbl, label.size = unit(0, "mm"), label.r = unit(0, "mm"),
-             alpha = 0.5) +
-  scale_color_manual(values = clrs$clone_label) +
-  labs(title = "inferCNV clone") +
-  remove_guides
-
-```
-
-```{r chunk_360_100, fig.width=20, fig.height=5}
-
-cancer_grid_pca <- ggdraw() +
-  draw_plot(add_umap_coord(umap_pca_mutsig), 
-            x = 0, y = 0, width = 0.25, height = 1) +
-  draw_plot(add_umap_coord(umap_pca_cluster + guides(color = F)), 
-            x = 0.24, y = 0, width = 0.25, height = 1) +
-  draw_grob(cluster_legend, x = 0.5, y = -0.15, height = 1) +
-  draw_plot(add_umap_coord(umap_pca_jak_stat), 
-            x = 0.7, y = 0, width = 0.25, height = 1)
-
-cancer_grid_pca
-
-```
-
-```{r chunk_360_110, fig.width=6, fig.height=5}
-
-umap_pca_clone
-
-```
-
-## distributions per clone
+# distributions 
 
 ```{r chunk_360_120, fig.width=6, fig.height=5}
 
 ## cell annotation
-anno_data <- seu_obj_cc %>% 
-  FetchData(c("sample", "cell_id", "cluster_label", "JAK.STAT.pathway", "NFkB.pathway", "TNFa.pathway", "TGFb.pathway", "Hypoxia.pathway")) %>%
-  as_tibble() %>% 
-  gather(key, value, -sample, -cell_id, -cluster_label) %>% 
-  left_join(scrna_meta_tbl, by = "sample") %>% 
-  left_join(inferCNV_clone_tbl, by = "cell_id")
-
-```
-
-```{r chunk_360_130, fig.width=6, fig.height=5}
-
-anno_data %>% 
+anno_data_sub <- anno_data %>% 
+  filter(patient_id_short %in% ptois) %>% 
   filter(!is.na(clone_label)) %>% 
-  group_by(patient_id_short, clone_label, tumor_supersite) %>% 
-  mutate(n = n()) %>% 
+  group_by(patient_id_short, clone_label) %>% 
+  mutate(ncells_clone = n()) %>% 
+  group_by(patient_id_short, cluster_label) %>% 
+  mutate(ncells_cluster = n()) %>% 
   ungroup() %>% 
-  # filter(patient_id_short %in% c("009", "026", "022")) %>% 
-  filter(n > 100) %>% 
-  filter(key == "JAK.STAT.pathway") %>% 
-  ggplot() +
-  geom_boxplot(aes(clone_label, value, fill = tumor_supersite)) +
-  # facet_grid(patient_id_short~key) +
-  facet_wrap(~patient_id_short) +
-  scale_fill_manual(values = clrs$tumor_supersite) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0))
+  filter(ncells_clone > 50) %>%
+  filter(ncells_cluster > 50) %>%
+  mutate(stat_group_clone = paste0(patient_id_short, clone_label),
+         stat_group_cluster = paste0(patient_id_short, cluster_label)) %>% 
+  mutate(value = JAK.STAT.pathway)
+
+# anno_data_test <- anno_data_sub %>% 
+#   group_by(sample_id, patient_id_short, cluster_label) %>% 
+#   summarise(value = mean(JAK.STAT.pathway)) %>% 
+#   select(-sample_id) %>% 
+#   ungroup()
+# 
+# anno_data_test
+
+icnv_boxplot1 <- ggplot(anno_data_sub, aes(clone_label, value)) +
+  geom_violin(aes(clone_label, value, color = clone_label)) +
+  geom_boxplot(aes(clone_label, value, color = clone_label), outlier.shape = NA) +
+  facet_wrap(~patient_id_short, ncol = 1) +
+  stat_compare_means(ref.group = ".all.", hide.ns = T, label = "p.signif", method.args = list(alternative = "greater"), label.y.npc = 0.8, paired = F) +
+  scale_color_manual(values = clrs$clone_label) +
+  remove_xaxis +
+  labs(y = "JAK.STAT PROGENy score")
+
+icnv_boxplot2 <- ggplot(anno_data_sub, aes(cluster_label, value, group = cluster_label)) +
+  geom_violin(aes(cluster_label, value, color = cluster_label, group = cluster_label)) +
+  geom_boxplot(aes(cluster_label, value, color = cluster_label, group = cluster_label), outlier.shape = NA) +
+  facet_wrap(~patient_id_short, ncol = 1) +
+  stat_compare_means(ref.group = ".all.", hide.ns = T, label = "p.signif", method.args = list(alternative = "greater"), label.y.npc = 0.8, paired = F, data = select(anno_data_sub, cluster_label, value, patient_id_short)) +
+  scale_color_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  remove_xaxis +
+  labs(y = "JAK.STAT PROGENy score")
+
+icnv_boxplot_grid <- plot_grid(icnv_boxplot1 + remove_guides, icnv_boxplot2 + remove_guides, ncol = 2)
+
+icnv_boxplot_grid
 
 ```
+
+# summary heatmaps
+
+```{r chunk_360_140, fig.width=11.5, fig.height=4.5}
+
+rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
+scale_breaks <- c(seq(-1, 0, length.out = 4)[-4], 0, seq(0, 3, length.out = 4)[-1])
+
+heat_theme <- list(
+  theme(
+    axis.text.x = element_blank(),
+    axis.line = element_blank(),
+    axis.ticks = element_blank(),
+    axis.title.x = element_blank(),
+    plot.title = element_text(face = "plain", hjust = 0.5),
+    plot.margin = margin(2, 2, 2, 2, "pt"),
+  ),
+  scale_fill_gradientn(colours = rdbu, 
+                       values = scales::rescale(scale_breaks),
+                       breaks = c(-1, 0, 1, 2, 3), 
+                       limits = c(-1, 3),
+                       na.value = "grey50")
+)
+
+anno_data_summary_jakstat <- anno_data %>% 
+  filter(str_detect(cluster_label, "ancer")) %>% 
+  group_by(patient_id_short) %>% 
+  summarise(median_value = median(JAK.STAT.pathway, na.rm = T)) %>% 
+  ungroup() %>% 
+  arrange(desc(median_value)) %>% 
+  mutate(patient_id_short = ordered(patient_id_short, levels = unique(patient_id_short)),
+         yhelper = "Median JAK/STAT score")
+
+anno_data_summary_cluster <- anno_data %>% 
+  filter(str_detect(cluster_label, "ancer")) %>% 
+  group_by(cluster_label, patient_id_short) %>% 
+  summarise(median_value = median(JAK.STAT.pathway, na.rm = T)) %>% 
+  ungroup() %>% 
+  arrange(desc(cluster_label == "Cancer.cell.3"), desc(median_value)) %>% 
+  mutate(patient_id_short = ordered(patient_id_short, levels = levels(anno_data_summary_jakstat$patient_id_short)))
+
+anno_data_summary_clone <- anno_data %>% 
+  filter(!is.na(clone_label)) %>% 
+  ## collapse clones (cut tree earlier)
+  mutate(clone_label = str_sub(clone_label, 0, 17)) %>%
+  mutate(clone_label = ifelse(clone_label == "observation.1.2", "observation.1.2.1", clone_label)) %>%
+  group_by(clone_label, patient_id_short) %>% 
+  summarise(median_value = median(JAK.STAT.pathway, na.rm = T)) %>% 
+  ungroup() %>% 
+  mutate(patient_id_short = ordered(patient_id_short, levels = levels(anno_data_summary_jakstat$patient_id_short)))
+  
+anno_data_summary_mutsig <- anno_data %>% 
+  distinct(patient_id_short, consensus_signature) %>% 
+  mutate(patient_id_short = ordered(patient_id_short, levels = levels(anno_data_summary_jakstat$patient_id_short))) %>% 
+  mutate(mutsig_helper = "Mut. signature")
+
+anno_data_summary_fraction <- anno_data %>% 
+  group_by(patient_id_short, cluster_label) %>% 
+  tally %>% 
+  group_by(patient_id_short) %>% 
+  mutate(ntotal = sum(n),
+         nrel = n/ntotal*100) %>% 
+  ungroup() %>% 
+  mutate(patient_id_short = ordered(patient_id_short, levels = levels(anno_data_summary_jakstat$patient_id_short)))
+
+heat_clone <- ggplot(anno_data_summary_clone, aes(patient_id_short, clone_label, fill = median_value)) + 
+  geom_tile() +
+  labs(x = "Patient", y = "InferCNV\nClone", title = "JAK/STAT PROGENy score", fill = "JAK/STAT\nscore") +
+  heat_theme
+
+heat_cluster <- ggplot(anno_data_summary_cluster, aes(patient_id_short, cluster_label, fill = median_value)) + 
+  geom_tile() +
+  labs(x = "Patient", y = "Cluster", fill = "JAK/STAT\nscore") +
+  heat_theme
+
+heat_jakstat <- ggplot(anno_data_summary_jakstat, aes(patient_id_short, yhelper, fill = median_value)) + 
+  geom_tile() +
+  labs(x = "Patient", y = "", fill = "JAK/STAT\nscore") +
+  heat_theme
+
+heat_fraction <- filter(anno_data_summary_fraction, cluster_label == "Cancer.cell.3") %>% 
+  mutate(cluster_label_helper = "Cancer.cell.3 frac. [%]") %>% 
+  ggplot() +
+  geom_tile(aes(patient_id_short, cluster_label_helper, fill = nrel)) +
+  geom_text(aes(patient_id_short, cluster_label_helper, label = round(nrel, 0)), color = "white", size = 3) +
+  remove_xaxis +
+  scale_fill_gradientn(colors = viridis(9)) + 
+  theme(axis.ticks = element_blank(),
+        axis.line = element_blank(),
+        axis.title = element_blank(), 
+        plot.margin = margin(2, 2, 2, 2, "pt"))
+
+heat_anno <- ggplot(anno_data_summary_mutsig, aes(patient_id_short, mutsig_helper, fill = consensus_signature)) +
+  geom_tile() +
+  labs(x = "Patient", y = "") +
+  scale_fill_manual(values = clrs$consensus_signature[c(mois, "Undetermined")]) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5), 
+        axis.ticks = element_blank(),
+        axis.line = element_blank(),
+        plot.margin = margin(2, 2, 2, 2, "pt"))
+
+heat_grid <- plot_grid(
+  heat_clone + remove_guides, 
+  heat_cluster + remove_guides, 
+  heat_jakstat + remove_guides, 
+  heat_fraction + remove_guides,
+  heat_anno + remove_guides, 
+  ncol = 1, align = "v", 
+  rel_heights = c(0.28, 0.38, 0.07, 0.07, 0.2)
+)
+
+ggdraw() +
+  draw_plot(heat_grid, width = 0.85, height = 1) +
+  draw_grob(get_legend(heat_cluster), x = 0.87, y = 0)
+
+ggsave("figures/360_cancer_cell_infercnv_umaps/360_JAKSTAT_heatmap.pdf", width = 11.5, height = 4.5)
+
+```
+
+
+# main text grid
+
+```{r chunk_360_150, fig.width=12, fig.height=5}
+
+icnv_grid <- ggdraw() +
+  draw_plot(umap_grid, width = 0.3, height = 1, x = 0.3, y = 0) +
+  draw_plot(icnv_boxplot_grid, width = 0.4, height = 1, x = 0.6, y = 0)
+
+icnv_grid
+ggsave("figures/360_cancer_cell_infercnv_umaps/icnv_grid.pdf", width = 8, height = 3)
+
+```
+
 
 
 ## session info 

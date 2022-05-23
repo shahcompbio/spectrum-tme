@@ -198,11 +198,11 @@ cluster_label:
     CD4.T.CXCL13: "#891417"
     # CD4.T.ISG: "#ff0000"
     CD4.T.reg: "#ad2572"
-    CD4.Th17: "#7f54f3"
     CD8.T.cytotoxic: "#43a047"
     # CD8.T.FOS: "#00897b"
     CD8.T.CXCL13: "#8bc34a"
     CD8.T.ISG: "#ff2e99"
+    ILC: "#7f54f3"
     NK.CD56: "#4FC3F7"
     NK.cytotoxic: "#00ACC1"
     # Stressed.T.NK: "#4a4549"
@@ -282,8 +282,7 @@ cluster_label_sub:
     # NK.CD56: "#4FC3F7"
     # NK.cytotoxic: "#00ACC1"
     # Cycling.T.NK: "#FF8F00"
-    CD4.T.naive.centr.mem.1: "#995858" ######### updated in v7
-    CD4.T.naive.centr.mem.2: "#ffc2c2" ######### updated in v7
+    CD4.T.naive.centr.mem: "#ffc2c2" ######### updated in v7
     CD4.T.effector.memory: "#ff6b6b"
     CD4.T.dysfunc.early: "#ff0000"
     CD4.T.dysfunc.late.1: "#b30000"
@@ -293,10 +292,8 @@ cluster_label_sub:
     CD4.T.reg.2: "#ba00ff"
     CD4.T.reg.3: "#64008a"
     CD4.T.reg.ISG: "#5c4295"
-    CD4.Th17.1: "#ffbe00"
-    CD4.Th17.2: "#b68800"
-    CD4.Th17.3: "#e48b00" ######### updated in v7
-    CD8.T.naive.centr.mem: "#52ff52"
+    CD8.T.naive.centr.mem.1: "#52ffae" ######### updated in v7
+    CD8.T.naive.centr.mem.2: "#52ff52"
     CD8.T.effector.memory: "#27af27"
     CD8.T.cytotoxic: "#005c00"
     CD8.T.dysfunc.early: "#b9cf8c"
@@ -304,6 +301,9 @@ cluster_label_sub:
     CD8.T.dysfunc.ISG: "#99e300" ######### updated in v7
     CD8.T.ISG.early: "#324a00" ######### updated in v7
     CD8.T.ISG.late: "#000000" ######### updated in v7
+    ILC.a: "#ffbe00"
+    ILC.b: "#e48b00"
+    ILC.c: "#b68800" ######### updated in v7
     gd.T.cell: "#817100"
     NK.cytotoxic.GZMH: "#00016b"
     NK.cytotoxic.SPON2.1: "#4848ff"
@@ -320,9 +320,9 @@ cluster_label_sub:
     Cycling.CD8.T.2: "#e9c17d"
     Cycling.CD8.T.3: "#d5bc05"
     Cycling.CD8.T.4: "#eee49b"
-    Cycling.NK.1: "#6f6203"
-    Cycling.NK.2: "#8c9900"
-    Cycling.NK.3: "#d7e53e"
+    Cycling.CD8.T.5: "#6f6203"
+    Cycling.CD8.T.6: "#8c9900"
+    Cycling.NK: "#d7e53e"
 expression_module:
   CD8.Naive: "#52ff52"
   CD8.Predysfunctional: "#b9cf8c"

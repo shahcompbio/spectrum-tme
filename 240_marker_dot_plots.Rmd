@@ -51,20 +51,51 @@ load_super_set <- function(super_set, cluster_var) {
   seu_obj <- read_rds(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/", super_set, "_processed_filtered_annotated.rds"))
   
   marker_tbl_full <- read_tsv(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", super_set, "_marker_table_annotated.tsv"))
+  marker_mat <- read_tsv(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", super_set, "_marker_sheet.tsv")) %>% 
+    slice(1:20)
   
   if (as_label(cluster_var) == "cluster_label_sub") {
     
     marker_tbl_full <- read_tsv(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", super_set, "_marker_table_annotated_full.tsv"))
+    marker_mat <- read_tsv(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", super_set, "_marker_sheet_full.tsv")) %>% 
+      slice(1:20)
   
   }
   
-  marker_tbl <- marker_tbl_full %>% 
+  marker_list <- marker_mat %>% 
+    select(-rank) %>% 
+    as.list %>% 
+    lapply(function(x) x[!is.na(x)]) %>% 
+    .[names(.)[names(.) %in% unique(unlist(seu_obj[[as_label(cluster_var)]]))]]
+  
+  defining_genes <- list()
+  for (i in 1:length(marker_list)) {
+    defining_genes[[i]] <- setdiff(
+      marker_list[[i]], 
+      unique(unlist(marker_list[-i]))
+    )
+  }
+  
+  defining_genes <- setNames(defining_genes, names(marker_list)) %>% 
+    enframe("cluster_marker", "gene") %>% 
+    unnest(gene) %>% 
+    group_by(cluster_marker) %>% 
+    slice(1:2) %>% 
+    ungroup()
+  
+  top_marker_tbl <- marker_tbl_full %>% 
     group_by(!!cluster_var) %>% 
     arrange(-avg_logFC) %>% 
-    filter(p_val_adj < 0.01) %>% 
-    slice(1:5) %>% 
+    filter(p_val_adj < 0.01, avg_logFC > 0) %>% 
+    slice(1:20) %>% 
     filter(!!cluster_var %in% cois) %>% 
-    select(cluster_marker = !!cluster_var, gene) %>% 
+    select(cluster_marker = !!cluster_var, gene)
+  
+  marker_tbl <- bind_rows(defining_genes, top_marker_tbl) %>% 
+    distinct(cluster_marker, gene) %>% 
+    group_by(cluster_marker) %>% 
+    slice(1:5) %>% 
+    ungroup() %>% 
     mutate(cluster_marker = ordered(cluster_marker, levels = cois)) %>% 
     arrange(cluster_marker)
   
@@ -114,7 +145,7 @@ rm(dot_plot_input_myeloid)
 
 dot_plot_input_tcell <- load_super_set("T.super", cluster_label)
 
-dot_plot_data_tcell <- marker_dot_plot_preprocess(dot_plot_input_tcell$seu_obj, dot_plot_input_tcell$marker_tbl, cluster_label)
+dot_plot_data_tcell <- marker_dot_plot_preprocess(dot_plot_input_tcell$seu_obj, dot_plot_input_tcell$marker_tbl, cluster_label, canonical_genes = c("CD4", "FOXP3", "CD8A", "CD8B", "GNLY"))
 
 pdots_tcell <- plot_marker_dots(dot_plot_data_tcell, "T.super", cluster_label)
 
@@ -131,7 +162,7 @@ rm(dot_plot_input_tcell)
 
 dot_plot_input_tcell_sub <- load_super_set("T.super", cluster_label_sub)
 
-dot_plot_data_tcell_sub <- marker_dot_plot_preprocess(dot_plot_input_tcell_sub$seu_obj, dot_plot_input_tcell_sub$marker_tbl, cluster_label_sub, top_n = 3)
+dot_plot_data_tcell_sub <- marker_dot_plot_preprocess(dot_plot_input_tcell_sub$seu_obj, dot_plot_input_tcell_sub$marker_tbl, cluster_label_sub, top_n = 3, canonical_genes = c("CD4", "FOXP3", "CD8A", "CD8B", "GNLY"))
 
 pdots_tcell_sub <- plot_marker_dots(dot_plot_data_tcell_sub, "T.super", cluster_label_sub)
 
@@ -176,6 +207,7 @@ rm(dot_plot_input_endo)
 
 
 ```
+
 
 
 # session info 

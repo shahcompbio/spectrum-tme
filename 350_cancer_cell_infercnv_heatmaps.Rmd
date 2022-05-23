@@ -85,11 +85,16 @@ inferCNV_obj_files <- paste0(inferCNV_dirs, "/run.final.infercnv_obj")
 
 inferCNV_clone_tbl <- lapply(inferCNV_clone_files, read_csv) %>% 
   bind_rows %>% 
-  rename(clone_label = cluster_name)
+  rename(clone_label = cluster_name) %>% 
+  mutate(clone_label = str_sub(clone_label, 0, 17)) %>%
+  mutate(clone_label = ifelse(clone_label == "observation.1.2", "observation.1.2.1", clone_label)) %>% 
+  mutate(clone_label = ifelse(clone_label == "observation.1.1", "observation.1.1.1", clone_label))
 
 inferCNV_obj_list <- lapply(inferCNV_obj_files, read_rds)
 
-clrs$clone_label <- magma(length(unique(inferCNV_clone_tbl$clone_label)))
+n_clones <- length(unique(inferCNV_clone_tbl$clone_label))
+
+clrs$clone_label <- magma(n_clones+1)[-c(1)]
 names(clrs$clone_label) <- sort(unique(inferCNV_clone_tbl$clone_label))
 
 ```
@@ -141,6 +146,8 @@ anno_data <- seu_obj_cc %>%
   mutate(cell_id_order_clone = ordered(cell_id, levels = cell_order)) %>%
   arrange(consensus_signature, patient_id_short, cluster_label, tumor_supersite, clone_label) %>% 
   mutate(cell_id_order_cluster = ordered(cell_id, levels = as.character(cell_id))) %>% 
+  arrange(consensus_signature, patient_id_short, clone_label, tumor_supersite, cluster_label) %>% 
+  mutate(cell_id_order_clone2 = ordered(cell_id, levels = as.character(cell_id))) %>% 
   arrange(consensus_signature, patient_id_short, tumor_supersite, clone_label, cluster_label) %>%
   mutate(cell_id_order_cohort = ordered(cell_id, levels = as.character(cell_id))) %>% 
   mutate(helper_var_p = " Patient",
@@ -169,7 +176,7 @@ plot_data <- as.data.frame(expr_cc) %>%
   left_join(iCNV_gene_anno, by = "gene") %>% 
   filter(!is.na(chr)) %>% 
   # filter(chr %in% c(" chr19", " chr20")) %>%
-  left_join(select(anno_data, cell_id, cell_id_order_clone, cell_id_order_cluster, cell_id_order_cohort, patient_id_short, consensus_signature), 
+  left_join(select(anno_data, cell_id, cell_id_order_clone, cell_id_order_cluster, cell_id_order_cohort, cell_id_order_clone2, patient_id_short, consensus_signature), 
             by = "cell_id") %>% 
   mutate(value_cut = value) %>% 
   mutate(value_cut = ifelse(value > 1.25, 1.25, ifelse(value < 0.75, 0.75, value))) %>%
@@ -224,12 +231,12 @@ plot_anno_helper <- function(var_column, helper_var_column,
   
 }
 
-plot_inferCNV_heat_wrapper <- function(pids, group_label = paste0(pids, collapse = "_"), cell_id_order, downsample = F, downsample_var = sample_id) {
+plot_inferCNV_heat_wrapper <- function(pids, group_label = paste0(pids, collapse = "_"), cell_id_order, downsample = F, downsample_var = sample_id, yscaling = 2000, return_data = F) {
   
   cell_id_order <- enquo(cell_id_order)
   downsample_var <- enquo(downsample_var)
   plot_data_sub <- filter(plot_data, patient_id_short %in% pids)
-  # plot_data_sub <- filter(plot_data_sub, chr %in% c(" chr6", " chr20"))
+  # plot_data_sub <- filter(plot_data_sub, chr %in% c(" chr20"))
   anno_data_sub <- filter(anno_data, patient_id_short %in% pids)
   segments_tbl_sub <- filter(segments_tbl, patient_id_short %in% pids) %>% 
     mutate(ycut = quantile(y, 0.8)) %>% 
@@ -237,7 +244,7 @@ plot_inferCNV_heat_wrapper <- function(pids, group_label = paste0(pids, collapse
     filter(yend > ycut)
   
   ncells <- unique(length(anno_data_sub$cell_id))
-  plotheight <- ncells/2000
+  plotheight <- ncells/yscaling
   
   if (downsample != F) {
     
@@ -251,76 +258,90 @@ plot_inferCNV_heat_wrapper <- function(pids, group_label = paste0(pids, collapse
     plot_data_sub <- filter(plot_data_sub, cell_id %in% cell_ids_sample)
     
     ncells <- unique(length(anno_data_sub$cell_id))
-    plotheight <- ncells/downsample/4
+    plotheight <- ncells/downsample/(yscaling/500)
     
   }
   
-  plot_cnv <- ggplot(plot_data_sub) +
-    # geom_tile(aes(rank, cell_id, fill = value_cut)) +
-    ggrastr::geom_tile_rast(aes(rank, !!cell_id_order, fill = value_cut),
-                            raster.dpi = 10, scale = 0.1) +
-    facet_grid(vars(consensus_signature, patient_id_short), vars(chr), scales = "free", space = "free") +
-    theme_void() +
-    theme(panel.spacing.x = unit(2, "points"),
-          panel.spacing.y = unit(3, "points"),
-          strip.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
-          strip.text.y = element_blank()) +
-    labs(fill = "inferCNV\nexpression") +
-    scale_fill_gradient2(midpoint = 1, low = "#3182bd", mid = "#cccccc", high = "#fc8d59") +
-    scale_x_continuous(expand = c(0, 0))
-  
-  patient_label_y_tbl <- anno_data_sub %>% 
-    group_by(patient_id_short, consensus_signature) %>% 
-    summarise(patient_label_y = n()/2) %>% 
-    mutate(helper_var_p = " Patient")
-  
-  plot_anno_patient <- plot_anno_helper(patient_id_short, helper_var_p, !!cell_id_order, "discrete", anno_data_sub) +
-    geom_text(aes(helper_var_p, patient_label_y, label = patient_id_short),
-              color = "white", size = 3, angle = 90,
-              data = patient_label_y_tbl)
-  
-  plot_anno_site <- plot_anno_helper(tumor_supersite, helper_var_s, !!cell_id_order, "discrete", anno_data_sub)
-  plot_anno_cluster <- plot_anno_helper(cluster_label, helper_var_c, !!cell_id_order, "discrete", anno_data_sub)
-  plot_anno_clone <- plot_anno_helper(clone_label, helper_var_i, !!cell_id_order, "discrete", anno_data_sub)
-  plot_anno_mutsig <- plot_anno_helper(consensus_signature, helper_var_m, !!cell_id_order, "discrete", anno_data_sub)
-  plot_anno_6pbaf <- plot_anno_helper(BAF6p, helper_var_6pBAF, !!cell_id_order, "continuous", anno_data_sub)
-  plot_anno_jakstat <- plot_anno_helper(JAK.STAT.pathway, helper_var_jakstat, !!cell_id_order, "continuous", anno_data_sub)
-  plot_anno_nfkb <- plot_anno_helper(NFkB.pathway, helper_var_nfkb, !!cell_id_order, "continuous", anno_data_sub)
-  plot_anno_tnfa <- plot_anno_helper(TNFa.pathway, helper_var_tnfa, !!cell_id_order, "continuous", anno_data_sub)
-  plot_anno_tgfb <- plot_anno_helper(TGFb.pathway, helper_var_tgfb, !!cell_id_order, "continuous", anno_data_sub)
-  plot_anno_hypoxia <- plot_anno_helper(Hypoxia.pathway, helper_var_hypoxia, !!cell_id_order, "continuous", anno_data_sub)
-  
-  if (as_label(cell_id_order) == "cell_id_order_clone") {
+  if (!return_data) {
     
-    plot_dendro <- ggplot(segments_tbl_sub) +
-      geom_segment(aes(x = -y, y = x, xend = -yend, yend = xend),
-                   size = 0.5) +
-      facet_grid(patient_id_short~helper_var_d, 
-                 scales = "free", space = "free") +
+    plot_cnv <- ggplot(plot_data_sub) +
+      # geom_tile(aes(rank, cell_id, fill = value_cut)) +
+      ggrastr::geom_tile_rast(aes(rank, !!cell_id_order, fill = value_cut),
+                              raster.dpi = 10, scale = 0.1) +
+      facet_grid(vars(consensus_signature, patient_id_short), vars(chr), scales = "free", space = "free") +
       theme_void() +
-      theme(panel.spacing = unit(0, "points"),
-            panel.spacing.x = unit(0, "points"),
+      theme(panel.spacing.x = unit(2, "points"),
             panel.spacing.y = unit(3, "points"),
-            strip.text = element_blank()) +
-      scale_y_continuous(expand = c(0, 0))
+            strip.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
+            strip.text.y = element_blank()) +
+      labs(fill = "inferCNV\nexpression") +
+      scale_fill_gradient2(midpoint = 1, low = "#3182bd", mid = "#cccccc", high = "#fc8d59") +
+      scale_x_continuous(expand = c(0, 0))
     
-    pg <- plot_grid(plot_dendro, plot_anno_patient, plot_anno_mutsig, plot_anno_site, plot_anno_clone, plot_anno_6pbaf, plot_anno_cluster, plot_anno_jakstat, plot_anno_nfkb, plot_anno_tnfa, plot_anno_tgfb, plot_anno_hypoxia, ggdraw(), plot_cnv+remove_guides, nrow = 1, align = "h", axis = "tb", rel_widths = c(0.1, rep(0.02, 11), 0.005, 1-0.1-11*0.02-0.005))
+    patient_label_y_tbl <- anno_data_sub %>% 
+      group_by(patient_id_short, consensus_signature) %>% 
+      summarise(patient_label_y = n()/2) %>% 
+      mutate(helper_var_p = " Patient")
     
-  } else {
+    plot_anno_patient <- plot_anno_helper(patient_id_short, helper_var_p, !!cell_id_order, "discrete", anno_data_sub) +
+      geom_text(aes(helper_var_p, patient_label_y, label = patient_id_short),
+                color = "white", size = 3, angle = 90,
+                data = patient_label_y_tbl)
     
-    pg <- plot_grid(ggdraw(), plot_anno_patient, plot_anno_mutsig, plot_anno_site, plot_anno_clone, plot_anno_6pbaf, plot_anno_cluster, plot_anno_jakstat, plot_anno_nfkb, plot_anno_tnfa, plot_anno_tgfb, plot_anno_hypoxia, ggdraw(), plot_cnv+remove_guides, nrow = 1, align = "h", axis = "tb", rel_widths = c(0.1, rep(0.02, 11), 0.005, 1-0.1-11*0.02-0.005))
+    plot_anno_site <- plot_anno_helper(tumor_supersite, helper_var_s, !!cell_id_order, "discrete", anno_data_sub)
+    plot_anno_cluster <- plot_anno_helper(cluster_label, helper_var_c, !!cell_id_order, "discrete", anno_data_sub)
+    plot_anno_clone <- plot_anno_helper(clone_label, helper_var_i, !!cell_id_order, "discrete", anno_data_sub)
+    plot_anno_mutsig <- plot_anno_helper(consensus_signature, helper_var_m, !!cell_id_order, "discrete", anno_data_sub)
+    plot_anno_6pbaf <- plot_anno_helper(BAF6p, helper_var_6pBAF, !!cell_id_order, "continuous", anno_data_sub)
+    plot_anno_jakstat <- plot_anno_helper(JAK.STAT.pathway, helper_var_jakstat, !!cell_id_order, "continuous", anno_data_sub)
+    plot_anno_nfkb <- plot_anno_helper(NFkB.pathway, helper_var_nfkb, !!cell_id_order, "continuous", anno_data_sub)
+    plot_anno_tnfa <- plot_anno_helper(TNFa.pathway, helper_var_tnfa, !!cell_id_order, "continuous", anno_data_sub)
+    plot_anno_tgfb <- plot_anno_helper(TGFb.pathway, helper_var_tgfb, !!cell_id_order, "continuous", anno_data_sub)
+    plot_anno_hypoxia <- plot_anno_helper(Hypoxia.pathway, helper_var_hypoxia, !!cell_id_order, "continuous", anno_data_sub)
+    
+    if (as_label(cell_id_order) == "cell_id_order_clone") {
+      
+      plot_dendro <- ggplot(segments_tbl_sub) +
+        geom_segment(aes(x = -y, y = x, xend = -yend, yend = xend),
+                     size = 0.5) +
+        facet_grid(patient_id_short~helper_var_d, 
+                   scales = "free", space = "free") +
+        theme_void() +
+        theme(panel.spacing = unit(0, "points"),
+              panel.spacing.x = unit(0, "points"),
+              panel.spacing.y = unit(3, "points"),
+              strip.text = element_blank()) +
+        scale_y_continuous(expand = c(0, 0))
+      
+      pg <- plot_grid(plot_dendro, plot_anno_patient, plot_anno_mutsig, plot_anno_site, plot_anno_clone, 
+                      # plot_anno_6pbaf, 
+                      plot_anno_cluster, plot_anno_jakstat, plot_anno_nfkb, plot_anno_tnfa, plot_anno_tgfb, plot_anno_hypoxia, ggdraw(), plot_cnv+remove_guides, nrow = 1, align = "h", axis = "tb", rel_widths = c(0.1, rep(0.02, 10), 0.005, 1-0.1-10*0.02-0.005))
+      
+    } else {
+      
+      pg <- plot_grid(ggdraw(), plot_anno_patient, plot_anno_mutsig, plot_anno_site, plot_anno_clone, 
+                      # plot_anno_6pbaf, 
+                      plot_anno_cluster, plot_anno_jakstat, plot_anno_nfkb, plot_anno_tnfa, plot_anno_tgfb, plot_anno_hypoxia, ggdraw(), plot_cnv+remove_guides, nrow = 1, align = "h", axis = "tb", rel_widths = c(0.1, rep(0.02, 10), 0.005, 1-0.1-10*0.02-0.005))
+      
+    }
+    
+    ggsave(paste0("figures/350_cancer_cell_infercnv/inferCNV_heatmap_", group_label, ".pdf"), pg, width = 7, height = 0.65+plotheight)
+    # ggsave(paste0("figures/350_cancer_cell_infercnv/inferCNV_heatmap_", group_label, ".png"), pg, width = 7, height = 1+ncells/2000)
     
   }
   
-  ggsave(paste0("figures/350_cancer_cell_infercnv/inferCNV_heatmap_", group_label, ".pdf"), pg, width = 7, height = 0.65+plotheight)
-  # ggsave(paste0("figures/350_cancer_cell_infercnv/inferCNV_heatmap_", group_label, ".png"), pg, width = 7, height = 1+ncells/2000)
+  result <- paste0(group_label, " DONE")
   
-  return(print(paste0(group_label, " DONE")))
+  if (return_data) result <- list(plot_data = plot_data_sub, anno_data = anno_data_sub)
+  
+  return(result)
   
 }
 
-plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_upper", "clone")
-plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_lower", "cluster")
+plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_cluster", cell_id_order_cluster, yscaling = 4000)
+plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_clone", cell_id_order_clone2, yscaling = 4000)
+# plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_clone_dendro", cell_id_order_clone, yscaling = 4000)
+
 
 # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "Undetermined")$patient_id_short), "Undetermined_clone")
 # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "Undetermined")$patient_id_short), "Undetermined_cluster", "cluster")
@@ -336,13 +357,46 @@ plot_inferCNV_heat_wrapper(c("007", "036", "107"), "pois_lower", "cluster")
 # 
 # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "HRD-Dup")$patient_id_short), "HRD-Dup_clone")
 # plot_inferCNV_heat_wrapper(unique(filter(scrna_meta_tbl, consensus_signature == "HRD-Dup")$patient_id_short), "HRD-Dup_cluster", "cluster")
-# 
-# plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_patients_balanced", cell_id_order_cohort, 50, patient_id_short)
+
+plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_patients_balanced", cell_id_order_cohort, 50, patient_id_short)
+plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_patients_balanced_clonesort", cell_id_order_clone2, 50, patient_id_short)
+plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_patients_balanced_clustersort", cell_id_order_cluster, 50, patient_id_short)
 # plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_samples_balanced", cell_id_order_cohort, 10, sample_id)
+
 
 ```
 
+```{r chunk_350_080, fig.width=7, fig.height=20}
 
+cohort_data <- plot_inferCNV_heat_wrapper(sort(unique(anno_data$patient_id_short)), "cohort_patients_balanced_clonesort", cell_id_order_clone2, 50, patient_id_short, return_data = T)
+
+cohort_data_sum <- cohort_data$plot_data %>% 
+  mutate(value_scaled = (value_cut - 1)*4) %>% 
+  group_by(gene, chr, rank, consensus_signature) %>% 
+  mutate() %>% 
+  summarise(n_cells = length(value_scaled),
+            value_sum = sum(value_scaled)) %>% 
+  mutate(value_rel = value_sum/n_cells) %>% 
+  arrange(-value_rel, -value_sum) %>% 
+  ungroup() %>% 
+  mutate(updown = ifelse(value_rel > 0, "up", "down"))
+
+cohort_data_sum %>% 
+  filter(value_rel > 0.5 | value_rel < 0.5)
+
+```
+
+```{r chunk_350_090, fig.width=7, fig.height=20}
+
+ggplot(cohort_data_sum) +
+  geom_bar(aes(rank, value_rel, fill = updown), stat = "identity") +
+  scale_fill_manual(values = c(up = "#fc8d59", down = "#3182bd")) +
+  facet_grid(consensus_signature~chr, scales = "free_x", space = "free_x") +
+  labs(y = "Fraction of patients\nwith AMP or DEL [%]") +
+  remove_xaxis +
+  remove_guides
+
+```
 
 ## session info 
 
