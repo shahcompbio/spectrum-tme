@@ -3,6 +3,9 @@
 
 ## input: seurat object and two-column cluster/marker table
 
+## calc_fc computes the fold change for each gene of interest 
+## across every cluster vs all clusters
+
 calc_fc <- function(data_tbl, coi, cluster_var) {
   cluster_var <- enquo(cluster_var)
   data_tbl %>%
@@ -23,7 +26,8 @@ calc_fc <- function(data_tbl, coi, cluster_var) {
 }
 
 marker_dot_plot_preprocess <- function(seu_obj, marker_tbl, cluster_var = cluster_label, 
-                                       sample_ncells = 10000, sample_seed = 123, top_n = 5) {
+                                       sample_ncells = 10000, sample_seed = 123, top_n = 5, 
+                                       canonical_genes = NULL) {
   
   marker_tbl <- marker_tbl %>% 
     group_by(cluster_marker) %>% 
@@ -32,8 +36,15 @@ marker_dot_plot_preprocess <- function(seu_obj, marker_tbl, cluster_var = cluste
   
   cluster_var <- enquo(cluster_var)
   cois <- unique(pull(marker_tbl, cluster_marker))
-    
-  expr_data <- FetchData(seu_obj, c(as_label(cluster_var), "sample", unique(marker_tbl$gene)), 
+  gois <- unique(marker_tbl$gene)
+  
+  if (!is.null(canonical_genes)) {
+    gois <- unique(c(gois, canonical_genes))
+    marker_tbl <- tibble(cluster_marker = "canonical", gene = canonical_genes) %>% 
+      bind_rows(marker_tbl)
+  }
+
+  expr_data <- FetchData(seu_obj, c(as_label(cluster_var), "sample", gois), 
                          slot = "data") %>% 
     as_tibble()
   
@@ -71,7 +82,8 @@ plot_marker_dots <- function(dot_plot_data, super_set, cluster_var) {
   
   dot_plot_data <- dot_plot_data %>% 
     mutate(cluster_numeric_var = as.numeric(!!cluster_var),
-           cluster_numeric_marker = as.numeric(cluster_marker))
+           cluster_numeric_marker = as.numeric(cluster_marker)) %>% 
+    mutate(cluster_numeric_marker = ifelse(is.na(cluster_numeric_marker), 0, cluster_numeric_marker))
   
   dot_plot <- ggplot(dot_plot_data) + 
     geom_point(aes(gene, !!cluster_var, color = logFC, size = pct_expr)) +
@@ -91,6 +103,7 @@ plot_marker_dots <- function(dot_plot_data, super_set, cluster_var) {
   
   strip_elements <- which(grepl('strip-', g$layout$name))
   fills <- rep(clrs[[as_label(cluster_var)]][[super_set]], times = 2)
+  if (any(dot_plot_data$cluster_numeric_marker == 0)) fills <- c("grey80", rep(clrs[[as_label(cluster_var)]][[super_set]], times = 2))
   k <- 1
   for (i in strip_elements) {
     j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))

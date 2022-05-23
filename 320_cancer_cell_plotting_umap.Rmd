@@ -598,8 +598,8 @@ ggsave("figures/320_cancer_cell_plotting_umap/003_cluster_marker_heatmap.pdf", h
 
 plot_data_vio <- plot_data %>% 
   # sample_n(10000) %>% 
-  select(umapharmony_1, umapharmony_2, cluster_label, consensus_signature, consensus_signature_short, tumor_supersite, tumor_megasite, all_of(gois), all_of(pois), sample_id) %>% 
-  gather(key, value, -umapharmony_1, -umapharmony_2, -cluster_label, -consensus_signature, -consensus_signature_short, -tumor_supersite, -tumor_megasite, -sample_id) %>% 
+  select(umapharmony_1, umapharmony_2, cluster_label, consensus_signature, consensus_signature_short, tumor_supersite, tumor_megasite, all_of(gois), all_of(pois), sample_id, patient_id_short) %>% 
+  gather(key, value, -umapharmony_1, -umapharmony_2, -cluster_label, -consensus_signature, -consensus_signature_short, -tumor_supersite, -tumor_megasite, -sample_id, -patient_id_short) %>% 
   # mutate(value = ifelse(value > 3, 3, value)) %>% 
   filter(str_detect(cluster_label, "^Cancer.cell")) %>% 
   mutate(cluster_label_num = str_remove_all(cluster_label, "Cancer.cell.")) %>% 
@@ -624,13 +624,15 @@ my_comparisons2 <- list(
   c("HRD", "HRP")
 )
 
-
+# violin_wrapper(cluster_label, "Cluster", pois_short, ".all.", "Expression", c(-1,8), 10, mut_filter = levels(unique(scrna_meta_tbl$consensus_signature)), site_filter = names(clrs$tumor_supersite), facet_site = F)
+  
 violin_wrapper <- function(group_column, group_var_label, keys, comps, y_label, ylims, ncol, plabel = "p.signif", mut_filter = mois, site_filter = names(clrs$tumor_supersite), facet_site = T) {
   
   group_column <- enquo(group_column)
   yrange <- ylims[2]-ylims[1]
   ylabels <- yrange*c(0.85,0.75,0.65)+ylims[1]
   clrs$cluster_label <- clrs$cluster_label$Ovarian.cancer.super
+  
   p <- plot_data_vio %>% 
     filter(key %in% keys) %>% 
     filter(consensus_signature %in% mut_filter) %>% 
@@ -951,6 +953,48 @@ plot_grid(violins_pw_mutsig, ggdraw(), violins_hla_mutsig,
           nrow = 1, align = "v", rel_widths = c(0.4, 0.05, 0.45))
 
 ggsave("figures/320_cancer_cell_plotting_umap/003_hla_pw_violins_mutsig.pdf", width = 10, height = 3)
+
+```
+
+## Boxplots pairwise site comparisons
+
+```{r chunk_320_110, fig.width=10, fig.height=3}
+
+
+plot_data_box_pairwise <- plot_data_vio_summary %>% 
+  group_by(patient_id_short, consensus_signature, 
+           tumor_megasite, key) %>% 
+  summarise(value = mean(value, na.rm = T)) %>% 
+  filter(tumor_megasite %in% c("Non-adnexa", "Adnexa")) %>% 
+  filter(consensus_signature != "Undetermined") %>% 
+  filter(key %in% "TGFb") %>% 
+  group_by(patient_id_short, key) %>% 
+  filter(n() == 2) %>% 
+  ungroup()
+
+ggplot(plot_data_box_pairwise, aes(tumor_megasite, value)) +
+  geom_boxplot(aes(tumor_megasite, value, color = tumor_megasite),
+               width = 0.5, size = 0.75, outlier.shape = NA) +
+  geom_boxplot(aes(tumor_megasite, value, fill = tumor_megasite),
+               color = "white", 
+               width = 0.5, outlier.shape = NA, size = 0.5) + 
+  geom_jitter(aes(tumor_megasite, value),
+              color = "black", width = 0.15, size = 0.25, alpha = 0.5) +
+  geom_line(aes(tumor_megasite, value, group = patient_id_short), 
+            alpha = 0.5) +
+  facet_grid(~consensus_signature) +
+  stat_compare_means(aes(tumor_megasite, value),
+                     comparisons = list(c("Adnexa", "Non-adnexa")), 
+                     data = plot_data_box_pairwise, 
+                     paired = T,
+                     tip.length = 0.01, hide.ns = F, 
+                     label = "p.signif") +
+  scale_color_manual(values = clrs$tumor_megasite) +
+  scale_fill_manual(values = clrs$tumor_megasite) +
+  guides(color = "none", fill = "none") +
+  labs(x = "Site", y = "TGFb PROGENy score") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
 
 ```
 

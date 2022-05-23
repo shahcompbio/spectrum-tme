@@ -40,7 +40,7 @@ cell_type_major <- "T.cell"
 louvain_resolution <- 0.3
 louvain_cluster <- "RNA_snn_res.0.3"
 pcut <- 0.05
-sois <- c("HRD-Dup", "HRD-Del", "FBI")
+mois <- c("HRD-Dup", "HRD-Del", "FBI")
 
 ```
 
@@ -114,16 +114,15 @@ add_umap_coord <- function(gg_obj) {
 }
 
 rdpi <- 75
-rh <- 7
-rw <- 7
+rscale <- 0.5
 rs <- 0.01
 
 dc_plot_cluster <- ggplot(plot_data_uniq) +
   ggrastr::geom_point_rast(aes(DC_1, DC_2, color = cluster_label_sub), 
                            size = rs, alpha = 1, 
-                           raster.dpi = rdpi, raster.height = rh, raster.width = rw) +
+                           raster.dpi = rdpi, scale = rscale) +
   # theme_void() +
-  scale_color_manual(values = clrs$cluster_label_sub[[coi]]) +
+  scale_color_manual(values = clrs$cluster_label_sub[[coi]][str_detect(names(clrs$cluster_label_sub[[coi]]), "^CD8")]) +
   guides(color = guide_legend(override.aes = list(size = 3, alpha = 1))) +
   theme(aspect.ratio = 1,
         axis.line = element_blank(),
@@ -156,9 +155,10 @@ dc_plot_cluster <- ggplot(plot_data_uniq) +
 
 
 dc_plot_dpt <- ggplot(plot_data_uniq) +
-  geom_point(aes(DC_1, DC_2, color = DPT1), size = 0.01, alpha = 1) +
+  ggrastr::geom_point_rast(aes(DC_1, DC_2, color = DPT1), size = rs, alpha = 1, 
+                           raster.dpi = rdpi, scale = rscale) +
   theme_void() +
-  scale_color_gradientn(colors = viridis(9)) +
+  scale_color_gradientn(colors = plasma(9)) +
   theme(aspect.ratio = 1) +
   labs(color = "Pseudotime")
 
@@ -189,11 +189,11 @@ dc_plot_genes <- ggplot() +
   #                          raster.dpi = 75,
   #                          data = filter(plot_data, key %in% gois, value > 0)) +
   ggrastr::geom_point_rast(aes(DC_1, DC_2), color = "grey80", size = rs, alpha = 1,
-                           raster.dpi = rdpi, raster.height = rh, raster.width = rw,
+                           raster.dpi = rdpi, scale = rscale,
                            data = filter(plot_data, key %in% gois_sub, value == 0) %>% 
                              mutate(key = ordered(key, levels = gois_sub))) +
   ggrastr::geom_point_rast(aes(DC_1, DC_2, color = value), size = rs, alpha = 1,
-                           raster.dpi = rdpi, raster.height = rh, raster.width = rw,
+                           raster.dpi = rdpi, scale = rscale,
                            data = filter(plot_data, key %in% gois_sub, value > 0) %>% 
                              mutate(key = ordered(key, levels = gois_sub))) +
   facet_wrap(~key) + 
@@ -257,9 +257,9 @@ plot_data_smooth <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/C
 #   group_by(key) %>%
 #   mutate(scaled_value = scales::rescale(fit),
 #            se_upper = scaled_value+scaled_value/fit*se.fit,
-#            se_lower = scaled_value-scaled_value/fit*se.fit) %>% 
+#            se_lower = scaled_value-scaled_value/fit*se.fit) %>%
 #   group_by(tumor_megasite) %>%
-#   mutate(DPT1_bin = scales::rescale(DPT1_bin)) %>% 
+#   mutate(DPT1_bin = scales::rescale(DPT1_bin)) %>%
 #   ungroup()
 # write_tsv(plot_data_smooth_megasite, "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_megasite.tsv")
 plot_data_smooth_megasite <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_megasite.tsv")
@@ -268,13 +268,23 @@ plot_data_smooth_megasite <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/fr
 #   group_by(key) %>%
 #   mutate(scaled_value = scales::rescale(fit),
 #            se_upper = scaled_value+scaled_value/fit*se.fit,
-#            se_lower = scaled_value-scaled_value/fit*se.fit) %>% 
-#   group_by(consensus_signature) %>% 
-#   mutate(DPT1_bin = scales::rescale(DPT1_bin)) %>% 
+#            se_lower = scaled_value-scaled_value/fit*se.fit) %>%
+#   group_by(consensus_signature) %>%
+#   mutate(DPT1_bin = scales::rescale(DPT1_bin)) %>%
 #   ungroup()
 # write_tsv(plot_data_smooth_mutsig, "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_mutsig.tsv")
 plot_data_smooth_mutsig <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_mutsig.tsv")
 
+# plot_data_smooth_site <- plot_data_smooth_wrapper(key, tumor_supersite) %>%
+#   group_by(key) %>%
+#   mutate(scaled_value = scales::rescale(fit),
+#            se_upper = scaled_value+scaled_value/fit*se.fit,
+#            se_lower = scaled_value-scaled_value/fit*se.fit) %>%
+#   group_by(tumor_supersite) %>%
+#   mutate(DPT1_bin = scales::rescale(DPT1_bin)) %>%
+#   ungroup()
+# write_tsv(plot_data_smooth_site, "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_site.tsv")
+plot_data_smooth_site <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_fitted_module_curves_site.tsv")
 
 ```
 
@@ -327,7 +337,7 @@ module_curves_module_megasite <- plot_data_smooth_megasite %>%
   geom_line(aes(DPT1_bin, scaled_value, color = tumor_megasite), size = 1.5) +
   labs(x = "Pseudotime", y = "Scaled module score", color = "Site") +
   facet_wrap(~key) + 
-  scale_color_manual(values = clrs$tumor_supersite) +
+  scale_color_manual(values = clrs$tumor_supersite[c("Adnexa", "Ascites", "Other")]) +
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
         aspect.ratio = 0.75) +
   guides(color = guide_legend(override.aes = list(fill = NA))) +
@@ -340,8 +350,31 @@ ggdraw() +
 ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_megasite.pdf", width = 8, height = 4)
 ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_megasite.png", width = 8, height = 4)
 
+module_curves_module_site <- plot_data_smooth_site %>% 
+  filter(key %in% module_names_sub) %>%
+  filter(tumor_supersite %in% c("Adnexa", "Omentum", "Ascites")) %>% 
+  mutate(key = ordered(str_remove_all(key, ".module"), 
+                       levels = names(clrs$expression_module))) %>% 
+  ggplot() +
+  geom_line(aes(DPT1_bin, scaled_value, color = tumor_supersite), size = 1.5) +
+  labs(x = "Pseudotime", y = "Scaled module score", color = "Site") +
+  facet_wrap(~key) + 
+  scale_color_manual(values = clrs$tumor_supersite[c("Adnexa", "Omentum", "Ascites")]) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        aspect.ratio = 0.75) +
+  guides(color = guide_legend(override.aes = list(fill = NA))) +
+  scale_y_continuous(breaks = c(0, 1))
+
+ggdraw() +
+  draw_plot(module_curves_module_site + remove_guides) +
+  draw_plot(get_legend(module_curves_module_site), x = 0.72, y = -0.2)
+
+ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_site.pdf", width = 8, height = 4)
+ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_site.png", width = 8, height = 4)
+
+
 module_curves_module_mutsig <- plot_data_smooth_mutsig %>% 
-  filter(consensus_signature %in% sois) %>% 
+  filter(consensus_signature %in% mois) %>% 
   mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>% 
   filter(key %in% module_names_sub[c(1,4,5)]) %>%
   mutate(key = ordered(str_remove_all(key, ".module"), 
@@ -350,7 +383,7 @@ module_curves_module_mutsig <- plot_data_smooth_mutsig %>%
   geom_line(aes(DPT1_bin, scaled_value, color = consensus_signature), size = 1.5) +
   labs(x = "Pseudotime", y = "Scaled module score", color = "Signature") +
   facet_wrap(~key) + 
-  scale_color_manual(values = clrs$consensus_signature) +
+  scale_color_manual(values = clrs$consensus_signature[mois]) +
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
         legend.position = "bottom", aspect.ratio = 1) +
   guides(color = guide_legend(override.aes = list(fill = NA), ncol = 4)) +
@@ -361,16 +394,26 @@ module_curves_module_mutsig
 ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_mutsig.pdf", width = 8, height = 3)
 ggsave("figures/520_T_cell_CD8_diffusion/005_pseudotime_curves_mutsig.png", width = 8, height = 3)
 
+
 ```
 
 ## violins  
 
 ```{r chunk_520_140, fig.width=4.5, fig.height=4}
 
+mutsig_boxplot_data_full <- plot_data %>% 
+  filter(key %in% module_names_sub) %>% 
+  mutate(key = str_replace_all(key, "CD8\\.", "CD8\n")) %>% 
+  mutate(key = str_replace_all(key, "JAK.STAT.pathway", "JAK/STAT\npathway")) %>% 
+  mutate(key = str_replace_all(key, "ysfunctional", "ysfunct.")) %>% 
+  mutate(key = str_remove_all(key, ".module")) %>% 
+  mutate(key = ordered(key, levels = c("CD8\nNaive", "CD8\nPredysfunct.", "CD8\nCytotoxic", "CD8\nDysfunct.", "JAK/STAT\npathway")))
+
 mutsig_boxplot_data <- plot_data %>% 
   filter(key %in% module_names_sub) %>% 
   filter(!(consensus_signature %in% c("Undetermined", "HRD"))) %>% 
   filter(tumor_supersite != "Ascites") %>% 
+  mutate(tumor_megasite = str_replace_all(tumor_megasite, "Other", "Non-adnexa")) %>% 
   mutate(key = str_replace_all(key, "CD8\\.", "CD8\n")) %>% 
   mutate(key = str_replace_all(key, "JAK.STAT.pathway", "JAK/STAT\npathway")) %>% 
   mutate(key = str_replace_all(key, "ysfunctional", "ysfunct.")) %>% 
@@ -393,7 +436,7 @@ mutsig_boxplot_data_stats <- mutsig_boxplot_data %>%
   distinct(sample, key, .keep_all = T) %>% 
   ungroup()
 
-boxplot_wrapper <- function(group_column, group_var_label, keys, comps, y_label, ylims) {
+violin_wrapper <- function(group_column, group_var_label, keys, comps, y_label, ylims) {
   group_column <- enquo(group_column)
   yrange <- ylims[2]-ylims[1]
   ylabels <- yrange*c(0.95,0.85,0.75)+ylims[1]
@@ -427,12 +470,107 @@ boxplot_wrapper <- function(group_column, group_var_label, keys, comps, y_label,
          fill = group_var_label)
 }
 
-mutsig_boxplot_cd8 <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", c("CD8\nNaive", "CD8\nDysfunct."), my_comparisons, "Module score", c(-1,2))
-mutsig_boxplot_cd8_short <- boxplot_wrapper(consensus_signature_short, "Mutational\nsignature", c("CD8\nNaive", "CD8\nDysfunct."), my_comparisons2, "Module score", c(-1,2))
+boxplot_wrapper <- function(group_column, group_var_label, keys, comps, y_label, ylims, plabel = "p.signif", mut_filter = mois, site_filter = names(clrs$tumor_supersite), facet_site = T) {
+  
+  group_column <- enquo(group_column)
+  yrange <- ylims[2]-ylims[1]
+  ylabels <- yrange*c(0.85,0.75,0.65)+ylims[1]
+  clrs$cluster_label <- clrs$cluster_label$Ovarian.cancer.super
+  
+  boxplot_data <- filter(mutsig_boxplot_data_stats, 
+                         key %in% keys, 
+                         consensus_signature %in% mut_filter,
+                         tumor_supersite %in% site_filter,
+                         tumor_megasite %in% c("Adnexa", "Non-adnexa"))
+  
+  p <- ggplot(boxplot_data, aes(!!group_column, value)) +
+    geom_boxplot(aes(!!group_column, value, color = !!group_column),
+                 width = 0.5, size = 0.75, outlier.shape = NA) +
+    geom_boxplot(aes(!!group_column, value, fill = !!group_column),
+                 color = "white", width = 0.5, outlier.shape = NA, size = 0.5) +
+    geom_jitter(aes(!!group_column, value),
+                color = "black", width = 0.15, size = 0.25, alpha = 0.5) +
+    scale_color_manual(values = clrs[[as_label(group_column)]]) +
+    scale_fill_manual(values = clrs[[as_label(group_column)]]) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          axis.title.x = element_blank()) + 
+    coord_cartesian(clip = "on", ylim = ylims) +
+    labs(y = y_label, color = group_var_label, 
+         fill = group_var_label) +
+    remove_guides
 
-mutsig_boxplot_jakstat <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", c("JAK/STAT\npathway"), my_comparisons, "PROGENy score", c(-1,5))
-mutsig_boxplot_jakstat_short <- boxplot_wrapper(consensus_signature_short, "Mutational\nsignature", c("JAK/STAT\npathway"), my_comparisons2, "PROGENy score", c(-1,5))
+  if (facet_site) {
+    p <- p + facet_grid(tumor_megasite~key)
+  } else {
+    p <- p + facet_grid(~key)
+  }
+  
+  if (any(unlist(comps) != ".all.")) {
+    p <- p + 
+      stat_compare_means(comparisons = comps, 
+                         data = boxplot_data,
+                         label = plabel, label.y = ylabels, 
+                         tip.length = 0.01,
+                         hide.ns = F)
+  }
+  
+  if (all(unlist(comps) == ".all.")) {
+    p <- p + 
+      stat_compare_means(ref.group = ".all.", 
+                         method.args = list(alternative = "greater"),
+                         data = boxplot_data, 
+                         label.y = ylabels[1], hide.ns = T,
+                         label = plabel)
+  }
+  
+  return(p)
+  
+}
 
+```
+
+```{r chunk_520_150, fig.width=4, fig.height=4}
+
+mutsig_violin_cd8 <- violin_wrapper(consensus_signature, "Mutational\nsignature", c("CD8\nNaive", "CD8\nDysfunct."), my_comparisons, "Module score", c(-1,2))
+mutsig_violin_cd8_short <- violin_wrapper(consensus_signature_short, "Mutational\nsignature", c("CD8\nNaive", "CD8\nDysfunct."), my_comparisons2, "Module score", c(-1,2))
+
+mutsig_violin_jakstat <- violin_wrapper(consensus_signature, "Mutational\nsignature", c("JAK/STAT\npathway"), my_comparisons, "PROGENy score", c(-1,5))
+mutsig_violin_jakstat_short <- violin_wrapper(consensus_signature_short, "Mutational\nsignature", c("JAK/STAT\npathway"), my_comparisons2, "PROGENy score", c(-1,5))
+
+
+mutsig_violin_grid <- plot_grid(
+  mutsig_violin_cd8 + guides(color = F, fill = F), 
+  mutsig_violin_jakstat + guides(color = F, fill = F), 
+  nrow = 1, rel_widths = c(0.62, 0.38)) 
+
+mutsig_violin_grid
+
+ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig.pdf", width = 4.5, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig.png", width = 4.5, height = 3)
+
+```
+
+```{r chunk_520_160, fig.width=4, fig.height=4}
+
+mutsig_violin_grid_short <- plot_grid(
+  mutsig_violin_cd8_short + guides(color = F, fill = F), 
+  mutsig_violin_jakstat_short + guides(color = F, fill = F), 
+  nrow = 1, rel_widths = c(0.62, 0.38)) 
+
+mutsig_violin_grid_short
+
+ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig_short.pdf", width = 4, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig_short.png", width = 4, height = 3)
+
+```
+
+```{r chunk_520_170, fig.width=5, fig.height=4.55}
+
+mutsig_boxplot_cd8 <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", c("CD8\nNaive", "CD8\nDysfunct."), my_comparisons, "Module score", c(-0.4,0.6))
+mutsig_boxplot_cd8_short <- boxplot_wrapper(consensus_signature_short, "Mutational\nsignature", c("CD8\nNaive", "CD8\nDysfunct."), my_comparisons2, "Module score", c(-0.4,0.6))
+
+mutsig_boxplot_jakstat <- boxplot_wrapper(consensus_signature, "Mutational\nsignature", c("JAK/STAT\npathway"), my_comparisons, "PROGENy score", c(-1,3))
+mutsig_boxplot_jakstat_short <- boxplot_wrapper(consensus_signature_short, "Mutational\nsignature", c("JAK/STAT\npathway"), my_comparisons2, "PROGENy score", c(-1,3))
 
 mutsig_boxplot_grid <- plot_grid(
   mutsig_boxplot_cd8 + guides(color = F, fill = F), 
@@ -441,31 +579,19 @@ mutsig_boxplot_grid <- plot_grid(
 
 mutsig_boxplot_grid
 
-ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig.pdf", width = 4.5, height = 3)
-ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig.png", width = 4.5, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/005_boxplots_mutsig.pdf", width = 5, height = 4.5)
+ggsave("figures/520_T_cell_CD8_diffusion/005_boxplots_mutsig.png", width = 5, height = 4.5)
 
 ```
 
-```{r chunk_520_141, fig.width=4, fig.height=4}
+## patient violins
 
-mutsig_boxplot_grid_short <- plot_grid(
-  mutsig_boxplot_cd8_short + guides(color = F, fill = F), 
-  mutsig_boxplot_jakstat_short + guides(color = F, fill = F), 
-  nrow = 1, rel_widths = c(0.62, 0.38)) 
-
-mutsig_boxplot_grid_short
-
-ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig_short.pdf", width = 4, height = 3)
-ggsave("figures/520_T_cell_CD8_diffusion/005_violins_mutsig_short.png", width = 4, height = 3)
-
-```
-
-```{r chunk_520_142, fig.width=6, fig.height=8}
+```{r chunk_520_180, fig.width=7, fig.height=8}
 
 
-patient_boxplot_wrapper <- function(koi, ylabel = "Module score") {
+patient_violin_wrapper <- function(koi, ylabel = "Module score") {
 
-  mutsig_boxplot_data_ranked <- filter(mutsig_boxplot_data, key == koi) %>%
+  mutsig_boxplot_data_ranked <- filter(mutsig_boxplot_data_full, key == koi) %>%
     group_by(patient_id_short) %>% 
     mutate(median = median(value)) %>%
     ungroup %>% 
@@ -491,22 +617,22 @@ patient_boxplot_wrapper <- function(koi, ylabel = "Module score") {
 }
 
 patient_plots_list <- lapply(c("CD8\nNaive", "CD8\nDysfunct."), 
-                             patient_boxplot_wrapper, "Module score") %>% 
+                             patient_violin_wrapper, "Module score") %>% 
   lapply(add, ylim(c(-1, 2)))
 
-patient_plots_list[[3]] <- patient_boxplot_wrapper("JAK/STAT\npathway", "PROGENy score") +
+patient_plots_list[[3]] <- patient_violin_wrapper("JAK/STAT\npathway", "PROGENy score") +
   ylim(c(-1, 5))
 
 plot_grid(plotlist = patient_plots_list, ncol = 1, align = "v")
 
 ggsave("figures/520_T_cell_CD8_diffusion/005_violins_patient_lvl.pdf", 
-            width = 6, height = 8)
+            width = 8, height = 8)
 ggsave("figures/520_T_cell_CD8_diffusion/005_violins_patient_lvl.png", 
-       width = 6, height = 8)
+       width = 8, height = 8)
 
 ```
 
-```{r chunk_520_160, fig.width=22, fig.height=4}
+```{r chunk_520_190, fig.width=22, fig.height=4}
   
 ggdraw() +
   draw_plot(add_umap_coord(dc_plot_cluster + guides(color = F)), 
@@ -531,9 +657,112 @@ ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell.png", width = 22, height
 
 ```
 
+```{r chunk_520_195, fig.width=3, fig.height=2.5}
+
+dc_plot_dpt
+ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_DC_pseudotime.pdf", width = 3, height = 2.5)
+ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_DC_pseudotime.png", width = 3, height = 2.5)
+
+```
+
+## patient boxplots
+
+```{r chunk_520_200, fig.width=24, fig.height=6}
+
+koi <- "JAK/STAT\npathway"
+
+patient_boxplot_wrapper <- function(koi, ylabel = "PROGENy score") {
+
+  plot_data_pw_ranked_patients <- filter(mutsig_boxplot_data_full, key == koi) %>%
+    # filter(patient_id_short %in% c("065", "054")) %>%
+    group_by(patient_id_short) %>% 
+    mutate(median = median(value)) %>%
+    ungroup %>% 
+    arrange(median) %>% 
+    mutate(patient_id_short = ordered(patient_id_short, levels = unique(patient_id_short)))
+  
+  plot_data_pw_ranked_samples <- filter(mutsig_boxplot_data_full, key == koi) %>%
+    # filter(patient_id_short %in% c("065", "054")) %>%
+    group_by(sample) %>% 
+    mutate(median = median(value),
+           n = n()) %>%
+    filter(n > 10) %>% 
+    ungroup %>% 
+    arrange(median) %>% 
+    mutate(sample = ordered(sample, levels = unique(sample))) %>% 
+    mutate(patient_id_short = ordered(patient_id_short, levels = levels(plot_data_pw_ranked_patients$patient_id_short)))
+  
+  plot_data_tumor_supersite_labels <- plot_data_pw_ranked_samples %>% 
+    distinct(sample, .keep_all = T)
+  
+  upper_ylim <- filter(mutsig_boxplot_data_full, key == koi) %>% 
+    # filter(patient_id_short %in% c("065", "054")) %>%
+    group_by(sample) %>% 
+    mutate(upper_whisker = 1.5*(quantile(value, 0.75) - quantile(value, 0.25))+quantile(value, 0.75)) %>% 
+    pull(upper_whisker) %>% 
+    unique %>% 
+    max
+  
+  ggplot(plot_data_pw_ranked_samples) +
+    geom_boxplot(aes(sample, value), fill = NA, 
+                 width = 0.1, outlier.shape = NA, size = 0.5) +
+    geom_boxplot(aes(sample, value, fill = consensus_signature), coef = 0,
+                 outlier.shape = NA, size = 0.5, color = NA) +
+    geom_point(aes(sample, median), color = "white", size = 0.35,
+               data = plot_data_tumor_supersite_labels) +
+    geom_point(aes(sample, color = tumor_supersite), 
+               y = -1, size = 1, shape = 15,
+               data = plot_data_tumor_supersite_labels) +
+    geom_hline(aes(yintercept = median), alpha = 0.65,
+               data = distinct(plot_data_pw_ranked_patients, 
+                               patient_id_short, .keep_all = T)) +
+    facet_grid(~patient_id_short, scales = "free_x", space = "free_x", 
+               switch = "x") +
+    scale_color_manual(values = clrs$tumor_supersite) +
+    scale_fill_manual(values = clrs$consensus_signature[c(mois, "Undetermined")]) +
+    theme(axis.text.x = element_blank(),
+          strip.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          axis.ticks.x = element_blank(),
+          axis.line.x = element_blank(),
+          plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "plain"),
+          panel.spacing = unit(2, "points")) +
+    coord_cartesian(clip = "off") + 
+    scale_y_continuous(limits = c(-2, upper_ylim), breaks = seq(-3, 9, by = 3)) +
+    labs(x = "Patient", y = ylabel,
+         fill = "Mutational\nsignature",
+         color = "Mutational\nsignature",
+         title = str_replace_all(koi, "\n", " "))
+
+}
+
+```
+
+```{r chunk_520_210, fig.width=10, fig.height=8}
+
+patient_boxplots_list <- lapply(c("CD8\nNaive", "CD8\nDysfunct."), 
+                             patient_boxplot_wrapper, "Module score") %>% 
+  lapply(add, ylim(c(-1, 2)))
+
+patient_boxplots_list[[3]] <- patient_boxplot_wrapper("JAK/STAT\npathway", "PROGENy score") +
+  ylim(c(-1, 6))
+
+box_grid <- plot_grid(plotlist = patient_boxplots_list %>% lapply(add, remove_guides), ncol = 1)
+
+ggdraw() + 
+  draw_plot(box_grid, width = 0.8, height = 1) +
+  draw_grob(get_legend(patient_boxplots_list[[1]]), x = 0.82, y = 0)
+
+ggsave("figures/520_T_cell_CD8_diffusion/005_boxplots_patient_lvl.pdf", 
+            width = 10, height = 8)
+ggsave("figures/520_T_cell_CD8_diffusion/005_boxplots_patient_lvl.png", 
+       width = 10, height = 8)
+
+
+```
+
 ## correlation
 
-```{r chunk_520_170, fig.width=8, fig.height=3}
+```{r chunk_520_230, fig.width=8, fig.height=3}
 
 plot_data_cc <- as_tibble(FetchData(seu_obj_cc, c("sample", "JAK.STAT.pathway", "CD274"))) %>% 
   gather(key_cc, value, -sample) %>% 
@@ -563,7 +792,7 @@ cor_plot1 <- plot_data_cor %>%
               linetype = 2, size = 0.5, color = "black") +
   stat_cor(aes(mean_value_cc, mean_value_tc), 
            method = "spearman", color = "black") +
-  scale_color_manual(values = clrs$consensus_signature) +
+  scale_color_manual(values = clrs$consensus_signature[mois]) +
   labs(y = "Dysfunctional score\n(CD8+ T cells)", 
        x = "CD274 expression\n(cancer cells)",
        color = "Mutational\nsignature")
@@ -578,21 +807,22 @@ cor_plot2 <- {cor_plot1 +
 
 cor_plot_grid <- plot_grid(cor_plot1 + guides(color = F), cor_plot2,
                            align = "hv", axis = "x", 
-                           rel_widths = c(0.4, 0.6))
+                           rel_widths = c(0.42, 0.58))
 
 cor_plot_grid
 
-ggsave("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.pdf", cor_plot_grid, width = 8, height = 3)
-ggsave("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.png", cor_plot_grid, width = 8, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.pdf", cor_plot_grid, width = 7.75, height = 3)
+ggsave("figures/520_T_cell_CD8_diffusion/004_tcell_cancer_cell_correlation.png", cor_plot_grid, width = 7.75, height = 3)
 
 
 ```
+
 
 ## composition
 
 ### scRNA
 
-```{r chunk_520_180, fig.width=24, fig.height=6}
+```{r chunk_520_240, fig.width=24, fig.height=6}
 
 source("src/comp_plot.R")
 
@@ -607,34 +837,38 @@ comp_tbl_cd8 <- distinct(plot_data, cell_id, .keep_all = T) %>%
   mutate(tumor_supersite = ordered(tumor_supersite, levels = rev(names(clrs$tumor_supersite))))
 
 plist1 <- default_comp_grid_list(
-  comp_tbl_cd8, cluster_label_sub, "CD8.T.naive.centr.mem", nmax = 2000,
+  comp_tbl_cd8, cluster_label_sub, "CD8.T.naive.centr.mem.1", nmax = 2000,
   cluster_label_sub, super_type_sub = "T.super", vec_plot = F)
 
 plist2 <- default_comp_grid_list(
-  comp_tbl_cd8, cluster_label_sub, "CD8.T.effector.memory", nmax = 2000, 
+  comp_tbl_cd8, cluster_label_sub, "CD8.T.naive.centr.mem.2", nmax = 2000,
   cluster_label_sub, super_type_sub = "T.super", vec_plot = F)
 
 plist3 <- default_comp_grid_list(
-  comp_tbl_cd8, cluster_label_sub, "CD8.T.cytotoxic", nmax = 2000, 
+  comp_tbl_cd8, cluster_label_sub, "CD8.T.effector.memory", nmax = 2000, 
   cluster_label_sub, super_type_sub = "T.super", vec_plot = F)
 
 plist4 <- default_comp_grid_list(
-  comp_tbl_cd8, cluster_label_sub, "CD8.T.dysfunc.early", nmax = 2000, 
+  comp_tbl_cd8, cluster_label_sub, "CD8.T.cytotoxic", nmax = 2000, 
   cluster_label_sub, super_type_sub = "T.super", vec_plot = F)
 
 plist5 <- default_comp_grid_list(
-  comp_tbl_cd8, cluster_label_sub, "CD8.T.dysfunc.late", nmax = 2000, 
+  comp_tbl_cd8, cluster_label_sub, "CD8.T.dysfunc.early", nmax = 2000, 
   cluster_label_sub, super_type_sub = "T.super", vec_plot = F)
 
 plist6 <- default_comp_grid_list(
-  comp_tbl_cd8, cluster_label_sub, "CD8.T.dysfunc.ISG", nmax = 2000, 
+  comp_tbl_cd8, cluster_label_sub, "CD8.T.dysfunc.late", nmax = 2000, 
   cluster_label_sub, super_type_sub = "T.super", vec_plot = F)
 
 plist7 <- default_comp_grid_list(
-  comp_tbl_cd8, cluster_label_sub, "CD8.T.ISG.early", nmax = 2000, 
+  comp_tbl_cd8, cluster_label_sub, "CD8.T.dysfunc.ISG", nmax = 2000, 
   cluster_label_sub, super_type_sub = "T.super", vec_plot = F)
 
 plist8 <- default_comp_grid_list(
+  comp_tbl_cd8, cluster_label_sub, "CD8.T.ISG.early", nmax = 2000, 
+  cluster_label_sub, super_type_sub = "T.super", vec_plot = F)
+
+plist9 <- default_comp_grid_list(
   comp_tbl_cd8, cluster_label_sub, "CD8.T.ISG.late", nmax = 2000, 
   cluster_label_sub, super_type_sub = "T.super", vec_plot = F)
 
@@ -654,11 +888,13 @@ comp_grid7 <- plot_grid(plotlist = plist7, ncol = 1, align = "v", rel_heights = 
 
 comp_grid8 <- plot_grid(plotlist = plist8, ncol = 1, align = "v", rel_heights = c(0.2, 0.2, 0.25, 0.35))
 
-pg <- plot_grid(comp_grid1, comp_grid2, comp_grid3, comp_grid4, comp_grid5, comp_grid6, comp_grid7, comp_grid8, ncol = 8)
+comp_grid9 <- plot_grid(plotlist = plist9, ncol = 1, align = "v", rel_heights = c(0.2, 0.2, 0.25, 0.35))
+
+pg <- plot_grid(comp_grid1, comp_grid2, comp_grid3, comp_grid4, comp_grid5, comp_grid6, comp_grid7, comp_grid8, comp_grid9, ncol = 9)
 pg
 
-ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.pdf", pg, width = 24, height = 6)
-ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.png", pg, width = 24, height = 6)
+ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.pdf", pg, width = 27, height = 6)
+ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.png", pg, width = 27, height = 6)
 
 ```
 
@@ -666,7 +902,7 @@ ggsave("figures/520_T_cell_CD8_diffusion/004_CD8.T.cell_composition.png", pg, wi
 
 ```{r chunk_520_999}
 
-devtools::session_info()
+# devtools::session_info()
 
 ```
 
