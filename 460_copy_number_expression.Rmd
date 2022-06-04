@@ -390,7 +390,9 @@ plot_data <- scrna_cancer_cell_genes_tbl %>%
   inner_join(
     wgs_gene_cna_tbl, 
     by = c("patient_id", "gene_name")) %>%
-  filter(!is.na(is_hlamp))
+  filter(
+    gene_name %in% c("CCNE1", "MYC"),
+    !is.na(is_hlamp))
 
 plot_data_stats <- plot_data %>% 
   group_by(patient_id, gene_name) %>% 
@@ -402,84 +404,9 @@ plot_data_stats <- plot_data %>%
 
 ```
 
-```{r, fig.width=12, fig.height=3}
+```{r, fig.width=7, fig.height=3}
 
 hlamp_corr_plot_all_samples <- plot_data_stats %>% 
-  ggplot(aes(log_change, expression_mean)) +
-  geom_smooth(
-    method = "lm", 
-    col = "gray50", 
-    fill = "gray90", 
-    linetype = "dashed",
-    size = 0.5
-  ) +
-  # stat_cor(
-  #   aes(log_change, expression_mean),
-  #   method = "spearman", 
-  #   color = "black",
-  #   # label.x = Inf,
-  #   # label.y = Inf
-  #   label.x.npc = 0.2,
-  #   label.y.npc = 0.8,
-  #   position = "identity"
-  # ) +
-  geom_vline(xintercept = 0, col = "black", linetype = "dashed") +
-  # geom_errorbar(
-  #   aes(
-  #     ymin=expression_min,
-  #     ymax=expression_max
-  #     ),
-  #   colour="gray80"
-  # ) +
-  geom_point(alpha = 1, aes(col = wgs_signature)) +
-  geom_text_repel(
-    aes(label = patient_id_short),
-    segment.color = "gray50",
-    data = plot_data_stats %>%
-      filter(is_hlamp == TRUE)
-  ) +
-  facet_wrap(~gene_name, ncol = 4, scales = "free") +
-  # coord_cartesian(ylim = c(0, 2)) +
-  scale_color_manual(values = clrs$wgs_signature) +
-  theme(strip.text = element_text(face = "italic")) +
-  labs(
-    x = "Log copy number change (WGS)",
-    y = "Mean expression (scRNA)", 
-    color = "Mutational\nsignature", 
-    fill = "Mutational\nsignature")
-
-hlamp_corr_plot_all_samples
-
-ggsave_pdf("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_all_samples.pdf",
-           hlamp_corr_plot_all_samples, width = 12, height = 3)
-ggsave_png("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_all_samples.png",
-           hlamp_corr_plot_all_samples, width = 12, height = 3)
-
-```
-
-### Site-matched samples
-
-```{r}
-
-plot_data <- scrna_cancer_cell_genes_tbl %>%
-  inner_join(
-    wgs_gene_cna_tbl, 
-    by = c("patient_id", "tumor_site", "gene_name")) %>%
-  filter(!is.na(is_hlamp))
-
-plot_data_stats <- plot_data %>% 
-  group_by(patient_id, tumor_site, gene_name) %>% 
-  mutate(expression_mean = mean(expression),
-         expression_min = quantile(expression, probs = c(0.4)),
-         expression_max = quantile(expression, probs = c(0.6)),
-         log_change = log_change) %>% 
-  distinct(patient_id, tumor_site, gene_name, .keep_all = T)
-
-```
-
-```{r, fig.width=12, fig.height=3}
-
-hlamp_corr_plot_site_matched <- plot_data_stats %>% 
   ggplot(aes(log_change, expression_mean)) +
   geom_smooth(
     method = "lm", 
@@ -494,8 +421,10 @@ hlamp_corr_plot_site_matched <- plot_data_stats %>%
     color = "black",
     # label.x = Inf,
     # label.y = Inf
-    label.x.npc = 0.2,
-    label.y.npc = 0.8,
+    label.x.npc = 0.1,
+    label.y.npc = 0.8, 
+    label.sep = '\n',
+    hjust = 0,
     position = "identity"
   ) +
   geom_vline(xintercept = 0, col = "black", linetype = "dashed") +
@@ -515,7 +444,99 @@ hlamp_corr_plot_site_matched <- plot_data_stats %>%
   ) +
   facet_wrap(~gene_name, ncol = 4, scales = "free") +
   # coord_cartesian(ylim = c(0, 2)) +
-  scale_color_manual(values = clrs$wgs_signature) +
+  scale_color_manual(
+    values = clrs$wgs_signature,
+    limits = force
+  ) +
+  theme(strip.text = element_text(face = "italic")) +
+  labs(
+    x = "Log copy number change (WGS)",
+    y = "Mean expression (scRNA)", 
+    color = "Mutational\nsignature", 
+    fill = "Mutational\nsignature")
+
+hlamp_corr_plot_all_samples
+
+ggsave_pdf("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_all_samples.pdf",
+           hlamp_corr_plot_all_samples, width = 7, height = 3)
+ggsave_png("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_all_samples.png",
+           hlamp_corr_plot_all_samples, width = 7, height = 3)
+
+```
+
+### Site-matched samples
+
+```{r}
+
+plot_data <- scrna_cancer_cell_genes_tbl %>%
+  inner_join(
+    wgs_gene_cna_tbl, 
+    by = c("patient_id", "tumor_site", "gene_name")) %>%
+  filter(
+    gene_name %in% c("CCNE1", "MYC"),
+    !is.na(is_hlamp))
+  
+plot_data_stats <- plot_data %>% 
+  group_by(patient_id, tumor_site, gene_name) %>% 
+  mutate(expression_mean = mean(expression),
+         expression_min = quantile(expression, probs = c(0.4)),
+         expression_max = quantile(expression, probs = c(0.6)),
+         log_change = log_change) %>% 
+  distinct(patient_id, tumor_site, gene_name, .keep_all = T)
+
+```
+
+```{r, fig.width=7, fig.height=3}
+
+library(ggpubr)
+# Custom formatting fucntion
+format_pval <- function(pval){
+  pval <- scales::pvalue(pval, accuracy= 0.0001, add_p = TRUE)
+  gsub(pattern = "(=|<)", replacement = " \\1 ", x = pval)
+}
+
+hlamp_corr_plot_site_matched <- plot_data_stats %>% 
+  ggplot(aes(log_change, expression_mean)) +
+  geom_smooth(
+    method = "lm", 
+    col = "gray50", 
+    fill = "gray90", 
+    linetype = "dashed",
+    size = 0.5
+  ) +
+  stat_cor(
+    aes(x = log_change, y = expression_mean),
+    method = "spearman",
+    color = "black",
+    # label.x = Inf,
+    # label.y = Inf
+    label.x.npc = 0.1,
+    label.y.npc = 0.8, 
+    label.sep = '\n',
+    hjust = 0,
+    position = "identity"
+  ) +
+  geom_vline(xintercept = 0, col = "black", linetype = "dashed") +
+  # geom_errorbar(
+  #   aes(
+  #     ymin=expression_min,
+  #     ymax=expression_max
+  #     ),
+  #   colour="gray80"
+  # ) +
+  geom_point(alpha = 1, aes(col = wgs_signature)) +
+  geom_text_repel(
+    aes(label = patient_id_short),
+    segment.color = "gray50",
+    data = plot_data_stats %>%
+      filter(is_hlamp == TRUE)
+  ) +
+  facet_wrap(~gene_name, ncol = 4, scales = "free") +
+  # coord_cartesian(ylim = c(0, 2)) +
+  scale_color_manual(
+    values = clrs$wgs_signature,
+    limits = force
+  ) +
   theme(strip.text = element_text(face = "italic")) +
   labs(
     x = "Log copy number change (WGS)",
@@ -526,9 +547,9 @@ hlamp_corr_plot_site_matched <- plot_data_stats %>%
 hlamp_corr_plot_site_matched
 
 ggsave_pdf("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_site_matched.pdf",
-           hlamp_corr_plot_site_matched, width = 12, height = 3)
+           hlamp_corr_plot_site_matched, width = 7, height = 3)
 ggsave_png("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_site_matched.png",
-           hlamp_corr_plot_site_matched, width = 12, height = 3)
+           hlamp_corr_plot_site_matched, width = 7, height = 3)
 
 ```
 
