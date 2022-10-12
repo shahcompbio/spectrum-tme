@@ -1,0 +1,104 @@
+patient_id	redcap_event_name	redcap_data_access_group	redcap_repeat_instrument	redcap_repeat_instance	gyn_diagnosis_chemo_intent_description	gyn_diagnosis_figo_stage	gyn_diagnosis_figo_stage_notes	gyn_diagnosis_histology	gyn_diagnosis_histology_notes
+SPECTRUM-OV-002	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-003	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	Supradiaphragmatic node - CT short axis 11mm; I used short axis of >=15mm and/or path confirmation as methodology). Lymph nodes with short axis <10mm are nonpathologic.  10-14mm - nontarget	HGS	NA
+SPECTRUM-OV-004	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-006	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	NA
+SPECTRUM-OV-007	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-008	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	Tumor implants up to 4cm on the sigmoid colon (pathology confirmed)	HGS	NA
+SPECTRUM-OV-009	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-011	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	Endometrial involvement (WT-1 positive)
+SPECTRUM-OV-014	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	NA
+SPECTRUM-OV-015	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-016	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-018	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIB	Op note with 1-2 cm implant on the splenic flexure of colon	HGS	NA
+SPECTRUM-OV-020	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-022	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIB	NA	HGS	NA
+SPECTRUM-OV-023	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	Mixed epithelial carcinoma (high grade serous and endometrioid)	Unusual pattern of spread (including cervical mucosa/stroma involvement; parenchyma liver)
+SPECTRUM-OV-024	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	NA
+SPECTRUM-OV-025	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-026	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-028	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IVB	NA	HGS	Endometrial invovlement (WT1 positive)
+SPECTRUM-OV-029	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-030	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-031	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-032	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	NA
+SPECTRUM-OV-033	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	2.9cm transverse epiploica mass on gross path; op report says approx 2cm	HGS	NA
+SPECTRUM-OV-034	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-036	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-037	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-038	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIB	NA	HGS	NA
+SPECTRUM-OV-041	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-042	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	NA
+SPECTRUM-OV-044	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-045	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-046	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	Endometrial invovlement (WT1 positive)
+SPECTRUM-OV-048	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIB	NA	HGS	Endometrial involvement (WT1 positive)
+SPECTRUM-OV-049	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-050	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-051	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-052	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IVB	NA	HGS	NA
+SPECTRUM-OV-053	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-054	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVA	NA	HGS	NA
+SPECTRUM-OV-056	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-059	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	NA
+SPECTRUM-OV-062	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-063	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-064	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIB	NA	HGS	NA
+SPECTRUM-OV-065	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-066	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	Endometrial involvement (WT1 positive)
+SPECTRUM-OV-067	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-068	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-070	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	NA
+SPECTRUM-OV-071	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-072	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IVB	NA	HGS	NA
+SPECTRUM-OV-073	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-075	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IVB	NA	HGS	NA
+SPECTRUM-OV-076	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-077	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-080	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IVB	NA	HGS	Arose in serous borderline tumor
+SPECTRUM-OV-081	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-082	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-083	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-087	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-090	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-092	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-093	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	NA
+SPECTRUM-OV-094	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IVB	NA	HGS	NA
+SPECTRUM-OV-097	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IVA	NA	HGS	NA
+SPECTRUM-OV-098	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-100	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
+SPECTRUM-OV-101	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-102	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-103	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	NA
+SPECTRUM-OV-104	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	IIIC	NA	HGS	NA
+SPECTRUM-OV-105	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-106	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-107	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVA	NA	HGS	NA
+SPECTRUM-OV-108	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-110	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	Endometrial involvement (WT1 positive)
+SPECTRUM-OV-111	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVA	NA	HGS	NA
+SPECTRUM-OV-112	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-114	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	Carcinosarcoma	NA
+SPECTRUM-OV-115	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-116	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-117	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IIIC	NA	HGS	NA
+SPECTRUM-OV-118	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	IVB	NA	HGS	NA
+SPECTRUM-OV-119	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
+SPECTRUM-OV-120	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-121	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-123	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-124	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
+SPECTRUM-OV-125	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-129	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
+SPECTRUM-OV-130	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
+SPECTRUM-OV-131	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
+SPECTRUM-OV-133	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
+SPECTRUM-OV-134	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-135	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
+SPECTRUM-OV-136	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
+SPECTRUM-OV-137	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-138	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-139	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-140	patient_consent_arm_1	NA	gyn_diagnosis	1	Primary	NA	NA	HGS	NA
+SPECTRUM-OV-142	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
+SPECTRUM-OV-144	patient_consent_arm_1	NA	gyn_diagnosis	1	NACT/IDS	NA	NA	HGS	NA
