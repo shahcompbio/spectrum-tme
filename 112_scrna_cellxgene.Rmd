@@ -53,11 +53,13 @@ seu_obj <- readr::read_rds("/work/shah/isabl_data_lake/analyses/68/75/6875/RNASC
 
 gids <- list(
   "organism_ontology"="910670315",
-  "cell_ontology"="2137427075",
-  "disease_ontology"="1550965376",
-  "sex_ontology"="1100516779",
   "tissue_ontology"="1819990913",
-  "assay_ontology"="150407398"
+  "assay_ontology"="150407398",
+  "disease_ontology"="1550965376",
+  "cell_type_ontology"="2137427075",
+  "ethnicity_ontology"="1904472753",
+  "development_stage_ontology"="722315336",
+  "sex_ontology"="1100516779"
 )
 
 url_template <- "https://docs.google.com/spreadsheets/d/15RWlyM8EfB7CgFGc22nIw0yBErkdHz0EFf0DYBMae2M/export?format=tsv&id=15RWlyM8EfB7CgFGc22nIw0yBErkdHz0EFf0DYBMae2M&gid="
@@ -72,42 +74,94 @@ ontology_list <- gids %>%
 
 ```{r, echo=FALSE}
 
-scrna_meta_cell_tbl <- seu_obj@meta.data %>%
-  # Add columns with constant values for all samples based on ontology table
+# Duplicate Seurat object to add annotations
+seu_obj_annotated <- seu_obj
+scrna_meta_cell_tbl <- seu_obj_annotated@meta.data
+
+# Add columns with constant values for all samples based on ontology table
+
+## Organism ontology
+scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+  # organism & organism_ontology_term_id (Example: Homo sapiens, NCBITaxon:9606)
   add_column(
-    # organism & organism_ontology_term_id (Example: Homo sapiens, NCBITaxon:9606)
-    ontology_list$organism_ontology,
-  ) %>%
-  # Add columns with sample-dependent values by mapping to ontology table
+    ontology_list$organism_ontology %>%
+      select(c("organism", "organism_ontology_term_id")),
+  )
+
+# Add columns with sample-dependent values by mapping to ontology table
+
+## Cell type ontology
+scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+  # cell_type & cell_type_ontology_term_id (Epithelial Cell, CL:0000066)
   left_join(
-    db$sequencing_scrna,
+    ontology_list$cell_type_ontology %>%
+      select(c("cell_type", "cell_type_ontology_term_id")),
+    by = "cell_type"
+  )
+
+## Assay ontology
+scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+  # Add sample assay
+  left_join(
+    db$sequencing_scrna %>%
+      select(c("isabl_id","platform")),
     by = c("sample"="isabl_id")
   ) %>%
-  mutate(
-    # tissue & tissue_ontology_term_id (Example: Lung, UBERON:002048, or for cell cultures CL with both values appended with " (cell culture)")
-    tissue = "",
-    tissue_ontology_term_id = "",
-    # assay & assay_ontology_term_id (Example: 10xV2 assay, EFO:0009899)
-    assay = "",
-    assay_ontology_term_id = "",
-    # disease & disease_ontology_term_id (MONDO or normal/PATO:0000461 if healthy)
-    disease = "",
-    disease_ontology_term_id = "",
-    # cell_type & cell_type_ontology_term_id ( Epithelial Cell, CL:0000066)
-    # ethnicity & ethnicity_ontology_term_id (Example: Asian, HANCESTRO:0008, ‘unknown’ if info unavailable)
-    ethnicity = "",
-    ethnicity_ontology_term_id = "",
-    # development_stage & development_stage_ontology_term _id (20-year-old human stage,HsapDv:0000114, ‘unknown’ if info unavailable)
-    development_stage = "",
-    development_stage_ontology_term = "",
-    # sex & sex_ontology_term_id field – male (PATO:0000384) or female (PATO:0000383) ('unknown' if info unavailable)
-    sex = "",
-    sex_ontology_term_id = ""
+  # assay & assay_ontology_term_id (Example: 10xV2 assay, EFO:0009899)
+  left_join(
+    ontology_list$assay_ontology %>%
+      select(c("platform", "assay", "assay_ontology_term_id")),
+    by = "platform"
+  )
+
+## Disease ontology
+scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+  # Add sample assay
+  left_join(
+    db$gyn_diagnosis %>%
+      select(c("patient_id","gyn_diagnosis_histology")),
+    by = "patient_id"
+  ) %>%
+  # disease & disease_ontology_term_id (MONDO or normal/PATO:0000461 if healthy)
+  left_join(
+    ontology_list$disease_ontology %>%
+      select(c("gyn_diagnosis_histology", "disease", "disease_ontology_term_id")),
+    by = "gyn_diagnosis_histology"
+  )
+
+## Ethnicity ontology
+scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+  # Add patient ethnicity
+  left_join(
+    db$patients %>%
+      select(c("patient_id","patient_race")), 
+    by = "patient_id"
+  ) %>%
+  # ethnicity & ethnicity_ontology_term_id (Example: Asian, HANCESTRO:0008, ‘unknown’ if info unavailable)
+  left_join(
+    ontology_list$ethnicity_ontology %>%
+      select(c("patient_race", "ethnicity", "ethnicity_ontology_term_id")),
+    by = "patient_race"
+  )
+
+## Sex ontology
+scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+  # Add patient sex
+  left_join(
+    db$patients %>%
+      select(c("patient_id","patient_gender")), 
+    by = "patient_id"
+  ) %>%
+  # sex & sex_ontology_term_id field – male (PATO:0000384) or female (PATO:0000383) ('unknown' if info unavailable)
+  left_join(
+    ontology_list$sex_ontology %>%
+      select(c("patient_gender", "sex", "sex_ontology_term_id")),
+    by = "patient_gender"
   )
 
 scrna_meta_cell_tbl
 
-# seu_obj@meta.data <- scrna_meta_cell_tbl
+seu_obj_annotated@meta.data <- scrna_meta_cell_tbl
 
 ```
 
@@ -115,7 +169,7 @@ scrna_meta_cell_tbl
 
 ```{r}
 
-# SaveH5Seurat(seu_obj, filename = "seu_obj.h5Seurat")
-# Convert("seu_obj.h5Seurat", dest = "h5ad")
+SaveH5Seurat(seu_obj_annotated, filename = "seu_obj_annotated.h5Seurat")
+Convert("seu_obj_annotated.h5Seurat", dest = "h5ad")
 
 ```
