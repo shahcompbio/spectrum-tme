@@ -1,134 +1,134 @@
-patient_id	redcap_event_name	redcap_data_access_group	patient_dmp_id	patient_age	patient_gender	patient_inclusion_exclusion	patient_cohort_version___1	patient_cohort_version___2	patient_cohort_version___3
-SPECTRUM-OV-001	patient_consent_arm_1	NA	P-0039384	70	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-002	patient_consent_arm_1	NA	P-0039615	70	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-003	patient_consent_arm_1	NA	P-0039726	64	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-004	patient_consent_arm_1	NA	P-0039734	74	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-005	patient_consent_arm_1	NA	P-0040521	61	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-006	patient_consent_arm_1	NA	P-0040154	68	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-007	patient_consent_arm_1	NA	P-0040980	47	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-008	patient_consent_arm_1	NA	P-0041572	64	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-009	patient_consent_arm_1	NA	P-0042164	50	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-010	patient_consent_arm_1	NA	P-0042350	67	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-011	patient_consent_arm_1	NA	P-0042351	69	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-012	patient_consent_arm_1	NA	P-0042353	86	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-013	patient_consent_arm_1	NA	P-0042738	36	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-014	patient_consent_arm_1	NA	P-0042548	84	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-015	patient_consent_arm_1	NA	P-0042757	50	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-016	patient_consent_arm_1	NA	P-0042815	60	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-017	patient_consent_arm_1	NA	P-0027793	73	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-018	patient_consent_arm_1	NA	P-0046443	64	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-019	patient_consent_arm_1	NA	P-0043569	66	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-020	patient_consent_arm_1	NA	P-0043617	50	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-021	patient_consent_arm_1	NA	P-0044078	42	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-022	patient_consent_arm_1	NA	P-0043571	58	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-023	patient_consent_arm_1	NA	P-0044011	67	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-024	patient_consent_arm_1	NA	P-0044784	84	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-025	patient_consent_arm_1	NA	P-0044084	75	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-026	patient_consent_arm_1	NA	P-0043587	57	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-027	patient_consent_arm_1	NA	P-0044136	66	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-028	patient_consent_arm_1	NA	P-0045578	56	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-029	patient_consent_arm_1	NA	P-0045312	39	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-030	patient_consent_arm_1	NA	P-0044919	71	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-031	patient_consent_arm_1	NA	P-0045494	56	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-032	patient_consent_arm_1	NA	P-0045771	78	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-033	patient_consent_arm_1	NA	P-0045890	44	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-034	patient_consent_arm_1	NA	P-0045643	69	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-035	patient_consent_arm_1	NA	P-0045998	45	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-036	patient_consent_arm_1	NA	P-0045589	77	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-037	patient_consent_arm_1	NA	P-0046401	45	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-038	patient_consent_arm_1	NA	P-0046940	55	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-041	patient_consent_arm_1	NA	P-0047883	63	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-042	patient_consent_arm_1	NA	P-0046857	78	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-044	patient_consent_arm_1	NA	P-0047453	69	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-045	patient_consent_arm_1	NA	P-0047947	57	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-046	patient_consent_arm_1	NA	P-0049265	54	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-047	patient_consent_arm_1	NA	P-0048452	45	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-048	patient_consent_arm_1	NA	P-0048755	76	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-049	patient_consent_arm_1	NA	P-0048524	68	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-050	patient_consent_arm_1	NA	P-0051015	78	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-051	patient_consent_arm_1	NA	P-0048525	68	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-052	patient_consent_arm_1	NA	P-0048670	61	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-053	patient_consent_arm_1	NA	P-0048695	46	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-054	patient_consent_arm_1	NA	P-0048554	75	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-056	patient_consent_arm_1	NA	P-0048923	62	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-057	patient_consent_arm_1	NA	P-0049483	67	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-059	patient_consent_arm_1	NA	P-0049560	55	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-060	patient_consent_arm_1	NA	P-0050204	56	FEMALE	Excluded	Checked	Checked	Unchecked
-SPECTRUM-OV-062	patient_consent_arm_1	NA	P-0051447	75	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-063	patient_consent_arm_1	NA	P-0051066	69	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-064	patient_consent_arm_1	NA	P-0050669	44	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-065	patient_consent_arm_1	NA	P-0051130	76	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-066	patient_consent_arm_1	NA	P-0052089	54	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-067	patient_consent_arm_1	NA	P-0052274	70	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-068	patient_consent_arm_1	NA	P-0052385	71	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-070	patient_consent_arm_1	NA	P-0052359	70	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-071	patient_consent_arm_1	NA	P-0052808	70	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-072	patient_consent_arm_1	NA	P-0053010	62	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-073	patient_consent_arm_1	NA	P-0053495	66	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-075	patient_consent_arm_1	NA	P-0054073	41	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-076	patient_consent_arm_1	NA	P-0054019	42	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-077	patient_consent_arm_1	NA	P-0054406	60	FEMALE	Included	Checked	Checked	Unchecked
-SPECTRUM-OV-078	patient_consent_arm_1	NA	P-0054338	50	FEMALE	Excluded	Unchecked	Checked	Unchecked
-SPECTRUM-OV-080	patient_consent_arm_1	NA	P-0055809	57	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-081	patient_consent_arm_1	NA	P-0056102	66	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-082	patient_consent_arm_1	NA	P-0055908	69	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-083	patient_consent_arm_1	NA	P-0056224	60	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-085	patient_consent_arm_1	NA	P-0056533	69	FEMALE	Excluded	Unchecked	Checked	Unchecked
-SPECTRUM-OV-087	patient_consent_arm_1	NA	P-0056610	79	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-088	patient_consent_arm_1	NA	P-0056938	61	FEMALE	Excluded	Unchecked	Checked	Unchecked
-SPECTRUM-OV-089	patient_consent_arm_1	NA	P-0056721	71	FEMALE	Excluded	Unchecked	Checked	Unchecked
-SPECTRUM-OV-090	patient_consent_arm_1	NA	P-0056958	70	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-092	patient_consent_arm_1	NA	P-0050400	69	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-093	patient_consent_arm_1	NA	P-0057608	50	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-094	patient_consent_arm_1	NA	P-0057731	77	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-095	patient_consent_arm_1	NA	P-0057840	36	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-097	patient_consent_arm_1	NA	P-0058350	60	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-098	patient_consent_arm_1	NA	P-0058190	71	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-099	patient_consent_arm_1	NA	P-0059044	61	FEMALE	Excluded	Unchecked	Checked	Unchecked
-SPECTRUM-OV-100	patient_consent_arm_1	NA	P-0058975	54	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-101	patient_consent_arm_1	NA	P-0034272	71	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-102	patient_consent_arm_1	NA	P-0059227	43	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-103	patient_consent_arm_1	NA	P-0059499	69	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-104	patient_consent_arm_1	NA	P-0059577	67	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-105	patient_consent_arm_1	NA	P-0059884	57	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-106	patient_consent_arm_1	NA	P-0059583	57	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-107	patient_consent_arm_1	NA	P-0060366	60	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-108	patient_consent_arm_1	NA	P-0059954	53	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-109	patient_consent_arm_1	NA	P-0061288	66	FEMALE	Excluded	Unchecked	Checked	Unchecked
-SPECTRUM-OV-110	patient_consent_arm_1	NA	P-0059753	57	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-111	patient_consent_arm_1	NA	P-0059972	64	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-112	patient_consent_arm_1	NA	P-0060511	69	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-113	patient_consent_arm_1	NA	P-0060204	73	FEMALE	Excluded	Unchecked	Checked	Unchecked
-SPECTRUM-OV-114	patient_consent_arm_1	NA	P-0059822	54	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-115	patient_consent_arm_1	NA	P-0060627	55	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-116	patient_consent_arm_1	NA	P-0060931	56	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-117	patient_consent_arm_1	NA	P-0061206	47	FEMALE	Included	Unchecked	Checked	Unchecked
-SPECTRUM-OV-118	patient_consent_arm_1	NA	P-0061784	59	FEMALE	Included	Unchecked	Checked	Checked
-SPECTRUM-OV-119	patient_consent_arm_1	NA	P-0063198	81	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-120	patient_consent_arm_1	NA	P-0063035	71	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-121	patient_consent_arm_1	NA	P-0062858	76	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-122	patient_consent_arm_1	NA	P-0060588	60	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-123	patient_consent_arm_1	NA	P-0063481	73	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-124	patient_consent_arm_1	NA	P-0063680	64	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-125	patient_consent_arm_1	NA	P-0064317	51	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-126	patient_consent_arm_1	NA	P-0064735	64	FEMALE	Excluded	Unchecked	Unchecked	Checked
-SPECTRUM-OV-127	patient_consent_arm_1	NA	P-0064168	76	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-128	patient_consent_arm_1	NA	P-0064305	64	FEMALE	Excluded	Unchecked	Unchecked	Checked
-SPECTRUM-OV-129	patient_consent_arm_1	NA	P-0064308	56	FEMALE	Included	Unchecked	Checked	Checked
-SPECTRUM-OV-130	patient_consent_arm_1	NA	P-0065244	68	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-131	patient_consent_arm_1	NA	P-0064901	73	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-133	patient_consent_arm_1	NA	P-0066666	56	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-134	patient_consent_arm_1	NA	P-0067219	75	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-135	patient_consent_arm_1	NA	P-0066833	63	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-136	patient_consent_arm_1	NA	P-0067903	76	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-137	patient_consent_arm_1	NA	P-0068780	63	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-138	patient_consent_arm_1	NA	P-0068653	73	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-139	patient_consent_arm_1	NA	P-0071512	52	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-140	patient_consent_arm_1	NA	P-0077317	72	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-141	patient_consent_arm_1	NA	P-0074264	49	FEMALE	Excluded	Unchecked	Unchecked	Checked
-SPECTRUM-OV-142	patient_consent_arm_1	NA	P-0046047	82	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-143	patient_consent_arm_1	NA	P-0077676	67	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-144	patient_consent_arm_1	NA	P-0078004	73	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-145	patient_consent_arm_1	NA	P-0078826	66	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-146	patient_consent_arm_1	NA	P-0079572	72	FEMALE	Included	Unchecked	Unchecked	Checked
-SPECTRUM-OV-148	patient_consent_arm_1	NA	P-0083560	72	FEMALE	Included	Unchecked	Unchecked	Checked
+patient_id	redcap_event_name	redcap_data_access_group	patient_dmp_id	patient_age	patient_gender	patient_race	patient_inclusion_exclusion	patient_cohort_version___1	patient_cohort_version___2	patient_cohort_version___3
+SPECTRUM-OV-001	patient_consent_arm_1	NA	P-0039384	70	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-002	patient_consent_arm_1	NA	P-0039615	70	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-003	patient_consent_arm_1	NA	P-0039726	64	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-004	patient_consent_arm_1	NA	P-0039734	74	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-005	patient_consent_arm_1	NA	P-0040521	61	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-006	patient_consent_arm_1	NA	P-0040154	68	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-007	patient_consent_arm_1	NA	P-0040980	47	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-008	patient_consent_arm_1	NA	P-0041572	64	FEMALE	OTHER	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-009	patient_consent_arm_1	NA	P-0042164	50	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-010	patient_consent_arm_1	NA	P-0042350	67	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-011	patient_consent_arm_1	NA	P-0042351	69	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-012	patient_consent_arm_1	NA	P-0042353	86	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-013	patient_consent_arm_1	NA	P-0042738	36	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-014	patient_consent_arm_1	NA	P-0042548	84	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-015	patient_consent_arm_1	NA	P-0042757	50	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-016	patient_consent_arm_1	NA	P-0042815	60	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-017	patient_consent_arm_1	NA	P-0027793	73	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-018	patient_consent_arm_1	NA	P-0046443	64	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-019	patient_consent_arm_1	NA	P-0043569	66	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-020	patient_consent_arm_1	NA	P-0043617	50	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-021	patient_consent_arm_1	NA	P-0044078	42	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-022	patient_consent_arm_1	NA	P-0043571	58	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-023	patient_consent_arm_1	NA	P-0044011	67	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-024	patient_consent_arm_1	NA	P-0044784	84	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-025	patient_consent_arm_1	NA	P-0044084	75	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-026	patient_consent_arm_1	NA	P-0043587	57	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-027	patient_consent_arm_1	NA	P-0044136	66	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-028	patient_consent_arm_1	NA	P-0045578	56	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-029	patient_consent_arm_1	NA	P-0045312	39	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-030	patient_consent_arm_1	NA	P-0044919	71	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-031	patient_consent_arm_1	NA	P-0045494	56	FEMALE	BLACK OR AFRICAN AMERICAN	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-032	patient_consent_arm_1	NA	P-0045771	78	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-033	patient_consent_arm_1	NA	P-0045890	44	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-034	patient_consent_arm_1	NA	P-0045643	69	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-035	patient_consent_arm_1	NA	P-0045998	45	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-036	patient_consent_arm_1	NA	P-0045589	77	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-037	patient_consent_arm_1	NA	P-0046401	45	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-038	patient_consent_arm_1	NA	P-0046940	55	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-041	patient_consent_arm_1	NA	P-0047883	63	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-042	patient_consent_arm_1	NA	P-0046857	78	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-044	patient_consent_arm_1	NA	P-0047453	69	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-045	patient_consent_arm_1	NA	P-0047947	57	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-046	patient_consent_arm_1	NA	P-0049265	54	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-047	patient_consent_arm_1	NA	P-0048452	45	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-048	patient_consent_arm_1	NA	P-0048755	76	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-049	patient_consent_arm_1	NA	P-0048524	68	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-050	patient_consent_arm_1	NA	P-0051015	78	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-051	patient_consent_arm_1	NA	P-0048525	68	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-052	patient_consent_arm_1	NA	P-0048670	61	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-053	patient_consent_arm_1	NA	P-0048695	46	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-054	patient_consent_arm_1	NA	P-0048554	75	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-056	patient_consent_arm_1	NA	P-0048923	62	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-057	patient_consent_arm_1	NA	P-0049483	67	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-059	patient_consent_arm_1	NA	P-0049560	55	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-060	patient_consent_arm_1	NA	P-0050204	56	FEMALE	WHITE	Excluded	Checked	Checked	Unchecked
+SPECTRUM-OV-062	patient_consent_arm_1	NA	P-0051447	75	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-063	patient_consent_arm_1	NA	P-0051066	69	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-064	patient_consent_arm_1	NA	P-0050669	44	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-065	patient_consent_arm_1	NA	P-0051130	76	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-066	patient_consent_arm_1	NA	P-0052089	54	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-067	patient_consent_arm_1	NA	P-0052274	70	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-068	patient_consent_arm_1	NA	P-0052385	71	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-070	patient_consent_arm_1	NA	P-0052359	70	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-071	patient_consent_arm_1	NA	P-0052808	70	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-072	patient_consent_arm_1	NA	P-0053010	62	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-073	patient_consent_arm_1	NA	P-0053495	66	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-075	patient_consent_arm_1	NA	P-0054073	41	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-076	patient_consent_arm_1	NA	P-0054019	42	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-077	patient_consent_arm_1	NA	P-0054406	60	FEMALE	WHITE	Included	Checked	Checked	Unchecked
+SPECTRUM-OV-078	patient_consent_arm_1	NA	P-0054338	50	FEMALE	WHITE	Excluded	Unchecked	Checked	Unchecked
+SPECTRUM-OV-080	patient_consent_arm_1	NA	P-0055809	57	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-081	patient_consent_arm_1	NA	P-0056102	66	FEMALE	BLACK OR AFRICAN AMERICAN	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-082	patient_consent_arm_1	NA	P-0055908	69	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-083	patient_consent_arm_1	NA	P-0056224	60	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-085	patient_consent_arm_1	NA	P-0056533	69	FEMALE	WHITE	Excluded	Unchecked	Checked	Unchecked
+SPECTRUM-OV-087	patient_consent_arm_1	NA	P-0056610	79	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-088	patient_consent_arm_1	NA	P-0056938	61	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Excluded	Unchecked	Checked	Unchecked
+SPECTRUM-OV-089	patient_consent_arm_1	NA	P-0056721	71	FEMALE	WHITE	Excluded	Unchecked	Checked	Unchecked
+SPECTRUM-OV-090	patient_consent_arm_1	NA	P-0056958	70	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-092	patient_consent_arm_1	NA	P-0050400	69	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-093	patient_consent_arm_1	NA	P-0057608	50	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-094	patient_consent_arm_1	NA	P-0057731	77	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-095	patient_consent_arm_1	NA	P-0057840	36	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-097	patient_consent_arm_1	NA	P-0058350	60	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-098	patient_consent_arm_1	NA	P-0058190	71	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-099	patient_consent_arm_1	NA	P-0059044	61	FEMALE	WHITE	Excluded	Unchecked	Checked	Unchecked
+SPECTRUM-OV-100	patient_consent_arm_1	NA	P-0058975	54	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-101	patient_consent_arm_1	NA	P-0034272	71	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-102	patient_consent_arm_1	NA	P-0059227	43	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-103	patient_consent_arm_1	NA	P-0059499	69	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-104	patient_consent_arm_1	NA	P-0059577	67	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-105	patient_consent_arm_1	NA	P-0059884	57	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-106	patient_consent_arm_1	NA	P-0059583	57	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-107	patient_consent_arm_1	NA	P-0060366	60	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-108	patient_consent_arm_1	NA	P-0059954	53	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-109	patient_consent_arm_1	NA	P-0061288	66	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Excluded	Unchecked	Checked	Unchecked
+SPECTRUM-OV-110	patient_consent_arm_1	NA	P-0059753	57	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-111	patient_consent_arm_1	NA	P-0059972	64	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-112	patient_consent_arm_1	NA	P-0060511	69	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-113	patient_consent_arm_1	NA	P-0060204	73	FEMALE	WHITE	Excluded	Unchecked	Checked	Unchecked
+SPECTRUM-OV-114	patient_consent_arm_1	NA	P-0059822	54	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-115	patient_consent_arm_1	NA	P-0060627	55	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-116	patient_consent_arm_1	NA	P-0060931	56	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-117	patient_consent_arm_1	NA	P-0061206	47	FEMALE	WHITE	Included	Unchecked	Checked	Unchecked
+SPECTRUM-OV-118	patient_consent_arm_1	NA	P-0061784	59	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Included	Unchecked	Checked	Checked
+SPECTRUM-OV-119	patient_consent_arm_1	NA	P-0063198	81	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-120	patient_consent_arm_1	NA	P-0063035	71	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-121	patient_consent_arm_1	NA	P-0062858	76	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-122	patient_consent_arm_1	NA	P-0060588	60	FEMALE	BLACK OR AFRICAN AMERICAN	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-123	patient_consent_arm_1	NA	P-0063481	73	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-124	patient_consent_arm_1	NA	P-0063680	64	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-125	patient_consent_arm_1	NA	P-0064317	51	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-126	patient_consent_arm_1	NA	P-0064735	64	FEMALE	WHITE	Excluded	Unchecked	Unchecked	Checked
+SPECTRUM-OV-127	patient_consent_arm_1	NA	P-0064168	76	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-128	patient_consent_arm_1	NA	P-0064305	64	FEMALE	ASIAN-FAR EAST/INDIAN SUBCONT	Excluded	Unchecked	Unchecked	Checked
+SPECTRUM-OV-129	patient_consent_arm_1	NA	P-0064308	56	FEMALE	BLACK OR AFRICAN AMERICAN	Included	Unchecked	Checked	Checked
+SPECTRUM-OV-130	patient_consent_arm_1	NA	P-0065244	68	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-131	patient_consent_arm_1	NA	P-0064901	73	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-133	patient_consent_arm_1	NA	P-0066666	56	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-134	patient_consent_arm_1	NA	P-0067219	75	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-135	patient_consent_arm_1	NA	P-0066833	63	FEMALE	BLACK OR AFRICAN AMERICAN	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-136	patient_consent_arm_1	NA	P-0067903	76	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-137	patient_consent_arm_1	NA	P-0068780	63	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-138	patient_consent_arm_1	NA	P-0068653	73	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-139	patient_consent_arm_1	NA	P-0071512	52	FEMALE	PT REFUSED TO ANSWER	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-140	patient_consent_arm_1	NA	P-0077317	72	FEMALE	UNKNOWN	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-141	patient_consent_arm_1	NA	P-0074264	49	FEMALE	WHITE	Excluded	Unchecked	Unchecked	Checked
+SPECTRUM-OV-142	patient_consent_arm_1	NA	P-0046047	82	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-143	patient_consent_arm_1	NA	P-0077676	67	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-144	patient_consent_arm_1	NA	P-0078004	73	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-145	patient_consent_arm_1	NA	P-0078826	66	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-146	patient_consent_arm_1	NA	P-0079572	72	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
+SPECTRUM-OV-148	patient_consent_arm_1	NA	P-0083560	72	FEMALE	WHITE	Included	Unchecked	Unchecked	Checked
