@@ -65,7 +65,7 @@ gids <- list(
 url_template <- "https://docs.google.com/spreadsheets/d/15RWlyM8EfB7CgFGc22nIw0yBErkdHz0EFf0DYBMae2M/export?format=tsv&id=15RWlyM8EfB7CgFGc22nIw0yBErkdHz0EFf0DYBMae2M&gid="
 
 ontology_list <- gids %>% 
-  imap(~ str_c(url,.x)) %>%
+  imap(~ str_c(url_template,.x)) %>%
   map(~read_tsv(.))
 
 ```
@@ -144,6 +144,21 @@ scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
     by = "patient_race"
   )
 
+## Age ontology
+scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+  # Add patient age
+  left_join(
+    db$patients %>%
+      select(c("patient_id","patient_age")), 
+    by = "patient_id"
+  ) %>%
+  # sex & sex_ontology_term_id field – male (PATO:0000384) or female (PATO:0000383) ('unknown' if info unavailable)
+  left_join(
+    ontology_list$development_stage_ontology %>%
+      select(c("patient_age", "development_stage", "development_stage_ontology_term_id")),
+    by = "patient_age"
+  )
+
 ## Sex ontology
 scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
   # Add patient sex
@@ -169,7 +184,21 @@ seu_obj_annotated@meta.data <- scrna_meta_cell_tbl
 
 ```{r}
 
-SaveH5Seurat(seu_obj_annotated, filename = "seu_obj_annotated.h5Seurat")
-Convert("seu_obj_annotated.h5Seurat", dest = "h5ad")
+# Save Seurat object as h5Seurat
+SeuratDisk::SaveH5Seurat(
+  seu_obj_annotated, 
+  filename = "seu_obj_annotated.h5Seurat",
+  overwrite = TRUE,
+  verbose = TRUE
+)
+
+# Convert h5Seurat file to h5ad file
+SeuratDisk::Convert(
+  "seu_obj_annotated.h5Seurat", 
+  dest = "h5ad",
+  assay = "RNA",
+  overwrite = TRUE,
+  verbose = TRUE
+)
 
 ```
