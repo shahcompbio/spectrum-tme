@@ -1,0 +1,342 @@
+---
+title: "scRNA data conversion for cellxgene"
+subtitle: "MSK SPECTRUM"
+author:
+  - "Ignacio Vazquez-Garcia"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    highlight: tango
+    df_print: paged
+    code_folding: hide
+    fig_align: center
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: yes
+params:
+   rmd: "112_scrna_cellxgene.Rmd"
+---
+
+```{r setup, include=FALSE}
+# Global knit options
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+# Global chunk options
+knitr::opts_chunk$set(echo=FALSE, tidy=TRUE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+
+library(tidyverse)
+library(Seurat)
+library(SeuratData)
+library(SeuratDisk)
+library(sceasy)
+library(googlesheets4)
+library(cowplot)
+
+library(reticulate)
+use_condaenv('cellxgene')
+
+source("src/global_vars.R")
+source("src/metadata.R")
+
+```
+
+## Load data
+
+```{r}
+
+seu_obj <- readr::read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/integrated_seurat.rds")
+
+```
+
+## Load metadata
+
+```{r}
+
+gids <- list(
+  "organism_ontology"="910670315",
+  "tissue_ontology"="1819990913",
+  "assay_ontology"="150407398",
+  "suspension_ontology"="533715780",
+  "disease_ontology"="1550965376",
+  "cell_type_super_ontology"="2137427075",
+  "cell_type_sub_ontology"="120791258",
+  "ethnicity_ontology"="1904472753",
+  "development_stage_ontology"="722315336",
+  "sex_ontology"="1100516779"
+)
+
+url_template <- "https://docs.google.com/spreadsheets/d/15RWlyM8EfB7CgFGc22nIw0yBErkdHz0EFf0DYBMae2M/export?format=tsv&id=15RWlyM8EfB7CgFGc22nIw0yBErkdHz0EFf0DYBMae2M&gid="
+
+ontology_list <- gids %>% 
+  imap(~ str_c(url_template,.x)) %>%
+  map(~read_tsv(.))
+
+```
+
+## Map cellxgene metadata
+
+```{r}
+
+source("src/metadata.R")
+
+# Duplicate Seurat object to add annotations
+seu_obj_annotated <- seu_obj
+scrna_meta_cell_tbl <- seu_obj_annotated@meta.data
+
+# Add patient metadata
+scrna_meta_cell_tbl <- add_cellxgene_patient_metadata(scrna_meta_cell_tbl, db, ontology_list)
+
+# Add sample metadata
+scrna_meta_cell_tbl <- add_cellxgene_sample_metadata(scrna_meta_cell_tbl, db, ontology_list)
+
+# Add cell metadata
+scrna_meta_cell_tbl <- add_cellxgene_cell_metadata(scrna_meta_cell_tbl, db, ontology_list)
+
+# 
+# # Add columns with constant values for all samples based on ontology table
+# 
+# ## Organism ontology
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   # organism & organism_ontology_term_id (Example: Homo sapiens, NCBITaxon:9606)
+#   add_column(
+#     ontology_list$organism_ontology %>%
+#       select(c("organism", "organism_ontology_term_id")),
+#   ) %>%
+#   select(-c("organism"))
+# 
+# # Add columns with sample-dependent values by mapping to ontology table
+# 
+# ## Cell type ontology
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   # Remap monocytes to myeloid cells to follow convention used in paper
+#   mutate(cell_type = ifelse(cell_type == "Monocyte", "Myeloid.cell", cell_type)) %>% 
+#   # cell_type & cell_type_ontology_term_id (Epithelial Cell, CL:0000066)
+#   left_join(
+#     ontology_list$cell_type_super_ontology %>%
+#       select(c("cell_type", "cell_type_ontology_term_id")),
+#     by = "cell_type"
+#   ) %>%
+#   rename(c("author_cell_type" = "cell_type")) %>%
+#   select(-c("cell_type_super","seurat_clusters"))
+# 
+# # Tissue ontology
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   # Add sample assay
+#   left_join(
+#     db$sequencing_scrna %>%
+#       select(c("isabl_id","tumor_subsite")),
+#     by = c("sample"="isabl_id")
+#   ) %>%
+#   # tissue & tissue_ontology_term_id
+#   left_join(
+#     ontology_list$tissue_ontology %>%
+#       select(c("tumor_subsite", "tissue", "tissue_ontology_term_id")),
+#     by = "tumor_subsite"
+#   ) %>%
+#   select(-c("tumor_subsite","tissue"))
+# 
+# ## Assay ontology
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   # Add sample assay
+#   left_join(
+#     db$sequencing_scrna %>%
+#       select(c("isabl_id","platform")),
+#     by = c("sample"="isabl_id")
+#   ) %>%
+#   # assay & assay_ontology_term_id (Example: 10xV2 assay, EFO:0009899)
+#   left_join(
+#     ontology_list$assay_ontology %>%
+#       select(c("platform", "assay", "assay_ontology_term_id")),
+#     by = "platform"
+#   ) %>%
+#   select(-c("platform","assay"))
+# 
+# ## Suspension type ontology
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   # Add suspension_type
+#   mutate(
+#     suspension_type = "cell"
+#   )
+# 
+# ## Disease ontology
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   # Add sample assay
+#   left_join(
+#     db$gyn_diagnosis %>%
+#       select(c("patient_id","gyn_diagnosis_histology")),
+#     by = "patient_id"
+#   ) %>%
+#   # disease & disease_ontology_term_id (MONDO or normal/PATO:0000461 if healthy)
+#   left_join(
+#     ontology_list$disease_ontology %>%
+#       select(c("gyn_diagnosis_histology", "disease", "disease_ontology_term_id")),
+#     by = "gyn_diagnosis_histology"
+#   ) %>%
+#   select(-c("gyn_diagnosis_histology","disease"))
+# 
+# ## Ethnicity ontology
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   # Add patient ethnicity
+#   left_join(
+#     db$patients %>%
+#       select(c("patient_id","patient_race")), 
+#     by = "patient_id"
+#   ) %>%
+#   # ethnicity & ethnicity_ontology_term_id (Example: Asian, HANCESTRO:0008, ‘unknown’ if info unavailable)
+#   left_join(
+#     ontology_list$ethnicity_ontology %>%
+#       select(c("patient_race", "ethnicity", "ethnicity_ontology_term_id")),
+#     by = "patient_race"
+#   ) %>%
+#   select(-c("patient_race","ethnicity"))
+# 
+# ## Age ontology
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   # Add patient age
+#   left_join(
+#     db$patients %>%
+#       select(c("patient_id","patient_age")), 
+#     by = "patient_id"
+#   ) %>%
+#   # development_stage & development_stage_ontology_term_id field (20-year-old human stage,HsapDv:0000114, ‘unknown’ if info unavailable)
+#   left_join(
+#     ontology_list$development_stage_ontology %>%
+#       select(c("patient_age", "development_stage", "development_stage_ontology_term_id")),
+#     by = "patient_age"
+#   ) %>%
+#   select(-c("patient_age","development_stage"))
+# 
+# ## Sex ontology
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   # Add patient sex
+#   left_join(
+#     db$patients %>%
+#       select(c("patient_id","patient_gender")), 
+#     by = "patient_id"
+#   ) %>%
+#   # sex & sex_ontology_term_id field – male (PATO:0000384) or female (PATO:0000383) ('unknown' if info unavailable)
+#   left_join(
+#     ontology_list$sex_ontology %>%
+#       select(c("patient_gender", "sex", "sex_ontology_term_id")),
+#     by = "patient_gender"
+#   ) %>%
+#   select(-c("patient_gender","sex"))
+# 
+# ## Donor identifier
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   # Add patient identifier
+#   mutate(
+#     donor_id = patient_id
+#   ) %>%
+#   select(-c("patient_id","batch"))
+# 
+# ## Sample identifier
+# scrna_meta_cell_tbl <- scrna_meta_cell_tbl %>%
+#   rename(
+#     c("author_sample_id" = "sample")
+#   ) %>%
+#   # Add sample assay
+#   left_join(
+#     db$sequencing_scrna %>%
+#       select(c("isabl_id","tumor_supersite","tumor_site","tumor_subsite","sort_parameters","therapy","procedure","procedure_type")) %>% 
+#       rename(
+#         c("sample_id" = "isabl_id")
+#       ) %>%
+#       rename_with( ~ paste("author", .x, sep = "_")),
+#     by = "author_sample_id"
+#   )
+
+scrna_meta_cell_tbl
+
+seu_obj_annotated@meta.data <- scrna_meta_cell_tbl
+
+```
+
+## Export data
+
+### Metadata
+
+```{r}
+
+write_tsv(scrna_meta_cell_tbl, "release/cellxgene/scrna_cell_metadata.tsv")
+
+```
+
+### Seurat
+
+```{r}
+
+seu_obj_annotated_lite <- 
+  Seurat::DietSeurat(
+    seu_obj_annotated,
+    counts = TRUE,
+    data = TRUE,
+    scale.data = FALSE,
+    assays = "RNA",
+    dimreducs = c("pca","umap50")
+)
+
+```
+
+```{r}
+
+# Save Seurat object as h5Seurat
+SeuratDisk::SaveH5Seurat(
+  seu_obj_annotated, 
+  filename = "release/cellxgene/seu_obj_annotated_seuratdisk.h5Seurat",
+  overwrite = TRUE,
+  verbose = TRUE
+)
+
+# Convert h5Seurat file to h5ad file
+SeuratDisk::Convert(
+  "release/cellxgene/seu_obj_annotated_seuratdisk.h5Seurat", 
+  dest = "h5ad",
+  assay = "RNA",
+  overwrite = TRUE,
+  verbose = TRUE
+)
+
+```
+
+```{r}
+
+# Save Seurat object as h5Seurat
+SeuratDisk::SaveH5Seurat(
+  seu_obj_annotated_lite, 
+  filename = "release/cellxgene/seu_obj_annotated_lite_seuratdisk.h5Seurat",
+  overwrite = TRUE,
+  verbose = TRUE
+)
+
+# Convert h5Seurat file to h5ad file
+SeuratDisk::Convert(
+  "release/cellxgene/seu_obj_annotated_lite_seuratdisk.h5Seurat", 
+  dest = "h5ad",
+  assay = "RNA",
+  overwrite = TRUE,
+  verbose = TRUE
+)
+
+```
+
+### sceasy
+
+```{r}
+
+# sceasy::convertFormat(
+#   seu_obj_annotated_lite, 
+#   assay='RNA', 
+#   from="seurat", 
+#   to="anndata", 
+#   main_layer='data', 
+#   transfer_layers='counts', 
+#   drop_single_values=FALSE, 
+#   outFile='seu_obj_annotated_lite_scgene.h5ad'
+# )
+
+```

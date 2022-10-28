@@ -26,7 +26,7 @@ remove_guides <- guides(color = F, fill = F, shape = F, alpha = F, size = F)
 ggsave_pdf <- function(filename, plot = last_plot(), device = NULL, path = NULL, 
                        scale = 1, width = NA, height = NA, units = "in",#units = c("in", "cm", "mm"), 
                        dpi = 300, limitsize = TRUE, ...) {
-  ggsave(filename = filename, plot = plot, device = cairo_pdf, path = path, 
+  ggsave(filename = filename, plot = plot, device = cairo_pdf, path = path,
          scale = scale, width = width, height = height, units = units, 
          dpi = dpi, limitsize = limitsize, ...)
 }
@@ -126,6 +126,8 @@ mpif_patients <- db$mpif_slide %>%
   filter(patient_id %in% included_patients,
          therapy == "pre-Rx",
          qc_status == "Pass") %>%
+  # HACK
+  filter(!patient_id %in% c("SPECTRUM-OV-006","SPECTRUM-OV-044","SPECTRUM-OV-046","SPECTRUM-OV-129")) %>%
   pull(patient_id) %>%
   unique
 
@@ -143,6 +145,26 @@ bulk_dna_patients <- db$sequencing_bulk_dna %>%
   filter(patient_id %in% included_patients,
          patient_id %in% union(scrna_patients, mpif_patients),
          qc_status == "Pass") %>%
+  distinct(patient_id) %>%
+  pull(patient_id) %>%
+  unique
+
+bulk_dna_tumor_patients <- db$sequencing_bulk_dna %>%
+  mutate(sample_type = ifelse(!is.na(tumor_site), "Tumor", "Normal")) %>%
+  filter(patient_id %in% included_patients,
+         patient_id %in% union(scrna_patients, mpif_patients),
+         qc_status == "Pass",
+         sample_type == "Tumor") %>%
+  distinct(patient_id) %>%
+  pull(patient_id) %>%
+  unique
+
+bulk_dna_normal_patients <- db$sequencing_bulk_dna %>%
+  mutate(sample_type = ifelse(!is.na(tumor_site), "Tumor", "Normal")) %>%
+  filter(patient_id %in% included_patients,
+         patient_id %in% union(scrna_patients, mpif_patients),
+         qc_status == "Pass",
+         sample_type == "Normal") %>%
   distinct(patient_id) %>%
   pull(patient_id) %>%
   unique
@@ -174,8 +196,10 @@ scrna_meta_tbl <- db$sequencing_scrna %>%
   mutate(patient_id_short = str_remove_all(patient_id, "SPECTRUM-OV-"),
          sort_short = str_remove_all(sort_parameters, "singlet, live, "),
          tumor_supersite = str_replace_all(tumor_supersite, "Upper Quadrant", "UQ")) %>% 
-  mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
-                                 "Non-Adnexa", tumor_supersite)) %>% 
+  mutate(
+    tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
+                            "Non-Adnexa", tumor_supersite),
+    tumor_megasite = ordered(tumor_megasite, levels = names(clrs$tumor_megasite))) %>% 
   mutate(tumor_megasite_adnexa = case_when(
     tumor_megasite == "Adnexa" ~ "Adnexa",
     tumor_megasite == "Ascites" ~ "Ascites",
@@ -267,9 +291,11 @@ mpif_fov_meta_tbl <- db$mpif_fov %>%
                 isabl_id_dummy = str_replace_all(isabl_id_dummy, "-RA", "_RA"),
                 isabl_id_dummy = str_replace_all(isabl_id_dummy, "-PP", "_PP"),
                 isabl_id_dummy = str_replace_all(isabl_id_dummy, "-LUQ", "_LUQ"),
-                isabl_id_dummy = str_replace_all(isabl_id_dummy, "-RUQ", "_RUQ")) %>%
-  tidyr::separate(isabl_id_dummy, c("patient_id","site","markers",NA,"fov"), sep = "_", remove = FALSE) %>%
-  dplyr::mutate(pici_id = paste(patient_id, site)) %>%
+                isabl_id_dummy = str_replace_all(isabl_id_dummy, "-RUQ", "_RUQ"),
+                isabl_id_dummy = str_replace_all(isabl_id_dummy, "-OTHER", "_OTHER")) %>%
+  tidyr::separate(isabl_id_dummy, c("patient_id","site_section","markers",NA,"fov"), sep = "_", remove = FALSE) %>%
+  tidyr::separate(site_section, c("site","section"), sep = "-", remove = FALSE) %>%
+  dplyr::mutate(pici_id = glue::glue("{patient_id} {site_section}")) %>%
   dplyr::select(-c('project','patient_id','site')) %>%
   dplyr::rename(image_id = isabl_id) %>%
   left_join(db$mpif_slide, by = "pici_id") %>%
