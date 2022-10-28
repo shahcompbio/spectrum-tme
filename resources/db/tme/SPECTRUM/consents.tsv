@@ -1,0 +1,598 @@
+patient_id	redcap_event_name	redcap_data_access_group	redcap_repeat_instrument	redcap_repeat_instance	patient_consent_irb
+SPECTRUM-OV-001	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-001	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-001	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-001	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-002	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-002	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-002	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-002	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-002	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-003	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-003	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-003	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-003	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-004	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-004	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-004	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-004	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-005	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-005	patient_consent_arm_1	NA	consents	4	12-245
+SPECTRUM-OV-005	patient_consent_arm_1	NA	consents	5	12-245 Part A
+SPECTRUM-OV-005	patient_consent_arm_1	NA	consents	6	12-245 Part C
+SPECTRUM-OV-005	patient_consent_arm_1	NA	consents	9	15-309
+SPECTRUM-OV-005	patient_consent_arm_1	NA	consents	10	17-327
+SPECTRUM-OV-006	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-006	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-006	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-006	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-006	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-007	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-007	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-007	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-007	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-007	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-007	patient_consent_arm_1	NA	consents	6	16-080
+SPECTRUM-OV-007	patient_consent_arm_1	NA	consents	7	19-238
+SPECTRUM-OV-008	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-008	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-008	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-008	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-008	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-009	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-009	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-009	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-009	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-009	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-010	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-010	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-010	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-010	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-010	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-011	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-011	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-011	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-011	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-011	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-012	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-012	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-012	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-012	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-013	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-013	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-013	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-013	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-014	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-014	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-014	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-014	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-014	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-015	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-016	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-016	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-016	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-016	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-017	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-017	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-017	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-017	patient_consent_arm_1	NA	consents	5	20-162
+SPECTRUM-OV-018	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-018	patient_consent_arm_1	NA	consents	3	12-245
+SPECTRUM-OV-018	patient_consent_arm_1	NA	consents	4	12-245 Part A
+SPECTRUM-OV-018	patient_consent_arm_1	NA	consents	5	12-245 Part C
+SPECTRUM-OV-018	patient_consent_arm_1	NA	consents	6	15-309
+SPECTRUM-OV-019	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-019	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-019	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-019	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-020	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-020	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-020	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-020	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-021	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-021	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-021	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-021	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-021	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-022	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-022	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-022	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-022	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-022	patient_consent_arm_1	NA	consents	5	19-053
+SPECTRUM-OV-023	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-023	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-023	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-023	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-023	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-024	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-024	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-024	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-024	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-025	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-025	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-025	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-025	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-025	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-025	patient_consent_arm_1	NA	consents	6	18-428
+SPECTRUM-OV-025	patient_consent_arm_1	NA	consents	7	18-474
+SPECTRUM-OV-025	patient_consent_arm_1	NA	consents	8	19-152
+SPECTRUM-OV-026	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-026	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-026	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-026	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-026	patient_consent_arm_1	NA	consents	5	19-053
+SPECTRUM-OV-027	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-027	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-027	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-027	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-028	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-028	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-028	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-028	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-028	patient_consent_arm_1	NA	consents	5	22-203
+SPECTRUM-OV-029	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-029	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-029	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-029	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-029	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-030	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-030	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-030	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-030	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-030	patient_consent_arm_1	NA	consents	5	19-053
+SPECTRUM-OV-030	patient_consent_arm_1	NA	consents	6	20-379
+SPECTRUM-OV-031	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-031	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-031	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-031	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-031	patient_consent_arm_1	NA	consents	5	15-309
+SPECTRUM-OV-032	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-032	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-032	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-032	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-033	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-033	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-033	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-033	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-033	patient_consent_arm_1	NA	consents	5	19-053
+SPECTRUM-OV-034	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-034	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-034	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-034	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-034	patient_consent_arm_1	NA	consents	5	19-341
+SPECTRUM-OV-035	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-035	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-035	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-035	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-036	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-036	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-036	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-036	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-037	patient_consent_arm_1	NA	consents	1	12-245
+SPECTRUM-OV-037	patient_consent_arm_1	NA	consents	2	12-245 Part A
+SPECTRUM-OV-037	patient_consent_arm_1	NA	consents	3	12-245 Part C
+SPECTRUM-OV-038	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-038	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-038	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-041	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-041	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-041	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-041	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-042	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-042	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-042	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-042	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-044	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-044	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-044	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-044	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-044	patient_consent_arm_1	NA	consents	5	21-078
+SPECTRUM-OV-045	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-045	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-045	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-045	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-045	patient_consent_arm_1	NA	consents	5	19-108
+SPECTRUM-OV-046	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-046	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-046	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-046	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-046	patient_consent_arm_1	NA	consents	5	19-053
+SPECTRUM-OV-047	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-047	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-047	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-047	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-048	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-048	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-048	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-048	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-049	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-049	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-049	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-049	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-050	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-050	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-050	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-050	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-050	patient_consent_arm_1	NA	consents	5	19-108
+SPECTRUM-OV-050	patient_consent_arm_1	NA	consents	6	21-019
+SPECTRUM-OV-051	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-051	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-051	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-051	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-051	patient_consent_arm_1	NA	consents	5	19-108
+SPECTRUM-OV-052	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-052	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-052	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-052	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-052	patient_consent_arm_1	NA	consents	5	19-053
+SPECTRUM-OV-052	patient_consent_arm_1	NA	consents	6	19-108
+SPECTRUM-OV-053	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-053	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-053	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-053	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-053	patient_consent_arm_1	NA	consents	5	19-053
+SPECTRUM-OV-053	patient_consent_arm_1	NA	consents	6	19-108
+SPECTRUM-OV-054	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-054	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-054	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-054	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-056	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-056	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-056	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-056	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-057	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-057	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-057	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-057	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-059	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-059	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-059	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-059	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-060	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-060	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-060	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-060	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-062	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-062	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-062	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-062	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-063	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-063	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-063	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-063	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-064	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-064	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-064	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-064	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-065	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-065	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-065	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-066	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-066	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-066	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-066	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-067	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-067	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-067	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-067	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-067	patient_consent_arm_1	NA	consents	5	19-108
+SPECTRUM-OV-068	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-068	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-068	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-068	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-070	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-070	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-070	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-070	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-070	patient_consent_arm_1	NA	consents	5	19-053
+SPECTRUM-OV-071	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-071	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-071	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-071	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-072	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-072	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-072	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-072	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-073	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-073	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-073	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-073	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-073	patient_consent_arm_1	NA	consents	5	20-190
+SPECTRUM-OV-073	patient_consent_arm_1	NA	consents	6	21-464
+SPECTRUM-OV-075	patient_consent_arm_1	NA	consents	5	12-245
+SPECTRUM-OV-075	patient_consent_arm_1	NA	consents	6	12-245 Part A
+SPECTRUM-OV-075	patient_consent_arm_1	NA	consents	7	12-245 Part C
+SPECTRUM-OV-075	patient_consent_arm_1	NA	consents	8	20-193
+SPECTRUM-OV-075	patient_consent_arm_1	NA	consents	9	20-418
+SPECTRUM-OV-076	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-076	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-076	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-076	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-077	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-077	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-077	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-077	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-078	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-078	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-078	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-078	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-080	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-080	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-080	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-080	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-080	patient_consent_arm_1	NA	consents	5	18-547
+SPECTRUM-OV-080	patient_consent_arm_1	NA	consents	6	20-279
+SPECTRUM-OV-081	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-081	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-081	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-081	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-082	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-082	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-082	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-082	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-083	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-083	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-083	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-083	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-083	patient_consent_arm_1	NA	consents	5	19-108
+SPECTRUM-OV-085	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-085	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-085	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-085	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-087	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-087	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-087	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-087	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-087	patient_consent_arm_1	NA	consents	5	21-359
+SPECTRUM-OV-088	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-088	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-088	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-088	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-088	patient_consent_arm_1	NA	consents	5	19-108
+SPECTRUM-OV-089	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-089	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-089	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-089	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-090	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-090	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-090	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-090	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-090	patient_consent_arm_1	NA	consents	5	19-108
+SPECTRUM-OV-090	patient_consent_arm_1	NA	consents	6	21-162
+SPECTRUM-OV-092	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-092	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-092	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-092	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-092	patient_consent_arm_1	NA	consents	5	18-428
+SPECTRUM-OV-092	patient_consent_arm_1	NA	consents	6	18-474
+SPECTRUM-OV-092	patient_consent_arm_1	NA	consents	7	19-053
+SPECTRUM-OV-092	patient_consent_arm_1	NA	consents	8	21-039
+SPECTRUM-OV-093	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-093	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-093	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-093	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-094	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-094	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-094	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-094	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-095	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-095	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-095	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-095	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-095	patient_consent_arm_1	NA	consents	5	17-182
+SPECTRUM-OV-097	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-097	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-097	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-097	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-097	patient_consent_arm_1	NA	consents	5	19-108
+SPECTRUM-OV-098	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-098	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-098	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-098	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-099	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-099	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-099	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-099	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-100	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-100	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-100	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-100	patient_consent_arm_1	NA	consents	4	17-182
+SPECTRUM-OV-101	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-101	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-101	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-101	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-102	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-102	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-102	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-102	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-102	patient_consent_arm_1	NA	consents	5	19-238
+SPECTRUM-OV-102	patient_consent_arm_1	NA	consents	6	20-407
+SPECTRUM-OV-103	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-103	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-103	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-103	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-104	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-104	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-104	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-104	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-105	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-105	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-105	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-105	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-105	patient_consent_arm_1	NA	consents	5	21-351
+SPECTRUM-OV-106	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-106	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-106	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-106	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-107	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-107	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-107	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-107	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-108	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-108	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-108	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-108	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-109	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-109	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-109	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-109	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-110	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-110	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-110	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-110	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-111	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-111	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-111	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-111	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-112	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-112	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-112	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-112	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-113	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-113	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-113	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-113	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-114	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-114	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-114	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-114	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-115	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-115	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-115	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-115	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-116	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-116	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-116	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-116	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-117	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-117	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-117	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-117	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-118	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-118	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-118	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-118	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-119	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-119	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-119	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-119	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-119	patient_consent_arm_1	NA	consents	5	17-182
+SPECTRUM-OV-120	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-120	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-120	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-120	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-121	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-121	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-121	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-121	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-122	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-122	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-122	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-122	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-122	patient_consent_arm_1	NA	consents	5	17-182
+SPECTRUM-OV-122	patient_consent_arm_1	NA	consents	6	21-359
+SPECTRUM-OV-123	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-123	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-123	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-123	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-124	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-124	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-124	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-124	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-124	patient_consent_arm_1	NA	consents	5	17-182
+SPECTRUM-OV-125	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-125	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-125	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-125	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-125	patient_consent_arm_1	NA	consents	5	20-212
+SPECTRUM-OV-126	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-126	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-126	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-126	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-127	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-127	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-127	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-128	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-128	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-128	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-128	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-129	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-129	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-129	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-129	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-130	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-130	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-130	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-130	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-131	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-131	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-131	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-131	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-131	patient_consent_arm_1	NA	consents	5	20-212
+SPECTRUM-OV-133	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-133	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-133	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-133	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-133	patient_consent_arm_1	NA	consents	5	20-212
+SPECTRUM-OV-134	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-134	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-134	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-134	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-134	patient_consent_arm_1	NA	consents	5	20-212
+SPECTRUM-OV-135	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-135	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-135	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-135	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-136	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-136	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-136	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-137	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-137	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-137	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-137	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-137	patient_consent_arm_1	NA	consents	5	20-212
+SPECTRUM-OV-138	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-138	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-138	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-138	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-138	patient_consent_arm_1	NA	consents	5	20-212
+SPECTRUM-OV-139	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-139	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-139	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-139	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-139	patient_consent_arm_1	NA	consents	5	20-212
+SPECTRUM-OV-140	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-140	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-140	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-140	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-140	patient_consent_arm_1	NA	consents	5	21-202
+SPECTRUM-OV-141	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-141	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-141	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-141	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-142	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-142	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-142	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-142	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-142	patient_consent_arm_1	NA	consents	5	19-133
+SPECTRUM-OV-143	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-143	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-143	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-143	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-144	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-144	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-144	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-144	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-145	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-145	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-145	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-145	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-146	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-146	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-146	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-146	patient_consent_arm_1	NA	consents	4	12-245 Part C
+SPECTRUM-OV-146	patient_consent_arm_1	NA	consents	5	19-347
+SPECTRUM-OV-148	patient_consent_arm_1	NA	consents	1	06-107
+SPECTRUM-OV-148	patient_consent_arm_1	NA	consents	2	12-245
+SPECTRUM-OV-148	patient_consent_arm_1	NA	consents	3	12-245 Part A
+SPECTRUM-OV-148	patient_consent_arm_1	NA	consents	4	12-245 Part C
