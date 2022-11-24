@@ -1,8 +1,16 @@
 ---
-output:
-  bookdown::html_document2:
-    fig_caption: yes
-editor_options:
+title: "Cohort overview"
+subtitle: "MSK SPECTRUM"
+author:
+  - "Ignacio Vazquez-Garcia"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
+editor_options: 
   chunk_output_type: inline
 ---
 
@@ -17,6 +25,7 @@ knitr::opts_chunk$set(echo=FALSE, tidy=TRUE, warning=FALSE, message=FALSE)
 ```
 
 ```{r}
+
 library(tidyverse)
 library(gdata)
 library(stringr)
@@ -32,6 +41,12 @@ library(RColorBrewer)
 source("src/global_vars.R")
 source("src/plot_inventory_heatmap.R")
 source("src/plot_oncoprint_heatmap.R")
+
+```
+
+```{r}
+write_tsv(mpif_slide_meta_tbl, "/work/shah/vazquezi/data/transfers/spectrum/results/mpif/v12/mpif_slide_metadata.tsv")
+write_tsv(mpif_fov_meta_tbl, "/work/shah/vazquezi/data/transfers/spectrum/results/mpif/v12/mpif_fov_metadata.tsv")
 ```
 
 ## Overview
@@ -47,7 +62,7 @@ diagram_png
 
 ```{r}
 patients <- db$patients %>%
-  dplyr::select(patient_id, patient_age) %>%
+  dplyr::select(patient_id, patient_isabl_id, patient_age) %>%
   mutate(patient_id = as.character(patient_id))
 
 gyn_diagnosis <- db$gyn_diagnosis %>%
@@ -57,7 +72,8 @@ gyn_diagnosis <- db$gyn_diagnosis %>%
 
 patient_merged <- patients %>%
   left_join(gyn_diagnosis, by = "patient_id") %>%
-  filter(patient_id %in% included_patients)
+  filter(patient_id %in% included_patients) %>%
+  filter(patient_id %in% Reduce(union, list(scrna_patients, hne_patients, mpif_patients)))
 
 patient_list <-
   list(
@@ -79,7 +95,7 @@ saveWorkbook(wb, "tables/patient_metadata.xlsx", overwrite = TRUE)
 
 ```{r}
 # Load all IMPACT data
-samples <- readr::read_tsv("/work/shah/vazquezi/projects/dmp-2021/mskimpact/data_clinical_sample.txt", comment = "#")
+samples <- vroom::vroom("/work/shah/vazquezi/projects/dmp-2022/mskimpact/data_clinical_sample.txt", comment = "#")
 
 # Clean up column names
 names(samples) <- tolower(names(samples))
@@ -92,7 +108,6 @@ samples <- samples %>%
 samples
 ```
 
-
 ```{r}
 # Load gene annotations
 cancer_gene_census <- readr::read_tsv("/work/shah/vazquezi/projects/spectrum/resources/annotation/cancer_gene_census.tsv")
@@ -103,7 +118,7 @@ genes <- yaml::read_yaml("/work/shah/vazquezi/projects/spectrum/resources/annota
 
 ```{r}
 # Load SNV/indel data
-snv <- readr::read_tsv("/work/shah/vazquezi/projects/dmp-2021/mskimpact/data_mutations_extended.txt", comment = "#")
+snv <- vroom::vroom("/work/shah/vazquezi/projects/dmp-2022/mskimpact/data_mutations_extended.txt", comment = "#")
 
 # Clean up column names
 names(snv) <- tolower(names(snv))
@@ -128,6 +143,7 @@ snv <- snv %>%
       `Nonsense_Mutation`="Truncating_Mutation", 
       `Frame_Shift_Ins`="Truncating_Mutation", 
       `Frame_Shift_Del`="Truncating_Mutation", 
+      `frameshift_deletion`="Truncating_Mutation", 
       `In_Frame_Ins`="In_Frame_Mutation", 
       `In_Frame_Del`="In_Frame_Mutation", 
       `Splice_Site`="Truncating_Mutation", 
@@ -147,8 +163,64 @@ snv
 ### Copy number
 
 ```{r}
+# # Load CNA data
+# cna <- vroom::vroom("/work/shah/vazquezi/projects/dmp-2022/mskimpact/data_CNA.txt")
+# 
+# # Pivot wide to long
+# cna <- cna %>% pivot_longer(-c("Hugo_Symbol"), names_to = "sample_id", values_to = "copy_number")
+# 
+# # Clean up column names
+# names(cna) <- tolower(names(cna))
+# 
+# # Filter samples and variants
+# cna <- cna %>% 
+#   # Add custom IMPACT annotations
+#   dplyr::rename("impact_dmp_sample_id" = "sample_id") %>%
+#   dplyr::left_join(samples, by = "impact_dmp_sample_id") %>%
+#   # Keep included patients
+#   filter(patient_id %in% included_patients) %>%
+#   # Convert to factor
+#   mutate(patient_id = factor(patient_id, levels = included_patients)) %>%
+#   # Add cancer gene annotation
+#   dplyr::left_join(cancer_gene_census %>% dplyr::select('Gene Symbol', 'Role in Cancer'), by = c('hugo_symbol' = 'Gene Symbol')) %>%
+#   mutate(cna_type = case_when(copy_number > 0 ~ "AMP", copy_number < 0 ~ "HOMDEL"))
+# 
+# cna
+```
+
+### Fusions
+
+```{r}
+# Load fusion data
+fusions <- vroom::vroom("/work/shah/vazquezi/projects/dmp-2022/mskimpact/data_sv.txt")
+
+# Clean up column names
+names(fusions) <- tolower(names(fusions))
+
+# Filter samples and variants
+fusions <- fusions %>% 
+  # Add custom IMPACT annotations
+  dplyr::rename("impact_dmp_sample_id" = "sample_id") %>%
+  dplyr::left_join(samples, by = "impact_dmp_sample_id") %>%
+  # Keep included patients
+  filter(patient_id %in% included_patients) %>%
+  # Convert to factor
+  mutate(
+    patient_id = factor(patient_id, levels = included_patients),
+    fusion_type = "Fusion"
+  ) %>%
+  unite(hugo_symbol, c("site1_hugo_symbol", "site2_hugo_symbol"), remove = FALSE, na.rm = TRUE, sep = ":")
+
+fusions
+```
+
+## WGS
+
+### Copy number
+
+```{r}
 # Load CNA data
-cna <- readr::read_tsv("/work/shah/vazquezi/projects/dmp-2021/mskimpact/data_CNA.txt")
+cna <- vroom::vroom("/juno/work/shah/isabl_data_lake/analyses/29/80/22980/results/cna.tsv")
 
 # Pivot wide to long
 cna <- cna %>% pivot_longer(-c("Hugo_Symbol"), names_to = "sample_id", values_to = "copy_number")
@@ -157,42 +229,19 @@ cna <- cna %>% pivot_longer(-c("Hugo_Symbol"), names_to = "sample_id", values_to
 names(cna) <- tolower(names(cna))
 
 # Filter samples and variants
-cna <- cna %>% 
+cna <- cna %>%
   # Add custom IMPACT annotations
-  dplyr::rename("impact_dmp_sample_id" = "sample_id") %>%
-  dplyr::left_join(samples, by = "impact_dmp_sample_id") %>%
+  dplyr::rename("isabl_id" = "sample_id") %>%
+  dplyr::left_join(db$sequencing_bulk_dna, by = "isabl_id") %>%
   # Keep included patients
   filter(patient_id %in% included_patients) %>%
   # Convert to factor
   mutate(patient_id = factor(patient_id, levels = included_patients)) %>%
   # Add cancer gene annotation
   dplyr::left_join(cancer_gene_census %>% dplyr::select('Gene Symbol', 'Role in Cancer'), by = c('hugo_symbol' = 'Gene Symbol')) %>%
-  mutate(cna_type = case_when(copy_number > 0 ~ "AMP", copy_number < 0 ~ "HOMDEL"))
+  mutate(cna_type = case_when(copy_number >= 2 ~ "AMP", copy_number <= -2 ~ "HOMDEL"))
 
 cna
-```
-
-### Fusions
-
-```{r}
-# Load fusion data
-fusions <- readr::read_tsv("/work/shah/vazquezi/projects/dmp-2021/mskimpact/data_fusions.txt")
-
-# Clean up column names
-names(fusions) <- tolower(names(fusions))
-
-# Filter samples and variants
-fusions <- fusions %>% 
-  # Add custom IMPACT annotations
-  dplyr::rename("impact_dmp_sample_id" = "tumor_sample_barcode") %>%
-  dplyr::left_join(samples, by = "impact_dmp_sample_id") %>%
-  # Keep included patients
-  filter(patient_id %in% included_patients) %>%
-  # Convert to factor
-  mutate(patient_id = factor(patient_id, levels = included_patients)) %>%
-  mutate(fusion_type = "Fusion")
-
-fusions
 ```
 
 ```{r}
@@ -217,49 +266,80 @@ snv_cna_fusions_tbl <- bind_rows(snv_tbl, cna_tbl, fusions_tbl) %>%
 
 ```{r}
 # Remove scRNA samples from unidentified sites
-db$sequencing_scrna <- db$sequencing_scrna %>% 
-  filter(patient_id %in% included_patients) %>%
-  filter(tumor_type != "Unknown") %>%
-  filter(therapy == "pre-Rx")
+db$sequencing_scrna <- db$sequencing_scrna %>%
+  mutate(sample_type = "Tumor") %>%
+  filter(tme_inclusion_status == "Yes")
+  # filter(patient_id %in% intersect(included_patients, scrna_patients),
+  #        # tumor_type != "Unknown",
+  #        qc_status == "Pass",
+  #        therapy == "pre-Rx")
 
 # Remove H&E samples that are not adjacent or site-matched slides
 db$he_slide <- db$he_slide %>% 
-  filter(patient_id %in% included_patients) %>%
-  filter(is_adjacent == TRUE) %>%
-  filter(therapy == "pre-Rx")
+  mutate(sample_type = "Tumor") %>%
+  filter(tme_inclusion_status == "Yes",
+         tumor_type != "Unknown")
+  # filter(patient_id %in% intersect(included_patients, hne_patients),
+  #        qc_status == "Pass",
+  #        tumor_type != "Unknown",
+  #        is_adjacent == TRUE,
+  #        therapy == "pre-Rx")
 
 # Remove mpIF samples that have not been delivered
 db$mpif_slide <- db$mpif_slide %>% 
-  filter(patient_id %in% included_patients) %>%
-  filter(submission_status == "Delivered") %>%
-  filter(therapy == "pre-Rx")
+  mutate(sample_type = "Tumor") %>%
+  filter(tme_inclusion_status == "Yes",
+         tumor_type != "Unknown")
+  # filter(patient_id %in% intersect(included_patients, mpif_patients),
+  #        qc_status == "Pass",
+  #        tumor_type != "Unknown",
+  #        therapy == "pre-Rx")
 
 # Remove normal WGS samples and failed samples
 db$sequencing_bulk_dna <- db$sequencing_bulk_dna %>% 
-  filter(patient_id %in% included_patients) %>%
-  filter(tumor_type %in% c("Primary","Metastasis")) %>% 
-  filter(qc_status == "Pass")
+  mutate(sample_type = ifelse(!is.na(tumor_site), "Tumor", "Normal"),
+         therapy = ifelse(!is.na(tumor_site), therapy, "pre-Rx")) %>%
+         # tumor_supersite = ifelse(is.na(tumor_supersite), "Normal", tumor_supersite)) %>%
+  filter(tme_inclusion_status == "Yes")
+  # filter(patient_id %in% intersect(included_patients, bulk_dna_patients),
+  #        # tumor_type %in% c("Primary","Metastasis"),
+  #        qc_status == "Pass")
 
 # Remove normal IMPACT samples and remove duplicates
-db$sequencing_msk_impact_custom <- db$sequencing_msk_impact_custom %>% 
+sequencing_msk_impact_custom_tumor <- db$sequencing_msk_impact_custom %>% 
   filter(patient_id %in% included_patients) %>%
   left_join(samples %>% dplyr::select(impact_dmp_sample_id, tumor_purity)) %>%
   filter(impact_gene_panel == "IMPACT") %>%
   group_by(impact_dmp_patient_id) %>%
   top_n(1, tumor_purity) %>%
-  ungroup
+  ungroup %>%
+  select(-tumor_purity)
+
+sequencing_msk_impact_custom_normal <- db$sequencing_msk_impact_custom %>%
+  filter(patient_id %in% intersect(included_patients, impact_patients),
+         impact_gene_panel == "Secondary Germline MSK-IMPACT")
+
+db$sequencing_msk_impact_custom <- bind_rows(
+  sequencing_msk_impact_custom_tumor,
+  sequencing_msk_impact_custom_normal) %>%
+  filter(patient_id %in% intersect(included_patients, impact_patients)) %>%
+  mutate(sample_type = ifelse(impact_gene_panel == "IMPACT", "Tumor", "Normal"),
+         therapy = ifelse(impact_gene_panel == "IMPACT", therapy, "pre-Rx"))
+         # tumor_supersite = ifelse(is.na(tumor_supersite), "Normal", tumor_supersite))
 
 # Remove Myriad samples not yet delivered
-db$sequencing_myriad <- db$sequencing_myriad %>% 
-  filter(patient_id %in% included_patients) %>%
-  filter(status == "Delivered")
+db$sequencing_myriad <- db$sequencing_myriad %>%
+  mutate(sample_type = "Tumor") %>%
+  filter(patient_id %in% included_patients,
+         qc_status == "Pass")
 
 patients <- db$patients %>%
   dplyr::select(patient_id, patient_age) %>%
   mutate(patient_id = as.character(patient_id))
 
 gyn_diagnosis <- db$gyn_diagnosis %>%
-  mutate(gyn_diagnosis_chemo_intent_description = factor(gyn_diagnosis_chemo_intent_description, levels = c('Primary', 'NACT/IDS'))) %>%
+  mutate(gyn_diagnosis_chemo_intent_description = factor(gyn_diagnosis_chemo_intent_description, levels = c('Primary', 'NACT/IDS')),
+         gyn_diagnosis_procedure_description = recode_factor(gyn_diagnosis_chemo_intent_description, Primary = "Primary Debulking", `NACT/IDS` = "Laparoscopic Biopsy")) %>%
   mutate(patient_id = as.character(patient_id))
 ```
 
@@ -295,7 +375,7 @@ inventory
 wb <- createWorkbook()
 lapply(seq_along(inventory_list), function(i){
   addWorksheet(wb=wb, sheetName = names(inventory_list[i]))
-  writeData(wb, sheet = i, inventory_list[[i]][-length(inventory_list[[i]])])
+  writeData(wb, sheet = i, inventory_list[[i]])
 })
 
 saveWorkbook(wb, "tables/sample_metadata.xlsx", overwrite = TRUE)
@@ -304,13 +384,21 @@ saveWorkbook(wb, "tables/sample_metadata.xlsx", overwrite = TRUE)
 ### Sample table
 
 ```{r}
+inventory %>% 
+  group_by(technique) %>%
+  distinct(patient_id, tumor_site, therapy) %>%
+  summarize(n_patients = n_distinct(patient_id), n_samples = n()) %>%
+  ungroup()
+```
+
+```{r}
 sample_inventory <- get_sample_inventory(inventory, unique = FALSE)
 
 # readr::write_tsv(sample_inventory, file=snakemake@output$sample_inventory)
 
 data <- sample_inventory %>%
   group_by(patient_id, tumor_type, tumor_supersite, therapy, is_site_matched) %>%
-  summarise_at(vars(scrna, bulk_dna, myriad, impact, he_slide, mpif_slide), list(sum)) %>%
+  summarise_at(vars(scrna, bulk_dna, impact, myriad, he_slide, mpif_slide), list(sum)) %>%
   ungroup()
 
 data <- data %>% 
@@ -321,20 +409,28 @@ data <- data %>%
     consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)),
     consensus_signature_short = ordered(consensus_signature_short, levels = names(clrs$consensus_signature_short))
     ) %>%
-  dplyr::rename(`scRNA` = scrna, `Bulk WGS` = bulk_dna, `Myriad` = myriad, `MSK-IMPACT` = impact, `H&E` = he_slide, `mpIF` = mpif_slide)
+  dplyr::rename(`scRNA` = scrna, `Bulk WGS` = bulk_dna, `MSK-IMPACT` = impact, `Myriad` = myriad, `H&E` = he_slide, `mpIF` = mpif_slide)
 
 # mat <- mat > 0
 ```
 
 ### Patient table
 
-```{r merge_patient_inventory}
+```{r}
+inventory %>% 
+  filter(technique %in% c("scrna","he_slide","mpif_slide")) %>% 
+  distinct(patient_id, tumor_site, therapy) %>%
+  summarize(n_patients = n_distinct(patient_id), n_samples = n())
+```
+
+```{r}
 patient_inventory <- sample_inventory %>%
   group_by(patient_id) %>%
   summarise(
+    scrna = sum(scrna),
     bulk_dna = sum(bulk_dna),
     impact = sum(impact),
-    scrna = sum(scrna),
+    myriad = sum(myriad),
     he_slide = sum(he_slide),
     mpif_slide = sum(mpif_slide)
     )
@@ -344,6 +440,7 @@ patient_inventory
 ```
 
 ```{r}
+
 data <- patient_inventory %>% 
   dplyr::left_join(db$mutational_signatures, by = 'patient_id') %>%
   mutate(
@@ -352,7 +449,7 @@ data <- patient_inventory %>%
     consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)),
     consensus_signature_short = ordered(consensus_signature_short, levels = names(clrs$consensus_signature_short))
     ) %>%
-  dplyr::rename(`scRNA` = scrna, `Bulk WGS` = bulk_dna, `MSK-IMPACT` = impact, `H&E` = he_slide, `mpIF` = mpif_slide)
+  dplyr::rename(`scRNA` = scrna, `Bulk WGS` = bulk_dna, `MSK-IMPACT` = impact, `Myriad` = myriad, `H&E` = he_slide, `mpIF` = mpif_slide)
 
 top_annotation <- data
 
@@ -361,12 +458,14 @@ left_annotation <- data
 mat <- data %>%
     dplyr::select(`scRNA`, `H&E`, `mpIF`, `Bulk WGS`, `MSK-IMPACT`) %>%
     as.matrix() %>% t()
-```
 
+```
 
 ## OncoPrint (main)
 
 ```{r, fig.width = 8, fig.height = 4.5}
+
+source("src/plot_oncoprint_heatmap.R")
 
 snv_cna_fusions_wide_tbl <- snv_cna_fusions_tbl %>%
   filter(patient_id %in% Reduce(union, list(scrna_patients, hne_patients, mpif_patients))) %>%
@@ -389,8 +488,7 @@ included_genes <-
     "RB1",
     "NF1",
     "MYC",
-    "CCNE1",
-    "KRAS")
+    "CCNE1")
 
 oncoprint_main_mat <- snv_cna_fusions_wide_tbl %>%
   # Only keep genes of interest
@@ -407,21 +505,23 @@ top_df <- db$mutational_signatures %>%
   left_join(patients, by = 'patient_id') %>%
   left_join(gyn_diagnosis, by = 'patient_id') %>%
   mutate(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
+  filter(patient_id %in% colnames(oncoprint_main_mat)) %>%
+  distinct(patient_id, .keep_all = TRUE) %>% # HACK
   arrange(match(patient_id, colnames(oncoprint_main_mat))) %>%
-  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>%
-  dplyr::select(consensus_signature,
+  mutate(wgs_signature = ordered(wgs_signature, levels = names(clrs$wgs_signature))) %>%
+  dplyr::select(wgs_signature,
                 patient_age,
-                gyn_diagnosis_chemo_intent_description,
-                gyn_diagnosis_figo_stage) %>%
+                gyn_diagnosis_figo_stage,
+                gyn_diagnosis_procedure_description) %>%
   as.data.frame
 
-colnames(top_df) <- c("Mutational\nsignature", "Age", "Surgery", "Stage")
+colnames(top_df) <- c("Mutational\nsignature", "Age", "Stage", "Surgery")
 colours <-
   list(
-    "Mutational\nsignature" = clrs$consensus_signature[names(clrs$consensus_signature)!="NA"],
+    "Mutational\nsignature" = clrs$wgs_signature[names(clrs$wgs_signature)!="NA"],
     "Age" = circlize::colorRamp2(seq(30, 90, 20), brewer.pal(4, "RdPu")),
-    "Surgery" = clrs$chemo_intent[names(clrs$chemo_intent)!="Salvage"],
-    "Stage" = clrs$pathology_stage
+    "Stage" = clrs$pathology_stage,
+    "Surgery" = clrs$procedure
   )
 top_annotation <- columnAnnotation(
   df = top_df,
@@ -485,11 +585,11 @@ rownames(oncoprint_main_ht@matrix)
 
 colnames(oncoprint_main_ht@matrix)
 
-cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_hne_mpif_patients.pdf", width = 13.5, height = 4.5)
+cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_hne_mpif_patients.pdf", width = 8, height = 4.5)
 print(oncoprint_main_ht)
 dev.off()
 
-png("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_hne_mpif_patients.png", width = 13.5, height = 4.5, res = 300)
+png("figures/110_cohort_overview/110_oncoprint_spectrum_scrna_hne_mpif_patients.png", width = 8, height = 4.5, res = 300)
 print(oncoprint_main_ht)
 dev.off()
 
@@ -534,28 +634,29 @@ oncoprint_supp_mat <- snv_cna_fusions_wide_tbl %>%
   as.matrix
 
 # Top annotation
-top_df <- db$mutational_signatures %>%
+top_df <- patients %>%
   filter(patient_id %in% included_patients) %>%
-  left_join(patients, by = 'patient_id') %>%
+  # left_join(patients, by = 'patient_id') %>%
+  left_join(db$mutational_signatures, by = "patient_id") %>%
   left_join(gyn_diagnosis, by = 'patient_id') %>%
   transform(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
   filter(patient_id %in% colnames(oncoprint_supp_mat)) %>%
+  distinct(patient_id, .keep_all = TRUE) %>% # HACK
   arrange(match(patient_id, colnames(oncoprint_supp_mat))) %>%
-  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>%
-  dplyr::select(consensus_signature,
+  mutate(wgs_signature = ordered(wgs_signature, levels = names(clrs$wgs_signature))) %>%
+  dplyr::select(wgs_signature,
                 patient_age,
-                gyn_diagnosis_chemo_intent_description,
-                gyn_diagnosis_figo_stage) %>%
+                gyn_diagnosis_figo_stage,
+                gyn_diagnosis_procedure_description) %>%
   as.data.frame
 
-colnames(top_df) <- c("Mutational\nsignature", "Age", "Surgery", "Stage")
+colnames(top_df) <- c("Mutational\nsignature", "Age", "Stage", "Surgery")
 colours <-
   list(
-    "Mutational\nsignature" = clrs$consensus_signature[names(clrs$consensus_signature) !=
-                                               "NA"],
+    "Mutational\nsignature" = clrs$wgs_signature[names(clrs$wgs_signature) != "NA"],
     "Age" = circlize::colorRamp2(seq(30, 90, 20), brewer.pal(4, "PuRd")),
-    "Surgery" = clrs$chemo_intent[names(clrs$chemo_intent) != "Salvage"],
-    "Stage" = clrs$pathology_stage
+    "Stage" = clrs$pathology_stage,
+    "Surgery" = clrs$procedure
   )
 top_annotation <- columnAnnotation(
   df = top_df,
@@ -615,35 +716,173 @@ dev.off()
 
 ```
 
+## OncoPrint (CDK12-ERBB1 co-amplification)
+
+```{r, fig.width = 13.5, fig.height = 4.6}
+
+# snv_cna_fusions_wide_tbl <- snv_cna_fusions_tbl %>%
+#   filter(patient_id %in% included_patients) %>%
+#   transform(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
+#   pivot_wider(
+#     id_cols = "hugo_symbol",
+#     names_from = "patient_id",
+#     values_from = "type",
+#     values_fn = list(type = ~ str_c(., collapse = ","))
+#   ) %>%
+#   arrange(hugo_symbol)
+# 
+# included_genes <-
+#   c("TP53",
+#     "BRCA1",
+#     "BRCA2",
+#     "ATM",
+#     "PALB2",
+#     "CDK12",
+#     "RB1",
+#     "NF1",
+#     "MYC",
+#     "CCNE1",
+#     "KRAS",
+#     "ERBB2")
+# 
+# # Oncoprint matrix
+# oncoprint_supp_mat <- snv_cna_fusions_wide_tbl %>%
+#   # Only keep genes of interest
+#   filter(hugo_symbol %in% genes$hgsoc) %>%
+#   # Keep included genes
+#   filter(hugo_symbol %in% included_genes) %>%
+#   arrange(match(hugo_symbol, included_genes)) %>%
+#   column_to_rownames(var = "hugo_symbol") %>%
+#   as.matrix
+# 
+# # Top annotation
+# top_df <- db$mutational_signatures %>%
+#   filter(patient_id %in% included_patients) %>%
+#   left_join(patients, by = 'patient_id') %>%
+#   left_join(gyn_diagnosis, by = 'patient_id') %>%
+#   transform(patient_id = str_remove_all(patient_id, "SPECTRUM-OV-")) %>%
+#   filter(patient_id %in% colnames(oncoprint_supp_mat)) %>%
+#   distinct(patient_id, .keep_all = TRUE) %>% # HACK
+#   arrange(match(patient_id, colnames(oncoprint_supp_mat))) %>%
+#   mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>%
+#   dplyr::select(consensus_signature,
+#                 patient_age,
+#                 gyn_diagnosis_figo_stage,
+#                 gyn_diagnosis_procedure_description) %>%
+#   as.data.frame
+# 
+# colnames(top_df) <- c("Mutational\nsignature", "Age", "Stage", "Surgery")
+# colours <-
+#   list(
+#     "Mutational\nsignature" = clrs$consensus_signature[names(clrs$consensus_signature) !=
+#                                                "NA"],
+#     "Age" = circlize::colorRamp2(seq(30, 90, 20), brewer.pal(4, "PuRd")),
+#     "Stage" = clrs$pathology_stage,
+#     "Surgery" = clrs$procedure
+#   )
+# top_annotation <- columnAnnotation(
+#   df = top_df,
+#   col = colours,
+#   # labels = ann$`Mutational signature`,
+#   # labels_gp = gpar(col = "white", fontsize = 10),
+#   annotation_width = unit(c(1, 4), "cm"),
+#   show_legend = c(TRUE),
+#   show_annotation_name = TRUE,
+#   annotation_name_side = "left",
+#   annotation_name_gp = list(fontsize = 10),
+#   simple_anno_size = unit(0.35, "cm"),
+#   gap = unit(1, "mm")
+# )
+# 
+# # Right annotation
+# right_annotation = rowAnnotation(
+#   "# alterations\nper gene" = anno_oncoprint_barplot(
+#     c("MUT", "AMP", "HOMDEL", "Fusion"),
+#     border = FALSE,
+#     bar_width = 0.6,
+#     height = unit(4, "cm"),
+#     axis_param = list(side = "bottom", labels_rot = 90)
+#   ),
+#   annotation_name_gp = list(fontsize = 8)
+# )
+# 
+# oncoprint_supp_ht <-
+#   plot_oncoprint_heatmap(
+#     mat = oncoprint_supp_mat,
+#     top_annotation = top_annotation,
+#     bottom_annotation = bottom_annotation,
+#     right_annotation = right_annotation,
+#     column_split = top_df$`Mutational\nsignature`
+#   )
+# 
+# print(nrow(oncoprint_supp_ht@matrix))
+# print(ncol(oncoprint_supp_ht@matrix))
+# 
+# oncoprint_supp_lgd_list <- plot_oncoprint_legend()
+# 
+# oncoprint_supp_ht <- ComplexHeatmap::draw(
+#   oncoprint_supp_ht,
+#   merge_legends = TRUE,
+#   heatmap_legend_side = "bottom",
+#   annotation_legend_side = "bottom",
+#   heatmap_legend_list = oncoprint_supp_lgd_list
+# )
+# 
+# cairo_pdf("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients_reply_to_reviewers_erbb2.pdf", width = 13.5, height = 4.6)
+# print(oncoprint_supp_ht)
+# dev.off()
+# 
+# png("figures/110_cohort_overview/110_oncoprint_spectrum_all_patients_reply_to_reviewers_erbb2.png", width = 13.5, height = 4.6, res = 300)
+# print(oncoprint_supp_ht)
+# dev.off()
+
+```
+
 ## Composite figure
 
 ```{r}
 
 data <- inventory %>%
-  filter(patient_id %in% Reduce(union, list(scrna_patients, hne_patients, mpif_patients))) %>%
-  filter((therapy == "pre-Rx") | (therapy == "post-Rx" & technique == "bulk_dna")) %>%
+  filter(patient_id %in% Reduce(union, list(scrna_patients, hne_patients, mpif_patients)),
+         (therapy == "pre-Rx") | (therapy == "post-Rx" & technique %in% c("bulk_dna", "impact"))) %>%
+  # mutate(
+  #   tumor_supersite = ifelse(sample_type=="Normal" & technique %in% c("bulk_dna", "impact"), "Other", tumor_supersite),
+  #   tumor_site = ifelse(sample_type=="Normal" & technique %in% c("bulk_dna", "impact"), "Other", tumor_site)) %>%
   get_sample_inventory(., unique = TRUE) %>% 
-  dplyr::left_join(patients, by = 'patient_id') %>%
-  dplyr::left_join(db$mutational_signatures, by = 'patient_id') %>%
-  dplyr::left_join(gyn_diagnosis, by = 'patient_id') %>%
+  left_join(patients, by = 'patient_id') %>%
+  left_join(db$mutational_signatures, by = 'patient_id') %>%
+  left_join(gyn_diagnosis, by = 'patient_id') %>%
   mutate(
     patient_id = str_remove_all(patient_id, "SPECTRUM-OV-"),
     # technique = ordered(technique, levels = c("scrna", "he_slide", "mpif_slide", "bulk_dna", "impact")),
-    tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite)),
+    # tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite)),
     consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)),
-    consensus_signature_short = ordered(consensus_signature_short, levels = names(clrs$consensus_signature_short))
+    consensus_signature_short = ordered(consensus_signature_short, levels = names(clrs$consensus_signature_short)),
+    # sample_type_tumor_supersite = paste(sample_type, tumor_supersite, sep = "_"), 
+    sample_type_tumor_supersite = ordered(paste(sample_type, tumor_supersite, sep = "_"),
+                                          levels = c(paste("Tumor", names(clrs$tumor_supersite), sep = "_"), "Normal_NA"))
     ) %>%
-  dplyr::select(patient_id, patient_age, gyn_diagnosis_chemo_intent_description, gyn_diagnosis_figo_stage, tumor_supersite, consensus_signature, scrna, he_slide, mpif_slide, bulk_dna, impact) %>%
+  dplyr::select(patient_id, patient_age, gyn_diagnosis_chemo_intent_description, gyn_diagnosis_figo_stage, sample_type_tumor_supersite, consensus_signature, scrna, he_slide, mpif_slide, bulk_dna, impact) %>%
   dplyr::rename(`scRNA` = scrna, `H&E` = he_slide, `mpIF` = mpif_slide, `Bulk WGS` = bulk_dna, `MSK-IMPACT` = impact) %>%
-  arrange(tumor_supersite) %>%
-  pivot_wider(names_from = "tumor_supersite", values_from = c(`scRNA`, `H&E`, `mpIF`, `Bulk WGS`, `MSK-IMPACT`), values_fn = sum, values_fill = 0) %>%
-  mutate(`Bulk WGS_Other` = rowSums(dplyr::select(.,starts_with("Bulk WGS")))) %>%
-  mutate(`MSK-IMPACT_Other` = rowSums(dplyr::select(.,starts_with("MSK-IMPACT")))) %>%
-  dplyr::select(c("patient_id", "patient_age", "gyn_diagnosis_chemo_intent_description", "gyn_diagnosis_figo_stage", "consensus_signature", contains(c("scRNA", "mpIF", "H&E")), "Bulk WGS_Other", "MSK-IMPACT_Other")) %>%
-  dplyr::select(-c("H&E_Ascites","mpIF_Ascites"))
+  arrange(sample_type_tumor_supersite) %>%
+  pivot_wider(names_from = "sample_type_tumor_supersite", values_from = c(`scRNA`, `H&E`, `mpIF`, `Bulk WGS`, `MSK-IMPACT`), values_fn = sum, values_fill = 0) %>%
+  mutate(
+    `Bulk WGS_Tumor_Other` = rowSums(dplyr::select(.,starts_with("Bulk WGS_Tumor"))),
+    `Bulk WGS_Normal_Other` = `Bulk WGS_Normal_NA`,
+    `MSK-IMPACT_Tumor_Other` = rowSums(dplyr::select(.,starts_with("MSK-IMPACT_Tumor"))),
+    `MSK-IMPACT_Normal_Other` = `MSK-IMPACT_Normal_NA`) %>%
+  # mutate(`Bulk WGS_Other` = rowSums(dplyr::select(.,starts_with("Bulk WGS")))) %>%
+  # mutate(`MSK-IMPACT_Other` = rowSums(dplyr::select(.,starts_with("MSK-IMPACT")))) %>%
+  dplyr::select(
+    c("patient_id", "patient_age", 
+      "gyn_diagnosis_chemo_intent_description", "gyn_diagnosis_figo_stage", "consensus_signature", 
+      contains(c("scRNA", "H&E", "mpIF")), 
+      "Bulk WGS_Tumor_Other", "Bulk WGS_Normal_Other", 
+      "MSK-IMPACT_Tumor_Other", "MSK-IMPACT_Normal_Other"))# %>%
+  # dplyr::select(-c("H&E_Ascites","mpIF_Ascites"))
 
 inventory_mat <- data %>%
-    dplyr::rename(`Bulk WGS_Other` = `Bulk WGS_Other`, `MSK-IMPACT_Other` = `MSK-IMPACT_Other`) %>%
+    # dplyr::rename(`Bulk WGS_Other` = `Bulk WGS_Other`, `MSK-IMPACT_Other` = `MSK-IMPACT_Other`) %>%
     dplyr::select(c("patient_id", contains(c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT")))) %>%
     column_to_rownames(var = "patient_id") %>%
     as.matrix() %>% t()
@@ -653,60 +892,150 @@ inventory_mat <- inventory_mat[rowSums(inventory_mat)>0,colnames(oncoprint_main_
 bottom_annotation <- data
 
 left_annotation <- inventory_mat %>%
-  rownames() %>%
-  as_tibble() %>%
-  tidyr::separate(value, c("technique", "tumor_supersite"), sep = "_") %>%
+  rowSums() %>%
+  bind_rows() %>%
+  pivot_longer(everything(), names_to = "technique_sample_type_tumor_supersite", values_to = "n_samples") %>%
+  tidyr::separate(technique_sample_type_tumor_supersite, c("technique", "sample_type", "tumor_supersite"), sep = "_") %>%
+  group_by(technique) %>%
+  mutate(n_samples = sum(n_samples)) %>%
+  ungroup() %>%
   mutate(
     technique = ordered(technique, levels = c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT")),
-    tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))
-    )
+    technique_n_samples = ifelse(technique %in% c("scRNA", "H&E", "mpIF"), glue::glue("{technique}\nn = {n_samples}"), glue::glue("{technique}")),
+    tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))) #%>%
+  # arrange(technique, sample_type, tumor_supersite)
+
+technique_mapping <- unique(left_annotation$technique_n_samples)
+names(technique_mapping) <- unique(left_annotation$technique)
+
+left_annotation <- left_annotation %>%
+  mutate(technique_n_samples = recode_factor(technique_n_samples, !!!technique_mapping[c("scRNA","H&E","mpIF","Bulk WGS","MSK-IMPACT")]))
 
 ```
 
-```{r patient_heatmap_vignette, fig.width=10, fig.height=4.5, results="asis"}
+
+```{r}
+
+# data <- inventory %>%
+#   filter(patient_id %in% Reduce(union, list(scrna_patients, hne_patients, mpif_patients))) %>%
+#   filter((therapy == "pre-Rx") | (therapy == "post-Rx" & technique %in% c("bulk_dna","impact"))) %>%
+#   get_sample_inventory(., unique = TRUE) %>% 
+#   dplyr::left_join(patients, by = 'patient_id') %>%
+#   dplyr::left_join(db$mutational_signatures, by = 'patient_id') %>%
+#   dplyr::left_join(gyn_diagnosis, by = 'patient_id') %>%
+#   mutate(
+#     patient_id = str_remove_all(patient_id, "SPECTRUM-OV-"),
+#     # technique = ordered(technique, levels = c("scrna", "he_slide", "mpif_slide", "bulk_dna", "impact")),
+#     tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite)),
+#     consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)),
+#     consensus_signature_short = ordered(consensus_signature_short, levels = names(clrs$consensus_signature_short)),
+#     sample_type_tumor_supersite = paste(sample_type, tumor_supersite, sep = "_")) %>%
+#   dplyr::select(
+#     patient_id, patient_age, 
+#     gyn_diagnosis_chemo_intent_description, gyn_diagnosis_figo_stage, consensus_signature,
+#     sample_type, tumor_supersite, sample_type_tumor_supersite, 
+#     scrna, he_slide, mpif_slide, bulk_dna, impact) %>%
+#   dplyr::rename(`scRNA` = scrna, `H&E` = he_slide, `mpIF` = mpif_slide, `Bulk WGS` = bulk_dna, `MSK-IMPACT` = impact) %>%
+#   arrange(sample_type_tumor_supersite) %>%
+#   pivot_wider(names_from = "sample_type_tumor_supersite", values_from = c(`scRNA`, `H&E`, `mpIF`, `Bulk WGS`, `MSK-IMPACT`), values_fn = sum, values_fill = 0) %>%
+#   mutate(`Bulk WGS_Tumor_Other` = rowSums(dplyr::select(.,starts_with("Bulk WGS_Tumor")))) %>%
+#   mutate(`MSK-IMPACT_Tumor_Other` = rowSums(dplyr::select(.,starts_with("MSK-IMPACT_Tumor")))) %>%
+#   dplyr::select(c("patient_id", "patient_age", "gyn_diagnosis_chemo_intent_description", "gyn_diagnosis_figo_stage", "consensus_signature", 
+#                   contains(c("scRNA_Tumor", "H&E_Tumor", "mpIF_Tumor")), 
+#                   "Bulk WGS_Tumor_Other", "MSK-IMPACT_Tumor_Other")) %>%
+#   # dplyr::select(c("patient_id", "patient_age", "gyn_diagnosis_chemo_intent_description", "gyn_diagnosis_figo_stage", "consensus_signature", contains(c("scRNA_Tumor", "H&E_Tumor", "mpIF_Tumor")), "Bulk WGS_Tumor_Other", "Bulk WGS_Normal_NA", "MSK-IMPACT_Tumor_Other", "MSK-IMPACT_Normal_NA")) %>%
+#   dplyr::select(-c("H&E_Tumor_Ascites","mpIF_Tumor_Ascites")) %>%
+#   distinct(patient_id, .keep_all = TRUE)
+# 
+# inventory_mat <- data %>%
+#     # dplyr::rename(`Bulk WGS_Tumor_Other` = `Bulk WGS_Tumor_Other`, `MSK-IMPACT_Tumor_Other` = `MSK-IMPACT_Tumor_Other`) %>%
+#     dplyr::select(c("patient_id", contains(c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT")))) %>%
+#     column_to_rownames(var = "patient_id") %>%
+#     as.matrix() %>% t()
+# 
+# # inventory_mat <- inventory_mat[rowSums(inventory_mat)>0,colnames(oncoprint_main_mat)]
+# 
+# bottom_annotation <- data
+# 
+# # left_annotation <- inventory_mat %>%
+# #   rownames() %>%
+# #   as_tibble() %>%
+# #   tidyr::separate(value, c("technique", "tumor_supersite"), sep = "_") %>%
+# #   mutate(
+# #     technique = ordered(technique, levels = c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT")),
+# #     tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))
+# #     )
+# 
+# left_annotation <- inventory_mat %>%
+#   rowSums() %>%
+#   bind_rows() %>%
+#   pivot_longer(everything(), names_to = "technique_sample_type_tumor_supersite", values_to = "n_samples") %>%
+#   tidyr::separate(technique_sample_type_tumor_supersite, c("technique", "sample_type", "tumor_supersite"), sep = "_") %>%
+#   group_by(technique) %>%
+#   mutate(n_samples = sum(n_samples)) %>%
+#   ungroup() %>%
+#   mutate(
+#     technique = ordered(technique, levels = c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT")),
+#     technique_n_samples = glue::glue("{technique}\nn = {n_samples}"),
+#     tumor_supersite = ordered(tumor_supersite, levels = names(clrs$tumor_supersite))
+#     )
+# 
+# technique_mapping <- unique(left_annotation$technique_n_samples)
+# names(technique_mapping) <- unique(left_annotation$technique)
+# 
+# left_annotation <- left_annotation %>%
+#   mutate(technique = recode_factor(technique, !!!technique_mapping[c("scRNA","H&E","mpIF")]))
+
+```
+
+```{r patient_heatmap_vignette, fig.width=10, fig.height=4.75, results="asis"}
+
+source("src/plot_inventory_heatmap.R")
 
 inventory_ht <-
   plot_inventory_heatmap(
     inventory_mat,
     bottom_annotation,
     left_annotation,
-    row_split = "technique",
+    row_split = "technique_n_samples",
     column_split = "consensus_signature",
-    column_order = colnames(oncoprint_main_mat)
+    column_order = colnames(inventory_mat)
   )
 
-ComplexHeatmap::draw(inventory_ht,
-                     merge_legend = TRUE,
-                     annotation_legend_side = "right")
+inventory_lgd_list <- 
+  plot_inventory_annotation_legend_list()
+
+ComplexHeatmap::draw(
+  inventory_ht,
+  merge_legend = TRUE,
+  annotation_legend_side = "right")
 
 ```
 
-```{r, fig.width = 9, fig.height = 8.8}
+```{r, fig.width = 9, fig.height = 9}
 
-ht_list <- oncoprint_main_ht %v% inventory_ht 
+ht_list <- oncoprint_main_ht %v% inventory_ht
 
-column_order = unlist(column_order(oncoprint_main_ht))
+column_order <- unlist(column_order(oncoprint_main_ht))
 
 cohort_ht <- ComplexHeatmap::draw(
   ht_list, 
   merge_legends = TRUE, 
   heatmap_legend_side = "bottom",
   annotation_legend_side = "bottom",
+  annotation_legend_list = inventory_lgd_list,
   heatmap_legend_list = oncoprint_main_lgd_list,
   column_title = "Patient",
   column_title_side = "bottom",
   column_title_gp = gpar(fontsize = 10),
   main_heatmap = 1, 
   auto_adjust = FALSE)
-  # column_split = column_split_shared,
-  # column_order = column_order)#, column_split = ann)
 
-
-cairo_pdf("figures/110_cohort_overview/110_cohort_overview.pdf", width = 9, height = 8.8)
+cairo_pdf("figures/110_cohort_overview/110_cohort_overview.pdf", width = 9, height = 9)
 print(cohort_ht)
 dev.off()
 
-png("figures/110_cohort_overview/110_cohort_overview.png", width = 9, height = 8.8, res = 300)
+png("figures/110_cohort_overview/110_cohort_overview.png", width = 9, height = 9, res = 300)
 print(cohort_ht)
 dev.off()
 
@@ -733,7 +1062,870 @@ dev.off()
 
 ```
 
-## Session
+# Overlap
+
+```{r}
+
+source("src/global_vars.R")
+
+db_all <- db
+db_filtered <- db
+
+```
+
+## All
+
+```{r}
+
+# Remove scRNA samples from unidentified sites
+db_all$sequencing_scrna <- scrna_meta_tbl
+# db_all$sequencing_scrna <- db_all$sequencing_scrna %>% 
+#   dplyr::filter(patient_id %in% intersect(included_patients, scrna_patients),
+#                 # tumor_type != "Unknown",
+#                 qc_status == "Pass",
+#                 therapy == "pre-Rx")
+
+# Remove H&E samples that are not adjacent or site-matched slides
+db_all$he_slide <- hne_meta_tbl
+# db_all$he_slide <- db_all$he_slide %>%
+#   dplyr::filter(is_adjacent == TRUE) %>%
+#   dplyr::filter(therapy == "pre-Rx")
+
+# Remove mpIF samples that have not been delivered
+db_all$mpif_slide <- mpif_slide_meta_tbl
+# db_all$mpif_slide <- db_all$mpif_slide %>%
+#   dplyr::filter(qc_status == "Pass") %>%
+#   dplyr::filter(therapy == "pre-Rx")
+
+db_all$mpif_fov <- mpif_fov_meta_tbl
+
+# Separate bulk normal and bulk tumor WGS samples
+db_all$sequencing_bulk_dna <- db_all$sequencing_bulk_dna %>%
+  dplyr::filter(qc_status == "Pass")
+
+db_all$sequencing_bulk_dna_tumor <- db_all$sequencing_bulk_dna %>%
+  filter(!is.na(tumor_site))
+
+db_all$sequencing_bulk_dna_normal <- db_all$sequencing_bulk_dna %>%
+  filter(is.na(tumor_site))
+
+# Separate bulk normal and bulk tumor WGS samples
+db_all$sequencing_msk_impact_custom <- db_all$sequencing_msk_impact_custom %>%
+  dplyr::filter(qc_status == "Pass")
+
+db_all$sequencing_msk_impact_custom_tumor <- db_all$sequencing_msk_impact_custom %>%
+  filter(!is.na(tumor_site))
+
+db_all$sequencing_msk_impact_custom_normal <- db_all$sequencing_msk_impact_custom %>%
+  filter(is.na(tumor_site))
+
+```
+
+```{r}
+
+inventory_list_all <-
+  list(
+    "scRNA" = db_all$sequencing_scrna,
+    "H&E" = db_all$he_slide,
+    # "Myriad" = db$sequencing_myriad,
+    "mpIF"= db_all$mpif_slide,
+    "Bulk WGS" = db_all$sequencing_bulk_dna_tumor,
+    "MSK-IMPACT" = db_all$sequencing_msk_impact_custom_tumor
+  )
+
+inventory_all <- plyr::join_all(
+  inventory_list_all,
+  by = c('technique', 'project', 'patient_id', 'tumor_site', 'therapy'), 
+  type = "full", 
+  match = "all"
+  ) %>%
+  mutate(technique = recode(technique, scrna = "scRNA", he_slide = "H&E", mpif_slide = "mpIF", bulk_dna = "Bulk WGS", impact = "MSK-IMPACT"))
+
+```
+
+## Filtered
+
+```{r}
+
+# Remove scRNA samples from unidentified sites
+db_filtered$sequencing_scrna <- db_filtered$sequencing_scrna %>%
+  dplyr::filter(patient_id %in% intersect(included_patients, scrna_patients),
+                # tumor_type != "Unknown",
+                qc_status == "Pass",
+                therapy == "pre-Rx")
+
+# Remove H&E samples that are not adjacent or site-matched slides
+db_filtered$he_slide <- db_filtered$he_slide %>%
+  dplyr::filter(patient_id %in% intersect(included_patients, hne_patients),
+                qc_status == "Pass",
+                is_adjacent == TRUE,
+                therapy == "pre-Rx")
+
+# Remove mpIF samples that have not been delivered
+db_filtered$mpif_slide <- db_filtered$mpif_slide %>%
+  dplyr::filter(patient_id %in% intersect(included_patients, mpif_patients),
+                qc_status == "Pass",
+                therapy == "pre-Rx")
+
+db_filtered$mpif_fov <- mpif_fov_meta_tbl
+
+# Separate bulk normal and bulk tumor WGS samples
+db_filtered$sequencing_bulk_dna <- db_filtered$sequencing_bulk_dna %>%
+  filter(patient_id %in% intersect(included_patients, bulk_dna_patients),
+         qc_status == "Pass")
+
+db_filtered$sequencing_bulk_dna_tumor <- db_filtered$sequencing_bulk_dna %>%
+  filter(!is.na(tumor_site))
+
+db_filtered$sequencing_bulk_dna_normal <- db_filtered$sequencing_bulk_dna %>%
+  filter(is.na(tumor_site))
+
+# Separate bulk normal and bulk tumor WGS samples
+db_filtered$sequencing_msk_impact_custom <- db_filtered$sequencing_msk_impact_custom %>%
+  dplyr::filter(patient_id %in% intersect(included_patients, impact_patients),
+                qc_status == "Pass")
+
+db_filtered$sequencing_msk_impact_custom_tumor <- db_filtered$sequencing_msk_impact_custom %>%
+  filter(!is.na(tumor_site))
+
+db_filtered$sequencing_msk_impact_custom_normal <- db_filtered$sequencing_msk_impact_custom %>%
+  filter(is.na(tumor_site))
+
+```
+
+```{r}
+
+inventory_list_filtered <-
+  list(
+    "scRNA" = db_filtered$sequencing_scrna,
+    "H&E" = db_filtered$he_slide,
+    # "Myriad" = db$sequencing_myriad,
+    "mpIF"= db_filtered$mpif_slide,
+    "Bulk WGS" = db_filtered$sequencing_bulk_dna_tumor,
+    "MSK-IMPACT" = db_filtered$sequencing_msk_impact_custom_tumor
+  )
+
+inventory_filtered <- plyr::join_all(
+  inventory_list_filtered,
+  by = c('technique', 'project', 'patient_id', 'tumor_site', 'therapy'), 
+  type = "full", 
+  match = "all"
+  ) %>%
+  mutate(technique = recode(technique, scrna = "scRNA", he_slide = "H&E", mpif_slide = "mpIF", bulk_dna = "Bulk WGS", impact = "MSK-IMPACT"))
+
+```
+
+## scRNA vs H&E vs mpIF
+
+### Sample level
+
+#### All
+
+```{r}
+
+sample_inventory_all <- inventory_all %>%
+  dplyr::select(
+    patient_id,
+    tumor_type,
+    tumor_supersite,
+    tumor_site,
+    therapy,
+    technique
+    # is_site_matched
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    tumor_type,
+    tumor_supersite,
+    tumor_site,
+    therapy,
+    technique
+    # is_site_matched
+  ) %>%
+  summarise(n_samples = n()) %>%
+  ungroup() %>%
+  spread(technique, n_samples, fill = 0) %>%
+  mutate_at(c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT"), as.logical) %>%
+  mutate(sample_id = paste(patient_id, tumor_site, therapy))
+
+```
+
+```{r}
+library(ggvenn)
+
+venn_scrna_hne_mpif_sample_all <- ggvenn(
+  sample_inventory_all, 
+  columns = c("scRNA", "H&E", "mpIF"),
+  stroke_size = 0, set_name_size = 4,
+  fill_color=c("red","orange","green")
+  ) +
+  labs(title = "Sample-level overlap") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_hne_mpif_sample_all
+
+```
+
+```{r}
+
+library("ggVennDiagram")
+
+sample_inventory_all_list <- lapply(sample_inventory_all[ -1 ], function(i) unique(sample_inventory_all$sample_id[ i ]))
+sample_inventory_all_list <- sample_inventory_all_list[c("H&E","scRNA","mpIF")]
+
+venn <- Venn(sample_inventory_all_list)
+data <- process_data(venn)
+
+venn_scrna_hne_mpif_sample_all <- ggVennDiagram(sample_inventory_all_list, set_color = "black", lwd = 0.7, lty = 1, label_alpha = 0) +
+  scale_fill_gradient(low = "#FFFFFF", high = "#999999") +
+  scale_color_manual(values = c("#A9A9A9","#A9A9A9","#A9A9A9")) +
+  # theme(legend.position = "none") +
+  labs(title = "Sample-level overlap", fill = "# samples") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_hne_mpif_sample_all
+
+```
+
+#### Filtered
+
+```{r}
+
+sample_inventory_filtered <- inventory_filtered %>%
+  dplyr::select(
+    patient_id,
+    tumor_type,
+    tumor_supersite,
+    tumor_site,
+    therapy,
+    technique
+    # is_site_matched
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    tumor_type,
+    tumor_supersite,
+    tumor_site,
+    therapy,
+    technique
+    # is_site_matched
+  ) %>%
+  summarise(n_samples = n()) %>%
+  ungroup() %>%
+  spread(technique, n_samples, fill = 0) %>%
+  mutate_at(c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT"), as.logical) %>%
+  mutate(sample_id = paste(patient_id, tumor_site, therapy))
+
+```
+
+```{r}
+library(ggvenn)
+
+venn_scrna_hne_mpif_sample_filtered <- ggvenn(
+  sample_inventory_filtered, 
+  columns = c("scRNA", "H&E", "mpIF"),
+  stroke_size = 0, set_name_size = 4,
+  fill_color=c("red","orange","green")
+  ) +
+  labs(title = "Sample-level overlap") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_hne_mpif_sample_filtered
+
+```
+
+```{r}
+
+library("ggVennDiagram")
+
+sample_inventory_filtered_list <- lapply(sample_inventory_filtered[ -1 ], function(i) unique(sample_inventory_filtered$sample_id[ i ]))
+sample_inventory_filtered_list <- sample_inventory_filtered_list[c("H&E","scRNA","mpIF")]
+
+venn <- Venn(sample_inventory_filtered_list)
+data <- process_data(venn)
+
+venn_scrna_hne_mpif_sample_filtered <- ggVennDiagram(sample_inventory_filtered_list, set_color = "black", lwd = 0.7, lty = 1, label_alpha = 0) +
+  scale_fill_gradient(low = "#FFFFFF", high = "#999999") +
+  scale_color_manual(values = c("#A9A9A9","#A9A9A9","#A9A9A9")) +
+  # theme(legend.position = "none") +
+  labs(title = "Sample-level overlap", fill = "# samples") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_hne_mpif_sample_filtered
+
+```
+
+### Patient level
+
+#### All
+
+```{r}
+
+patient_inventory_all <- inventory_all %>%
+  dplyr::select(
+    patient_id,
+    technique
+    # is_site_matched
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    technique
+    # is_site_matched
+  ) %>%
+  summarise(n_patients = n()) %>%
+  ungroup() %>%
+  spread(technique, n_patients, fill = 0) %>%
+  mutate_at(c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT"), as.logical)
+
+```
+
+```{r}
+library(ggvenn)
+
+venn_scrna_hne_mpif_patient_all <- ggvenn(
+  patient_inventory_all, 
+  columns = c("scRNA", "H&E", "mpIF"),
+  stroke_size = 0, set_name_size = 4,
+  fill_color=c("red","orange","green")
+  ) +
+  labs(title = "Patient-level overlap") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_hne_mpif_patient_all
+
+```
+
+```{r}
+
+patient_inventory_all_list <- lapply(patient_inventory_all[ -1 ], function(i) unique(patient_inventory_all$patient_id[ i ]))
+patient_inventory_all_list <- patient_inventory_all_list[c("H&E","scRNA","mpIF")]
+
+# Venn diagram without legend
+venn_scrna_hne_mpif_patient_all <- ggVennDiagram(patient_inventory_all_list[c("H&E","scRNA","mpIF")], set_color = "black", lwd = 0.7, label_alpha = 0) +
+  scale_fill_gradient(low = "#FFFFFF", high = "#999999") +
+  scale_color_manual(values = c("#A9A9A9","#A9A9A9","#A9A9A9")) +
+  labs(title = "Patient-level overlap", fill = "# patients") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_hne_mpif_patient_all
+
+```
+
+#### Filtered
+
+```{r}
+
+patient_inventory_filtered <- inventory_filtered %>%
+  dplyr::select(
+    patient_id,
+    technique
+    # is_site_matched
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    technique
+    # is_site_matched
+  ) %>%
+  summarise(n_patients = n()) %>%
+  ungroup() %>%
+  spread(technique, n_patients, fill = 0) %>%
+  mutate_at(c("scRNA", "H&E", "mpIF", "Bulk WGS", "MSK-IMPACT"), as.logical)
+
+```
+
+```{r}
+library(ggvenn)
+
+venn_scrna_hne_mpif_patient_filtered <- ggvenn(
+  patient_inventory_filtered, 
+  columns = c("scRNA", "H&E", "mpIF"),
+  stroke_size = 0, set_name_size = 4,
+  fill_color=c("red","orange","green")
+  ) +
+  labs(title = "Patient-level overlap") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_hne_mpif_patient_filtered
+
+```
+
+```{r}
+
+patient_inventory_filtered_list <- lapply(patient_inventory_filtered[ -1 ], function(i) unique(patient_inventory_filtered$patient_id[ i ]))
+patient_inventory_filtered_list <- patient_inventory_filtered_list[c("H&E","scRNA","mpIF")]
+
+# Venn diagram without legend
+venn_scrna_hne_mpif_patient_filtered <- ggVennDiagram(patient_inventory_filtered_list[c("H&E","scRNA","mpIF")], set_color = "black", lwd = 0.7, label_alpha = 0) +
+  scale_fill_gradient(low = "#FFFFFF", high = "#999999") +
+  scale_color_manual(values = c("#A9A9A9","#A9A9A9","#A9A9A9")) +
+  labs(title = "Patient-level overlap", fill = "# patients") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_hne_mpif_patient_filtered
+
+```
+
+### Composite
+
+#### All
+
+```{r, fig.width=10, fig.height=4}
+
+venn_scrna_hne_mpif_all <- plot_grid(
+  venn_scrna_hne_mpif_patient_all,
+  ggdraw(),
+  venn_scrna_hne_mpif_sample_all,
+  ncol = 3,
+  rel_widths = c(1, 0.2, 1))
+
+venn_scrna_hne_mpif_all
+
+ggsave_pdf(filename = "figures/110_cohort_overview/110_venn_scrna_hne_mpif.pdf", 
+           venn_scrna_hne_mpif_all, width = 10, height = 4)
+ggsave_png(filename = "figures/110_cohort_overview/110_venn_scrna_hne_mpif.png", 
+           venn_scrna_hne_mpif_all, width = 10, height = 4)
+
+```
+
+#### Filtered
+
+```{r, fig.width=10, fig.height=4}
+
+venn_scrna_hne_mpif_filtered <- plot_grid(
+  venn_scrna_hne_mpif_patient_filtered,
+  ggdraw(),
+  venn_scrna_hne_mpif_sample_filtered,
+  ncol = 3,
+  rel_widths = c(1, 0.2, 1))
+
+venn_scrna_hne_mpif_filtered
+
+ggsave_pdf(filename = "figures/110_cohort_overview/110_venn_scrna_hne_mpif_filtered.pdf", 
+           venn_scrna_hne_mpif_filtered, width = 10, height = 4)
+ggsave_png(filename = "figures/110_cohort_overview/110_venn_scrna_hne_mpif_filtered.png", 
+           venn_scrna_hne_mpif_filtered, width = 10, height = 4)
+
+```
+
+## scRNA vs WGS vs IMPACT
+
+### Sample level
+
+```{r}
+
+sample_inventory_all <- inventory_all %>%
+  dplyr::select(
+    patient_id,
+    tumor_type,
+    tumor_supersite,
+    tumor_site,
+    therapy,
+    technique
+    # is_site_matched
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    tumor_type,
+    tumor_supersite,
+    tumor_site,
+    therapy,
+    technique
+    # is_site_matched
+  ) %>%
+  summarise(n_samples = n()) %>%
+  ungroup() %>%
+  spread(technique, n_samples, fill = 0) %>%
+  mutate_at(c("scRNA", "Bulk WGS", "MSK-IMPACT"), as.logical) %>%
+  mutate(sample_id = paste(patient_id, tumor_site, therapy))
+
+sample_inventory_filtered <- inventory_filtered %>%
+  dplyr::select(
+    patient_id,
+    tumor_type,
+    tumor_supersite,
+    tumor_site,
+    therapy,
+    technique
+    # is_site_matched
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    tumor_type,
+    tumor_supersite,
+    tumor_site,
+    therapy,
+    technique
+    # is_site_matched
+  ) %>%
+  summarise(n_samples = n()) %>%
+  ungroup() %>%
+  spread(technique, n_samples, fill = 0) %>%
+  mutate_at(c("scRNA", "Bulk WGS", "MSK-IMPACT"), as.logical) %>%
+  mutate(sample_id = paste(patient_id, tumor_site, therapy))
+
+```
+
+#### All
+
+```{r}
+library(ggvenn)
+
+venn_scrna_hne_mpif_sample_all <- ggvenn(
+  sample_inventory_all, 
+  columns = c("scRNA", "Bulk WGS", "MSK-IMPACT"),
+  stroke_size = 0.5, set_name_size = 4,
+  fill_color=c("red","orange","green")
+  )
+
+venn_scrna_hne_mpif_sample_all
+
+```
+
+```{r}
+
+library("ggVennDiagram")
+
+sample_inventory_all_list <- lapply(sample_inventory_all[ -1 ], function(i) unique(sample_inventory_all$sample_id[ i ]))
+sample_inventory_all_list <- sample_inventory_all_list[c("Bulk WGS","scRNA","MSK-IMPACT")]
+
+venn_scrna_wgs_impact_sample_all <- ggVennDiagram(sample_inventory_all_list, set_color = "black", lwd = 0.7, lty = 1, label_alpha = 0) +
+  scale_fill_gradient(low = "#FFFFFF", high = "#999999") +
+  scale_color_manual(values = c("#A9A9A9","#A9A9A9","#A9A9A9")) +
+  labs(title = "Sample-level overlap", fill = "# samples") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_wgs_impact_sample_all
+
+```
+
+#### Filtered
+
+```{r}
+library(ggvenn)
+
+venn_scrna_hne_mpif_sample_filtered <- ggvenn(
+  sample_inventory_filtered, 
+  columns = c("scRNA", "Bulk WGS", "MSK-IMPACT"),
+  stroke_size = 0.5, set_name_size = 4,
+  fill_color=c("red","orange","green")
+  )
+
+venn_scrna_hne_mpif_sample_filtered
+
+```
+
+```{r}
+
+library("ggVennDiagram")
+
+sample_inventory_filtered_list <- lapply(sample_inventory_filtered[ -1 ], function(i) unique(sample_inventory_filtered$sample_id[ i ]))
+sample_inventory_filtered_list <- sample_inventory_filtered_list[c("Bulk WGS","scRNA","MSK-IMPACT")]
+
+venn_scrna_wgs_impact_sample_filtered <- ggVennDiagram(sample_inventory_filtered_list, set_color = "black", lwd = 0.7, lty = 1, label_alpha = 0) +
+  scale_fill_gradient(low = "#FFFFFF", high = "#999999") +
+  scale_color_manual(values = c("#A9A9A9","#A9A9A9","#A9A9A9")) +
+  labs(title = "Sample-level overlap", fill = "# samples") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_wgs_impact_sample_filtered
+
+```
+
+### Patient level
+
+```{r}
+
+patient_inventory_all <- inventory_all %>%
+  dplyr::select(
+    patient_id,
+    technique
+    # is_site_matched
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    technique
+    # is_site_matched
+  ) %>%
+  summarise(n_patients = n()) %>%
+  ungroup() %>%
+  spread(technique, n_patients, fill = 0) %>%
+  mutate_at(c("scRNA", "Bulk WGS", "MSK-IMPACT"), as.logical)
+
+patient_inventory_filtered <- inventory_filtered %>%
+  dplyr::select(
+    patient_id,
+    technique
+    # is_site_matched
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    technique
+    # is_site_matched
+  ) %>%
+  summarise(n_patients = n()) %>%
+  ungroup() %>%
+  spread(technique, n_patients, fill = 0) %>%
+  mutate_at(c("scRNA", "Bulk WGS", "MSK-IMPACT"), as.logical)
+
+```
+
+#### All
+
+```{r}
+library(ggvenn)
+
+# Change category names
+# Change the fill color
+# names(x) <- c("Stage 1","Stage 2","Stage 3", "Stage4")
+venn_scrna_hne_mpif_patient_all <- ggvenn(
+  patient_inventory_all, 
+  columns = c("scRNA", "Bulk WGS", "MSK-IMPACT"),
+  stroke_size = 0.5, set_name_size = 4,
+  fill_color=c("red","orange","green")
+  )
+
+venn_scrna_hne_mpif_patient_all
+
+```
+
+```{r}
+
+patient_inventory_all_list <- lapply(patient_inventory_all[ -1 ], function(i) unique(patient_inventory_all$patient_id[ i ]))
+patient_inventory_all_list <- patient_inventory_all_list[c("Bulk WGS","scRNA","MSK-IMPACT")]
+
+# Venn diagram without legend
+venn_scrna_wgs_impact_patient_all <- ggVennDiagram(patient_inventory_all_list, set_color = "black", lwd = 0.7, label_alpha = 0) +
+  scale_fill_gradient(low = "#FFFFFF", high = "#999999") +
+  scale_color_manual(values = c("#A9A9A9","#A9A9A9","#A9A9A9")) +
+  labs(title = "Patient-level overlap", fill = "# patients") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_wgs_impact_patient_all
+
+```
+
+#### Filtered
+
+```{r}
+
+library(ggvenn)
+
+venn_scrna_hne_mpif_patient_filtered <- ggvenn(
+  patient_inventory_all, 
+  columns = c("scRNA", "Bulk WGS", "MSK-IMPACT"),
+  stroke_size = 0.5, set_name_size = 4,
+  fill_color=c("red","orange","green")
+  )
+
+venn_scrna_hne_mpif_patient_filtered
+
+```
+
+```{r}
+
+patient_inventory_filtered_list <- lapply(patient_inventory_filtered[ -1 ], function(i) unique(patient_inventory_filtered$patient_id[ i ]))
+patient_inventory_filtered_list <- patient_inventory_filtered_list[c("Bulk WGS","scRNA","MSK-IMPACT")]
+
+# Venn diagram without legend
+venn_scrna_wgs_impact_patient_filtered <- ggVennDiagram(patient_inventory_filtered_list, set_color = "black", lwd = 0.7, label_alpha = 0) +
+  scale_fill_gradient(low = "#FFFFFF", high = "#999999") +
+  scale_color_manual(values = c("#A9A9A9","#A9A9A9","#A9A9A9")) +
+  labs(title = "Patient-level overlap", fill = "# patients") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_wgs_impact_patient_filtered
+
+```
+
+### Composite
+
+#### All
+
+```{r, fig.width=10, fig.height=4}
+
+venn_scrna_wgs_impact_all <- plot_grid(
+  venn_scrna_wgs_impact_patient_all,
+  ggdraw(),
+  venn_scrna_wgs_impact_sample_all,
+  ncol = 3,
+  rel_widths = c(1, 0.2, 1))
+
+venn_scrna_wgs_impact_all
+
+ggsave_pdf(filename = "figures/110_cohort_overview/110_venn_scrna_wgs_impact.pdf", 
+           venn_scrna_wgs_impact_all, width = 10, height = 4)
+ggsave_png(filename = "figures/110_cohort_overview/110_venn_scrna_wgs_impact.png", 
+           venn_scrna_wgs_impact_all, width = 10, height = 4)
+
+```
+
+#### Filtered
+
+```{r, fig.width=10, fig.height=4}
+
+venn_scrna_wgs_impact_filtered <- plot_grid(
+  venn_scrna_wgs_impact_patient_filtered,
+  ggdraw(),
+  venn_scrna_wgs_impact_sample_filtered,
+  ncol = 3,
+  rel_widths = c(1, 0.2, 1))
+
+venn_scrna_wgs_impact_filtered
+
+ggsave_pdf(filename = "figures/110_cohort_overview/110_venn_scrna_wgs_impact_filtered.pdf",
+           venn_scrna_wgs_impact_filtered, width = 10, height = 4)
+ggsave_png(filename = "figures/110_cohort_overview/110_venn_scrna_wgs_impact_filtered.png",
+           venn_scrna_wgs_impact_filtered, width = 10, height = 4)
+
+```
+
+## Site overlap
+
+### Sample level
+
+```{r}
+
+sample_inventory_all <- inventory_all %>%
+  dplyr::select(
+    patient_id,
+    tumor_supersite,
+    therapy,
+    technique
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    tumor_supersite,
+    therapy,
+    technique
+  ) %>%
+  summarise(n_samples = n()) %>%
+  ungroup() %>%
+  mutate(
+    sample_availability = ifelse(n_samples > 0, TRUE, FALSE),
+    sample_id = paste(patient_id, therapy)
+  ) %>%
+  select(-n_samples) %>%
+  spread(tumor_supersite, sample_availability, fill = FALSE) %>%
+  filter(technique == "scRNA")
+
+sample_inventory_filtered <- inventory_filtered %>%
+  dplyr::select(
+    patient_id,
+    tumor_supersite,
+    therapy,
+    technique
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    tumor_supersite,
+    therapy,
+    technique
+  ) %>%
+  summarise(n_samples = n()) %>%
+  ungroup() %>%
+  mutate(
+    sample_availability = ifelse(n_samples > 0, TRUE, FALSE),
+    sample_id = paste(patient_id, therapy)
+  ) %>%
+  select(-n_samples) %>%
+  spread(tumor_supersite, sample_availability, fill = FALSE) %>%
+  filter(technique == "scRNA")
+
+```
+
+#### All
+
+```{r}
+
+library("ggVennDiagram")
+
+sample_inventory_all_list <- lapply(sample_inventory_all[ -1 ], function(i) unique(sample_inventory_all$sample_id[ i ]))
+sample_inventory_all_list <- sample_inventory_all_list[c("Adnexa","Bowel","Omentum")]
+
+venn_scrna_wgs_impact_sample_all <- ggVennDiagram(sample_inventory_all_list, set_color = "black", lwd = 0.7, lty = 1, label_alpha = 0) +
+  scale_fill_gradient(low = "#FFFFFF", high = "#999999") +
+  scale_color_manual(values = c("#A9A9A9","#A9A9A9","#A9A9A9")) +
+  labs(title = "Sample-level overlap", fill = "# samples") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_wgs_impact_sample_all
+
+```
+
+
+```{r}
+
+library("ggVennDiagram")
+
+sample_inventory_filtered_list <- lapply(sample_inventory_filtered[ -1 ], function(i) unique(sample_inventory_filtered$sample_id[ i ]))
+sample_inventory_filtered_list <- sample_inventory_filtered_list[c("Adnexa","Bowel","Omentum")]
+
+venn_scrna_wgs_impact_sample_filtered <- ggVennDiagram(sample_inventory_filtered_list, set_color = "black", lwd = 0.7, lty = 1, label_alpha = 0) +
+  scale_fill_gradient(low = "#FFFFFF", high = "#999999") +
+  scale_color_manual(values = c("#A9A9A9","#A9A9A9","#A9A9A9")) +
+  labs(title = "Sample-level overlap (scRNA)", fill = "# samples") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+venn_scrna_wgs_impact_sample_filtered
+
+```
+
+## Patient level
+
+
+```{r}
+
+patient_inventory_all <- inventory_all %>%
+  dplyr::select(
+    patient_id,
+    tumor_supersite,
+    technique
+    # is_site_matched
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    tumor_supersite,
+    technique
+    # is_site_matched
+  ) %>%
+  summarise(n_patients = n()) %>%
+  ungroup() %>%
+  spread(technique, n_patients, fill = 0) %>%
+  mutate_at(c("scRNA", "Bulk WGS", "MSK-IMPACT"), as.logical)
+
+patient_inventory_filtered <- inventory_filtered %>%
+  dplyr::select(
+    patient_id,
+    tumor_supersite,
+    technique
+    # is_site_matched
+  ) %>%
+  dplyr::mutate(technique_status = 1) %>%
+  group_by(
+    patient_id,
+    technique
+    # is_site_matched
+  ) %>%
+  summarise(n_patients = n()) %>%
+  ungroup() %>%
+  spread(technique, n_patients, fill = 0) %>%
+  mutate_at(c("scRNA", "Bulk WGS", "MSK-IMPACT"), as.logical)
+
+```
+
+
+# Session
 
 ```{r}
 sessionInfo()
