@@ -15,7 +15,7 @@ wgs_signature:
   HRD-Dup: "#5890c0"
   HRD-Del: "#62a766"
   FBI: "#833216"
-  TD: "#d1352d"
+  # TD: "#d1352d"
   Undetermined: "#7f7f7f" # grey50
   NA: "#cccccc" # grey80
 myriad_signature:
@@ -70,6 +70,28 @@ consensus_signature_BRCA_mutation_status:
   TD: "#d1352d"
   Undetermined: "#7f7f7f" # grey50
   NA: "#cccccc" # grey80
+mmctm_topic:
+  SBS1 (Age): "#7f7f7f" # grey50
+  SBS5 (Age): "#7f7f7f" # grey50
+  SBS8: "#7f7f7f" # grey50
+  SBS18 (ROS): "#7f7f7f" # grey50
+  SBS40 (Age): "#7f7f7f" # grey50
+  SBS9 (Pol η): "#7f7f7f" # grey50
+  SBS26 (MMRD1): "#7f7f7f" # grey50
+  SBS44 (MMRD2): "#7f7f7f" # grey50
+  SBS2 (APOBEC1): "#7f7f7f" # grey50
+  SBS13 (APOBEC2): "#7f7f7f" # grey50
+  SBS3 (HRD): "#7f7f7f" # grey50
+  S-Dup: "#7f7f7f" # grey50
+  M-Dup: "#7f7f7f" # grey50
+  L-Dup: "#7f7f7f" # grey50
+  S-Del: "#7f7f7f" # grey50
+  M-Del: "#7f7f7f" # grey50
+  L-Del: "#7f7f7f" # grey50
+  Clust-FBI: "#7f7f7f" # grey50
+  Clust-SV: "#7f7f7f" # grey50
+  Tr: "#7f7f7f" # grey50
+  FBI/Inv: "#7f7f7f" # grey50
 hrdetect_signature:
   HRD: "#5890c0"
   HRP: "#833216"
@@ -115,7 +137,6 @@ tumor_megasite:
   Ascites: "#E69F00"
 tumor_supersite:
   Adnexa: "#ff0000"
-  Ascites: "#E69F00" # palette_OkabeIto[1]
   Bowel: "#56B4E9" # palette_OkabeIto[2]
   Omentum: "#0072B2" # palette_OkabeIto[3]
   Peritoneum: "#F0E442" # palette_OkabeIto[4]
@@ -123,12 +144,12 @@ tumor_supersite:
   UQ: "#009E73" # palette_OkabeIto[5]
   Other: "#999999" # grey60
   Unknown: "#999999" # grey60
+  Ascites: "#E69F00" # palette_OkabeIto[1]
 #   Normal: "#999999" # grey60
 tumor_supersite_adnexa:
   Adnexa: "#ff0000"
   Ovary: "#ff0000"
   Fallopian Tube: "#ff0000"
-  Ascites: "#E69F00" # palette_OkabeIto[1]
   Bowel: "#56B4E9" # palette_OkabeIto[2]
   Omentum: "#0072B2" # palette_OkabeIto[3]
   Peritoneum: "#F0E442" # palette_OkabeIto[4]
@@ -136,10 +157,10 @@ tumor_supersite_adnexa:
   UQ: "#009E73" # palette_OkabeIto[5]
   Other: "#999999" # grey60
   Unknown: "#999999" # grey60
+  Ascites: "#E69F00" # palette_OkabeIto[1]
 tumor_site:
   Left Adnexa: "#ff0000"
   Right Adnexa: "#ff6666"
-  Ascites: "#E69F00" # palette_OkabeIto[1]
   Bowel: "#56B4E9" # palette_OkabeIto[2]
   Omentum: "#0072B2" # palette_OkabeIto[3]
   Peritoneum: "#F0E442" # palette_OkabeIto[4]
@@ -147,6 +168,7 @@ tumor_site:
   Right Upper Quadrant: "#009E73" # palette_OkabeIto[5]
   Other: "#999999" # grey60
   Unknown: "#999999" # grey60
+  Ascites: "#E69F00" # palette_OkabeIto[1]
 tumor_type:
   Primary: "#ff0000"
   Metastasis: "#56B4E9" # palette_OkabeIto[2]
@@ -226,8 +248,8 @@ cluster_label_super:
     Other: "#b3b3b3"
   Myeloid.super:
     M1: "#77a1cd"
-    M2: "#91cf67"
-    DC: "#ab1500"
+    M2: "#47eeb8"
+    DC: "#ff2500"
     Other: "#b3b3b3"
 cluster_label:
   T.super:
@@ -318,8 +340,7 @@ cluster_label_sub:
     # NK.CD56: "#4FC3F7"
     # NK.cytotoxic: "#00ACC1"
     # Cycling.T.NK: "#FF8F00"
-    CD4.T.naive.centr.mem.1: "#995858" ######### updated in v7
-    CD4.T.naive.centr.mem.2: "#ffc2c2" ######### updated in v7
+    CD4.T.naive.centr.mem: "#ffc2c2" ######### updated in v7
     CD4.T.effector.memory: "#ff6b6b"
     CD4.T.dysfunc.early: "#ff0000"
     CD4.T.dysfunc.late.1: "#b30000"
@@ -329,10 +350,8 @@ cluster_label_sub:
     CD4.T.reg.2: "#ba00ff"
     CD4.T.reg.3: "#64008a"
     CD4.T.reg.ISG: "#5c4295"
-    CD4.Th17.1: "#ffbe00"
-    CD4.Th17.2: "#b68800"
-    CD4.Th17.3: "#e48b00" ######### updated in v7
-    CD8.T.naive.centr.mem: "#52ff52"
+    CD8.T.naive.centr.mem.1: "#52ffae" ######### updated in v7
+    CD8.T.naive.centr.mem.2: "#52ff52"
     CD8.T.effector.memory: "#27af27"
     CD8.T.cytotoxic: "#005c00"
     CD8.T.dysfunc.early: "#b9cf8c"
@@ -340,6 +359,9 @@ cluster_label_sub:
     CD8.T.dysfunc.ISG: "#99e300" ######### updated in v7
     CD8.T.ISG.early: "#324a00" ######### updated in v7
     CD8.T.ISG.late: "#000000" ######### updated in v7
+    ILC.a: "#ffbe00"
+    ILC.b: "#e48b00"
+    ILC.c: "#b68800" ######### updated in v7
     gd.T.cell: "#817100"
     NK.cytotoxic.GZMH: "#00016b"
     NK.cytotoxic.SPON2.1: "#4848ff"
@@ -356,9 +378,9 @@ cluster_label_sub:
     Cycling.CD8.T.2: "#e9c17d"
     Cycling.CD8.T.3: "#d5bc05"
     Cycling.CD8.T.4: "#eee49b"
-    Cycling.NK.1: "#6f6203"
-    Cycling.NK.2: "#8c9900"
-    Cycling.NK.3: "#d7e53e"
+    Cycling.CD8.T.5: "#6f6203"
+    Cycling.CD8.T.6: "#8c9900"
+    Cycling.NK: "#d7e53e"
 expression_module:
   CD8.Naive: "#52ff52"
   CD8.Predysfunctional: "#b9cf8c"
@@ -401,6 +423,22 @@ region_mpif:
   Tumor: "#e31a1c"
   Stroma: "#6a3d9a"
   Ignore*: "#b3b3b3"
+clones:
+  A: "#FF0000"
+  B: "#005EB5"
+  C: "#009D00"
+  D: "#FF008C"
+  E: "#FFCC00"
+  F: "#FF9000"
+  G: "#B90088"
+  H: "#00B4D7"
+  I: "#69D800"
+  J: "#20239E"
+  K: "#FF5E00"
+  L: "#71008C"
+  M: "#B8EE00"
+  N: "#00A9A9"
+  O: "#F2FC00"
 clone_id:
   1: "#FF0000"
   2: "#005EB5"
@@ -627,6 +665,13 @@ ascn_state:
   B-LOH: "#A75200"
   B-Gained: "#FF9E41"
   Balanced: "#d5d5d4"
+ascn_zygosity:
+  Balanced: "#d5d5d4"
+  Lost: "#025767"
+  Missing: "#999999"
+hlamp:
+  High-level amplification: "#DF65B0"
+  Wildtype: "#CCCCCC"
 pathology_stage:
   IIB: "#E5F5F9" #
   # III: "#C7E9B4"
@@ -682,4 +727,12 @@ Phase:
   G1: "#94b6d2"
   S: "#dc4040"
   G2M: "#7aa77f"
-
+cohort:
+  SPECTRUM: "#94b6d2"
+  HGSOC/TNBC Metacohort: "#dc4040"
+sort_short_x:
+  CD45-: "#62a766"
+  CD45+: "#5890c0"
+  Tumor: "#5890c0"
+  Stroma: "#62a766"
+  

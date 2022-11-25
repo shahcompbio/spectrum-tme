@@ -62,7 +62,7 @@ diagram_png
 
 ```{r}
 patients <- db$patients %>%
-  dplyr::select(patient_id, patient_isabl_id, patient_age) %>%
+  dplyr::select(patient_id, patient_isabl_id, patient_dmp_id, patient_age) %>%
   mutate(patient_id = as.character(patient_id))
 
 gyn_diagnosis <- db$gyn_diagnosis %>%
@@ -306,32 +306,37 @@ db$sequencing_bulk_dna <- db$sequencing_bulk_dna %>%
   #        qc_status == "Pass")
 
 # Remove normal IMPACT samples and remove duplicates
-sequencing_msk_impact_custom_tumor <- db$sequencing_msk_impact_custom %>% 
-  filter(patient_id %in% included_patients) %>%
-  left_join(samples %>% dplyr::select(impact_dmp_sample_id, tumor_purity)) %>%
-  filter(impact_gene_panel == "IMPACT") %>%
-  group_by(impact_dmp_patient_id) %>%
-  top_n(1, tumor_purity) %>%
-  ungroup %>%
-  select(-tumor_purity)
-
-sequencing_msk_impact_custom_normal <- db$sequencing_msk_impact_custom %>%
-  filter(patient_id %in% intersect(included_patients, impact_patients),
-         impact_gene_panel == "Secondary Germline MSK-IMPACT")
-
-db$sequencing_msk_impact_custom <- bind_rows(
-  sequencing_msk_impact_custom_tumor,
-  sequencing_msk_impact_custom_normal) %>%
-  filter(patient_id %in% intersect(included_patients, impact_patients)) %>%
+db$sequencing_msk_impact_custom <- db$sequencing_msk_impact_custom %>%
+  filter(tme_inclusion_status == "Yes") %>%
   mutate(sample_type = ifelse(impact_gene_panel == "IMPACT", "Tumor", "Normal"),
          therapy = ifelse(impact_gene_panel == "IMPACT", therapy, "pre-Rx"))
-         # tumor_supersite = ifelse(is.na(tumor_supersite), "Normal", tumor_supersite))
+# sequencing_msk_impact_custom_tumor <- db$sequencing_msk_impact_custom %>% 
+#   filter(patient_id %in% included_patients) %>%
+#   left_join(samples %>% dplyr::select(impact_dmp_sample_id, tumor_purity)) %>%
+#   filter(impact_gene_panel == "IMPACT") %>%
+#   group_by(impact_dmp_patient_id) %>%
+#   top_n(1, tumor_purity) %>%
+#   ungroup %>%
+#   select(-tumor_purity)
+# 
+# sequencing_msk_impact_custom_normal <- db$sequencing_msk_impact_custom %>%
+#   filter(patient_id %in% intersect(included_patients, impact_patients),
+#          impact_gene_panel == "Secondary Germline MSK-IMPACT")
+# 
+# db$sequencing_msk_impact_custom <- bind_rows(
+#   sequencing_msk_impact_custom_tumor,
+#   sequencing_msk_impact_custom_normal) %>%
+#   filter(patient_id %in% intersect(included_patients, impact_patients)) %>%
+#   mutate(sample_type = ifelse(impact_gene_panel == "IMPACT", "Tumor", "Normal"),
+#          therapy = ifelse(impact_gene_panel == "IMPACT", therapy, "pre-Rx"))
+#          # tumor_supersite = ifelse(is.na(tumor_supersite), "Normal", tumor_supersite))
 
 # Remove Myriad samples not yet delivered
 db$sequencing_myriad <- db$sequencing_myriad %>%
   mutate(sample_type = "Tumor") %>%
-  filter(patient_id %in% included_patients,
-         qc_status == "Pass")
+  filter(tme_inclusion_status == "Yes")
+  # filter(patient_id %in% included_patients,
+  #        qc_status == "Pass")
 
 patients <- db$patients %>%
   dplyr::select(patient_id, patient_age) %>%
