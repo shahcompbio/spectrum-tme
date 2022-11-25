@@ -15,10 +15,10 @@ output:
     toc_depth: 3
     number_sections: yes
 params:
-   rmd: "330_Cancer_cell_glm.Rmd"
+   rmd: "330_cancer_cell_glm.Rmd"
 ---
 
-# Generalized linear model of cancer cell clusters
+# Generalized linear model of cancer cell composition
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
@@ -57,27 +57,26 @@ names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "\\.", " ")
 
 # scRNA
 
-# Cohort object
-scrna_cohort_cell_tbl <-
-  readr::read_tsv(
-    "/work/shah/vazquezi/projects/spectrum/results/scrna/v27/download-data/outputs/cohort_metadata/SPECTRUM.tsv"
-  )
-
 # Cell supertype objects
-scrna_cancer_cell_tbl <-
-  readr::read_tsv(
-    "/work/shah/vazquezi/projects/spectrum/results/scrna/v27/download-data/outputs/cell_supertype_metadata/Ovarian_cancer_cell.tsv"
-  )
+scrna_cancer_cell_seu <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds")
+scrna_cancer_cell_tbl <- scrna_cancer_cell_seu@meta.data %>%  
+  dplyr::left_join(scrna_meta_tbl, by = c('sample', "patient_id"))
 
-scrna_cell_tbl <- scrna_cohort_cell_tbl %>%
-  dplyr::left_join(scrna_cancer_cell_tbl %>% dplyr::select(cell_id, cluster_label),
-                   by = 'cell_id') %>%
-  dplyr::left_join(db$mutational_signatures, by = 'patient_id') %>%
+```
+
+```{r}
+
+scrna_cell_tbl <- scrna_cancer_cell_tbl %>%
+  # dplyr::left_join(scrna_cancer_cell_tbl %>% dplyr::select(cell_id, cluster_label),
+  #                  by = 'cell_id') %>%
+  # dplyr::left_join(db$mutational_signatures, by = 'patient_id') %>%
   dplyr::filter(tumor_supersite != "Unknown") %>%
   dplyr::mutate(
     patient_id = str_remove(patient_id, "SPECTRUM-OV-"),
     sample_id = str_remove(sample_id, "OV-")
-  )
+  ) #%>%
+  # mutate(tumor_megasite = ifelse(!tumor_supersite %in% c("Adnexa", "Ascites"),
+  #                                "Non-Adnexa", tumor_supersite))
 
 scrna_cell_tbl <- scrna_cell_tbl %>% mutate(
   consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature)),
@@ -99,7 +98,7 @@ scrna_cell_tbl <- scrna_cell_tbl %>% mutate(
 scrna_sample_tbl <- scrna_cell_tbl %>%
   # filter(tumor_supersite != "Ascites") %>%
   mutate(cell_type = as.character(cell_type)) %>%
-  group_by(patient_id, consensus_signature, consensus_signature_short, tumor_type, tumor_supersite, tumor_subsite, therapy, sort_parameters, cell_type) %>%
+  group_by(patient_id, consensus_signature, consensus_signature_short, BRCA_mutation_status, tumor_type, tumor_megasite, tumor_supersite, tumor_subsite, therapy, sort_parameters, cell_type) %>%
   summarize(cell_type_count = n_distinct(cell_id)) %>% 
   mutate(
       other_cell_type_count = sum(cell_type_count) - cell_type_count,
@@ -111,7 +110,7 @@ scrna_sample_tbl <- scrna_cell_tbl %>%
 scrna_cell_state_sample_tbl <- scrna_cell_tbl %>%
   # filter(tumor_supersite != "Ascites") %>%
   mutate(cell_type = as.character(cell_type)) %>%
-  group_by(patient_id, consensus_signature, consensus_signature_short, tumor_type, tumor_supersite, tumor_subsite, therapy, sort_parameters, cell_type, cluster_label) %>%
+  group_by(patient_id, consensus_signature, consensus_signature_short, BRCA_mutation_status, tumor_type, tumor_megasite, tumor_supersite, tumor_subsite, therapy, sort_parameters, cell_type, cluster_label) %>%
   summarize(cell_state_count = n_distinct(cell_id)) %>% 
   mutate(
       other_cell_state_count = sum(cell_state_count) - cell_state_count,
@@ -144,11 +143,13 @@ data <- list()
 formulas <- list()
 models <- list()
 consensus_signature_emm <- list()
+BRCA_gene_mutation_status_emm <- list()
 site_emm <- list()
+consensus_signature_site_emm <- list()
 
 ```
 
-## Cancer cells {.tabset}
+## GLM with fixed effects (signature + site) {.tabset}
 
 ```{r}
 
@@ -170,6 +171,21 @@ site_odds <- site_emm[["Ovarian cancer cell"]]$contrasts %>%
   as.data.frame()
 
 ```
+
+```{r}
+
+source("src/fit_glm.R")
+
+ af <- anova(models[["Ovarian cancer cell"]]) %>%
+   mutate(R2 = 1 - (`Deviance` / `Resid. Dev`))
+ # afss <- af$"Sum Sq"
+ # print(cbind(af,PctExp=afss/sum(afss)*100))
+ 
+```
+
+### Signature + Site
+
+#### Horizontal
 
 ```{r, fig.width = 4.35, fig.height = 5.55, results = "asis"}
 
@@ -212,7 +228,7 @@ p_odds_ratio <- plot_data %>%
     labels = c(0, 125, 250)
   ) +
   scale_x_discrete(drop=FALSE) +
-  theme(aspect.ratio = 1,
+  theme(#aspect.ratio = 1,
         axis.text.x = element_blank(),
         axis.text.y = element_blank(),
         axis.title.x = element_blank(),
@@ -292,9 +308,1504 @@ p <- plot_grid(
 
 p
 
-ggsave_pdf("figures/330_Cancer_cell_glm/330_Cancer_cell_odds_ratio.pdf", p,
+# ggsave_pdf("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio.pdf", p,
+#            width = 4.35, height = 5.25)
+# ggsave_png("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio.png", p,
+#            width = 4.35, height = 5.25)
+
+```
+
+#### Vertical
+
+### Signature contrasts
+
+#### Portrait
+
+```{r, fig.width = 3.8, fig.height = 5.5, results = "asis"}
+
+plot_data <- bind_rows(consensus_signature_odds %>% add_column(contrast_variable = "Signature")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  # filter(!str_detect(contrast, "(HRD-Other) effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super))) %>%
+  filter(!str_detect(contrast, "HRD-Other"),
+         !str_detect(contrast, "Undetermined")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  # filter(p.value < 1E-20) %>%
+  filter(SE < 0.15) %>%
+  ggplot(aes(x = contrast, y = cluster_label, color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1.5, 1.5),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_y_discrete(drop=FALSE) +
+  theme(
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.direction = "horizontal",
+    legend.position = "top",
+    legend.box = "horizontal",
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "plain", size = 14),
+    strip.background = element_blank()#,
+    # strip.text.x = element_blank()
+  ) +
+  guides(color = guide_colorbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  facet_grid(. ~ contrast_variable, scales = "free", space = "free", switch = "x")
+
+p_signature_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=contrast, y=0, fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$consensus_signature) +
+  facet_grid(. ~ contrast_variable, scales = "free", space = "free") +
+  scale_x_discrete(position = "top") +
+  theme(#aspect.ratio = 1,
+        axis.text.x.top = element_text(hjust = 0, vjust = 0.5),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  mutate(facet_helper = "") %>% 
+  distinct(cluster_label, facet_helper, .keep_all = T) %>% 
+  ggplot(aes(x=facet_helper, y=cluster_label)) +
+  geom_tile(aes(fill = cluster_label)) +
+  geom_point(color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(label = as.numeric(cluster_label))) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  scale_x_discrete(drop = FALSE) +
+  facet_grid(facet_helper ~ ., scales = "free", space = "free") +
+  theme(# aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    ggdraw(),
+    p_cluster_anno + theme(plot.margin = margin(t = 5, r = 0, b = 22, l = 6)),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(0.45, 1)
+    # rel_widths = c(0.75, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_signature_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 6, r = 0, b = 0, l = 0)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.45, 1)
+    # rel_widths = c(0.75, 1)
+  )
+
+p <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(1.55, 1)
+    ),
+  get_legend(p_odds_ratio),
+  ncol = 1,
+  rel_heights = c(1, 0.2)
+  )
+
+p
+
+ggsave_pdf("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_signature_portrait.pdf", p,
+           width = 3.8, height = 5.5)
+ggsave_png("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_signature_portrait.png", p,
+           width = 3.8, height = 5.5)
+
+```
+
+
+#### Landscape
+
+```{r, fig.width = 4.35, fig.height = 5.55, results = "asis"}
+
+plot_data <- bind_rows(consensus_signature_odds %>% add_column(contrast_variable = "Signature")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  filter(!str_detect(contrast, "HRD-Other"),
+         !str_detect(contrast, "Undetermined")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  # filter(p.value < 1E-20) %>%
+  # filter(SE < 0.15) %>%
+  ggplot(aes(x = cluster_label, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    # values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -0.5, 0, 0.5, max(plot_data$log2.odds.ratio, na.rm=T))),
+    limits = c(-1.5, 1.5),
+    # limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  # scale_color_gradientn(
+  #   colors = rev(brewer.pal(9, "RdBu")),
+  #   values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -1, 0, 1, max(plot_data$log2.odds.ratio, na.rm=T))),
+  #   limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
+  #   breaks = c(-2, 0, 2)
+  # ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_x_discrete(drop=FALSE) +
+  theme(
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.direction = "horizontal",
+    legend.position = "top",
+    legend.box = "horizontal",
+    legend.box.just = "left",
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "plain", size = 14),
+    strip.background = element_blank()
+    # strip.text.x = element_blank()
+  ) +
+  guides(color = guide_colourbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  facet_grid(contrast_variable ~ ., scales = "free_y", space = "free")
+
+p_signature_site_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=0, y=forcats::fct_rev(contrast), fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = c(clrs$consensus_signature, clrs$tumor_supersite)) +
+  facet_grid(contrast_variable~., scales = "free", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  mutate(facet_helper = "") %>% 
+  distinct(cluster_label, facet_helper, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(cluster_label, facet_helper, fill = cluster_label)) +
+  geom_point(aes(cluster_label, facet_helper), color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(cluster_label, facet_helper, label = as.numeric(cluster_label))) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  scale_x_discrete(drop=FALSE) +
+  facet_grid(~facet_helper, scales = "free", space = "free") +
+  theme(axis.text.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    p_signature_site_anno + theme(plot.margin = margin(t = 6, r = 0, b = 0, l = 6)),
+    ggdraw(),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(1, 0.9),
+    rel_widths = c(0.75, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 0, r = 6, b = 0, l = 0)),
+    p_cluster_anno + theme(plot.margin = margin(t = 0, r = 6, b = 6, l = 6)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(1, 0.9),
+    rel_widths = c(0.75, 1)
+  )
+
+p <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(0.7, 1)
+    ),
+  get_legend(p_odds_ratio),
+  ncol = 1,
+  rel_heights = c(1, 0.15)
+  )
+
+p
+
+ggsave_pdf("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_signature_landscape.pdf", p,
            width = 4.35, height = 5.25)
-ggsave_png("figures/330_Cancer_cell_glm/330_Cancer_cell_odds_ratio.png", p,
+ggsave_png("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_signature_landscape.png", p,
            width = 4.35, height = 5.25)
 
 ```
+
+### Site contrasts
+
+#### Landscape
+
+```{r, fig.width = 4.35, fig.height = 4.5, results = "asis"}
+
+plot_data <- bind_rows(site_odds %>% add_column(contrast_variable = "Site")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  filter(!str_detect(contrast, "Other")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  filter(p.value < 1E-20) %>%
+  filter(SE < 0.15) %>%
+  ggplot(aes(x = cluster_label, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    # values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -0.5, 0, 0.5, max(plot_data$log2.odds.ratio, na.rm=T))),
+    limits = c(-1.5, 1.5),
+    # limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  # scale_color_gradientn(
+  #   colors = rev(brewer.pal(9, "RdBu")),
+  #   values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -1, 0, 1, max(plot_data$log2.odds.ratio, na.rm=T))),
+  #   limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
+  #   breaks = c(-2, 0, 2)
+  # ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_x_discrete(drop=FALSE) +
+  theme(
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.direction = "horizontal",
+    legend.position = "top",
+    legend.box = "horizontal",
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "plain", size = 14),
+    strip.background = element_blank()#,
+    # strip.text.x = element_blank()
+  ) +
+  guides(color = guide_colourbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  facet_grid(contrast_variable ~ ., scales = "free_y", space = "free")
+
+p_signature_site_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=0, y=forcats::fct_rev(contrast), fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = c(clrs$consensus_signature, clrs$tumor_supersite)) +
+  facet_grid(contrast_variable~., scales = "free", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  mutate(facet_helper = "") %>% 
+  distinct(cluster_label, facet_helper, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(cluster_label, facet_helper, fill = cluster_label)) +
+  geom_point(aes(cluster_label, facet_helper), color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(cluster_label, facet_helper, label = as.numeric(cluster_label))) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  scale_x_discrete(drop=FALSE) +
+  facet_grid(~facet_helper, scales = "free", space = "free") +
+  theme(axis.text.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    p_signature_site_anno + theme(plot.margin = margin(t = 6, r = 0, b = 20, l = 6)),
+    ggdraw(),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(1, 0.9),
+    rel_widths = c(0.75, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 0, r = 6, b = 0, l = 0)),
+    p_cluster_anno + theme(plot.margin = margin(t = 0, r = 6, b = 6, l = 6)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(1, 1.2),
+    rel_widths = c(0.75, 1)
+  )
+
+p <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(0.7, 1)
+    ),
+  get_legend(p_odds_ratio),
+  ncol = 1,
+  rel_heights = c(1, 0.15)
+  )
+
+p
+
+ggsave_pdf("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_site_landscape.pdf", p,
+           width = 4.35, height = 5.25)
+ggsave_png("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_site_landscape.png", p,
+           width = 4.35, height = 5.25)
+
+```
+
+
+#### Portrait
+
+```{r, fig.width = 3.8, fig.height = 5.95, results = "asis"}
+
+plot_data <- bind_rows(site_odds %>% add_column(contrast_variable = "Site")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  # filter(!str_detect(contrast, "(HRD-Other) effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super))) %>%
+  filter(!str_detect(contrast, "Other")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  # filter(p.value < 1E-20) %>%
+  # filter(SE < 0.15) %>%
+  ggplot(aes(x = contrast, y = cluster_label, color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1.5, 1.5),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_y_discrete(drop=FALSE) +
+  theme(
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.direction = "horizontal",
+    legend.position = "top",
+    legend.box = "horizontal",
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "plain", size = 14),
+    strip.background = element_blank()#,
+    # strip.text.x = element_blank()
+  ) +
+  guides(color = guide_colorbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  facet_grid(. ~ contrast_variable, scales = "free", space = "free", switch = "x")
+
+p_site_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=contrast, y=0, fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$tumor_supersite) +
+  facet_grid(. ~ contrast_variable, scales = "free", space = "free") +
+  scale_x_discrete(position = "top") +
+  theme(#aspect.ratio = 1,
+        axis.text.x.top = element_text(hjust = 0, vjust = 0.5),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  mutate(facet_helper = "") %>% 
+  distinct(cluster_label, facet_helper, .keep_all = T) %>% 
+  ggplot(aes(x=facet_helper, y=cluster_label)) +
+  geom_tile(aes(fill = cluster_label)) +
+  geom_point(color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(label = as.numeric(cluster_label))) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  scale_x_discrete(drop = FALSE) +
+  facet_grid(facet_helper ~ ., scales = "free", space = "free") +
+  theme(#aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    ggdraw(),
+    p_cluster_anno + theme(plot.margin = margin(t = 5, r = 0, b = 22, l = 6)),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(0.57, 1)
+    # rel_widths = c(0.75, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_site_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 6, r = 0, b = 0, l = 0)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.57, 1)
+    # rel_widths = c(0.75, 1)
+  )
+
+p <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(1.55, 1)
+    ),
+  get_legend(p_odds_ratio),
+  ncol = 1,
+  rel_heights = c(1, 0.2)
+  )
+
+p
+
+ggsave_pdf("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_site_portrait.pdf", p,
+           width = 3.8, height = 5.95)
+ggsave_png("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_site_portrait.png", p,
+           width = 3.8, height = 5.95)
+
+```
+
+## GLM with fixed effects (gene + site) {.tabset}
+
+```{r}
+
+# data[["Ovarian cancer cell"]] <- scrna_cell_state_sample_tbl %>%
+#   filter(str_detect(sort_parameters, "U|CD45-")) %>%
+#   filter(str_detect(cell_type, "Ovarian cancer cell")) %>%
+#   filter(!is.na(cluster_label))
+# formulas[["Ovarian cancer cell"]] <-cbind(cell_state_count, other_cell_state_count) ~ cluster_label * BRCA_mutation_status + cluster_label * tumor_supersite #+ cluster_label * sort_parameters
+# models[["Ovarian cancer cell"]] <- glm(formula = formulas[["Ovarian cancer cell"]], family = binomial(link = 'logit'), data = data[["Ovarian cancer cell"]])
+# 
+# consensus_signature_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ consensus_signature | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
+# consensus_signature_odds <- consensus_signature_emm[["Ovarian cancer cell"]]$contrasts %>%
+#   rbind() %>%
+#   as.data.frame()
+# 
+# site_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ tumor_supersite | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
+# site_odds <- site_emm[["Ovarian cancer cell"]]$contrasts %>%
+#   rbind() %>%
+#   as.data.frame()
+
+```
+
+## GLM with fixed effects (signature + megasite + signature * megasite) {.tabset}
+
+```{r}
+
+data[["Ovarian cancer cell"]] <- scrna_cell_state_sample_tbl %>%
+  filter(tumor_megasite != "Ascites")
+formulas[["Ovarian cancer cell"]] <-cbind(cell_state_count, other_cell_state_count) ~ cluster_label * consensus_signature + cluster_label * tumor_megasite + cluster_label * consensus_signature * tumor_megasite#+ cluster_label * sort_parameters
+models[["Ovarian cancer cell"]] <- glm(formula = formulas[["Ovarian cancer cell"]], family = binomial(link = 'logit'), data = data[["Ovarian cancer cell"]])
+
+consensus_signature_site_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ consensus_signature * tumor_megasite | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
+# consensus_signature_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ consensus_signature * tumor_megasite | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
+consensus_signature_site_odds <- consensus_signature_site_emm[["Ovarian cancer cell"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+```
+
+### Signature x megasite contrasts
+
+#### Portrait
+
+```{r, fig.width = 6.9, fig.height = 5.1, results = "asis"}
+
+plot_data <- consensus_signature_site_odds %>% 
+  add_column(contrast_variable = "Signature/Site") %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  # filter(!str_detect(contrast, "(HRD-Other) effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  separate(contrast, c("consensus_signature_contrast", "tumor_megasite_contrast"), sep = " ", remove = FALSE) %>%
+  mutate(contrast = ordered(contrast, levels = as.vector(t(outer(names(clrs$consensus_signature), names(clrs$tumor_megasite), paste, sep=" "))))) %>%
+  mutate(consensus_signature_contrast = ordered(consensus_signature_contrast, levels = names(clrs$consensus_signature))) %>%
+  mutate(tumor_megasite_contrast = ordered(tumor_megasite_contrast, levels = names(clrs$tumor_megasite))) %>%
+  mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super))) %>%
+  filter(!str_detect(contrast, "Undetermined")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 2, 2, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -2, -2, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  # filter(p.value < 1E-20) %>%
+  filter(SE < 0.15) %>%
+  ggplot(aes(x = contrast, y = cluster_label, color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-2, 2),
+    labels = c("≤-2", 0, "≥2"),
+    breaks = c(-2, 0, 2)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_y_discrete(drop=FALSE) +
+  theme(
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.direction = "horizontal",
+    legend.position = "top",
+    legend.box = "horizontal",
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "plain", size = 14),
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  ) +
+  # theme(panel.background = element_rect(fill = 'gray95')) +
+  guides(color = guide_colorbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  # facet_grid( ~ contrast_variable, scales = "free", space = "free", switch = "x")
+  facet_grid( ~ consensus_signature_contrast, scales = "free", space = "free")#, switch = "x", drop = FALSE)#, nrow = 2)#, space = "free")
+
+p_signature_anno <- plot_data %>%
+  distinct(contrast, contrast_variable, .keep_all = T) %>%
+  ggplot() +
+  geom_tile(aes(x=contrast, y=0, fill = consensus_signature_contrast)) +
+  heatmap_layers +
+  scale_fill_manual(values = clrs$consensus_signature) +
+  facet_grid(. ~ consensus_signature_contrast, scales = "free", space = "free") +
+  scale_x_discrete(position = "top") +
+  # theme(panel.background = element_rect(fill = 'gray95')) +
+  theme(#aspect.ratio = 1,
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    strip.text = element_text(face = "plain"),
+    legend.position = "bottom") +
+  guides(fill = F)
+
+p_site_anno <- plot_data %>%
+  distinct(contrast, contrast_variable, .keep_all = T) %>%
+  ggplot() +
+  geom_tile(aes(x=contrast, y=0, fill = tumor_megasite_contrast)) +
+  heatmap_layers +
+  scale_fill_manual(values = clrs$tumor_megasite) +
+  facet_grid(. ~ consensus_signature_contrast, scales = "free", space = "free") +
+  scale_x_discrete(position = "top") +
+  # theme(panel.background = element_rect(fill = 'gray90')) +
+  labs(fill = "Site") +
+  theme(#aspect.ratio = 1,
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    strip.text = element_blank())
+  # guides(fill = F)
+
+p_signature_site_anno <- plot_grid(
+  p_signature_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+  p_site_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+  nrow = 2,
+  align = "v",
+  axis = "lr")
+
+p_cluster_anno <- plot_data %>%
+  mutate(facet_helper = "") %>%
+  distinct(cluster_label, facet_helper, .keep_all = T) %>%
+  ggplot(aes(x=facet_helper, y=cluster_label)) +
+  geom_tile(aes(fill = cluster_label)) +
+  geom_point(color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(label = as.numeric(cluster_label))) +
+  heatmap_layers +
+  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  scale_x_discrete(drop = FALSE) +
+  facet_grid(facet_helper ~ ., scales = "free", space = "free") +
+  theme(#aspect.ratio = 1,
+    axis.text.x = element_blank(),
+    # axis.text.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    ggdraw(),
+    p_cluster_anno + 
+      theme(plot.margin = margin(t = 5, r = 0, b = 0, l = 6)),
+    ggdraw(),
+    nrow = 3,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(0.3, 1, 0.15)
+    # rel_widths = c(0.75, 1)
+  )
+
+p_middle <-
+  plot_grid(
+    # p_signature_site_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    p_signature_anno + 
+      theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0), legend.position = "none"),
+    p_site_anno + 
+      theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0), legend.position = "none"),
+    p_odds_ratio + 
+      theme(legend.position = "none", plot.margin = margin(t = 6, r = 0, b = 0, l = 0)),
+    ggdraw() + 
+      draw_label("Signature/Site"),
+    nrow = 4,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.2, 0.1, 1, 0.15)
+    # rel_widths = c(0.75, 1)
+  )
+
+p_right <- 
+  plot_grid(
+    ggdraw(),
+    get_legend(p_site_anno),
+    ggdraw(),
+    nrow = 3,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.3, 1, 0.15)
+    # rel_widths = c(0.75, 1)
+  )
+
+p <- plot_grid(
+  plot_grid(
+    p_left,
+    p_middle,
+    ggdraw(),
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(0.8, 1, 0.05, 0.6)
+    ),
+  plot_grid(
+    # get_legend(p_site_anno),
+    ggdraw(),
+    get_legend(p_odds_ratio),
+    ggdraw(),
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(0.6, 1, 0.65)
+    ),
+    # nrow = 2,
+    # rel_widths = c(1, 1)),
+  ncol = 1,
+  rel_heights = c(1, 0.2)
+  )
+
+p
+
+ggsave_pdf("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_signature_site_portrait.pdf", p,
+           width = 6.9, height = 5.1)
+ggsave_png("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_signature_site_portrait.png", p,
+           width = 6.9, height = 5.1)
+
+```
+
+### Megasite x signature contrasts
+
+#### Portrait
+
+```{r, fig.width = 6.9, fig.height = 5.1, results = "asis"}
+
+plot_data <- consensus_signature_site_odds %>% 
+  add_column(contrast_variable = "Site/Signature") %>%
+  mutate(p.value = ifelse(p.value < 1E-100, 1E-100, p.value)) %>%
+  # filter(!str_detect(contrast, "(HRD-Other) effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  separate(contrast, c("consensus_signature_contrast", "tumor_megasite_contrast"), sep = " ", remove = FALSE) %>%
+  mutate(contrast = ordered(contrast, levels = as.vector(t(outer(names(clrs$consensus_signature), names(clrs$tumor_megasite), paste, sep=" "))))) %>%
+  mutate(consensus_signature_contrast = ordered(consensus_signature_contrast, levels = names(clrs$consensus_signature))) %>%
+  mutate(tumor_megasite_contrast = ordered(tumor_megasite_contrast, levels = names(clrs$tumor_megasite))) %>%
+  mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super))) %>%
+  filter(!str_detect(contrast, "Undetermined")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1, 1, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1, -1, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  # filter(p.value < 1E-20) %>%
+  # filter(SE < 0.15) %>%
+  ggplot(aes(x = contrast, y = cluster_label, color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1, 1),
+    labels = c("≤-1", 0, "≥1"),
+    breaks = c(-1, 0, 1)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 100),
+    breaks = c(0, 50, 100),
+    labels = c(0, 50, 100)
+  ) +
+  scale_y_discrete(drop=FALSE) +
+  theme(
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.direction = "horizontal",
+    legend.position = "top",
+    legend.box = "horizontal",
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "plain", size = 14),
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  ) +
+  # theme(panel.background = element_rect(fill = 'gray95')) +
+  guides(color = guide_colorbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  # facet_grid( ~ contrast_variable, scales = "free", space = "free", switch = "x")
+  facet_grid( ~ tumor_megasite_contrast, scales = "free", space = "free")#, switch = "x", drop = FALSE)#, nrow = 2)#, space = "free")
+
+p_site_anno <- plot_data %>%
+  distinct(contrast, contrast_variable, .keep_all = T) %>%
+  ggplot() +
+  geom_tile(aes(x=contrast, y=0, fill = tumor_megasite_contrast)) +
+  heatmap_layers +
+  scale_fill_manual(values = clrs$tumor_megasite) +
+  facet_grid(. ~ tumor_megasite_contrast, scales = "free", space = "free") +
+  scale_x_discrete(position = "top") +
+  # theme(panel.background = element_rect(fill = 'gray95')) +
+  theme(#aspect.ratio = 1,
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    strip.text = element_text(face = "plain"),
+    legend.position = "bottom") +
+  guides(fill = F)
+
+p_signature_anno <- plot_data %>%
+  distinct(contrast, contrast_variable, .keep_all = T) %>%
+  ggplot() +
+  geom_tile(aes(x=contrast, y=0, fill = consensus_signature_contrast)) +
+  heatmap_layers +
+  scale_fill_manual(values = clrs$wgs_signature, limits = force) +
+  facet_grid(. ~ tumor_megasite_contrast, scales = "free", space = "free") +
+  scale_x_discrete(position = "top") +
+  # theme(panel.background = element_rect(fill = 'gray90')) +
+  labs(fill = "Mutational\nsignature") +
+  theme(#aspect.ratio = 1,
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    strip.text = element_blank())
+  # guides(fill = F)
+
+p_signature_site_anno <- plot_grid(
+  p_signature_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+  p_site_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+  nrow = 2,
+  align = "v",
+  axis = "lr")
+
+p_cluster_anno <- plot_data %>%
+  mutate(facet_helper = "") %>%
+  distinct(cluster_label, facet_helper, .keep_all = T) %>%
+  ggplot(aes(x=facet_helper, y=cluster_label)) +
+  geom_tile(aes(fill = cluster_label)) +
+  geom_point(color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(label = as.numeric(cluster_label))) +
+  heatmap_layers +
+  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  scale_x_discrete(drop = FALSE) +
+  facet_grid(facet_helper ~ ., scales = "free", space = "free") +
+  theme(#aspect.ratio = 1,
+    axis.text.x = element_blank(),
+    # axis.text.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    ggdraw(),
+    p_cluster_anno + 
+      theme(plot.margin = margin(t = 5, r = 0, b = 0, l = 6)),
+    ggdraw(),
+    nrow = 3,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(0.3, 1, 0.15)
+    # rel_widths = c(0.75, 1)
+  )
+
+p_middle <-
+  plot_grid(
+    # p_signature_site_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    p_site_anno + 
+      theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0), legend.position = "none"),
+    p_signature_anno + 
+      theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0), legend.position = "none"),
+    p_odds_ratio + 
+      theme(legend.position = "none", plot.margin = margin(t = 6, r = 0, b = 0, l = 0)),
+    ggdraw() + 
+      draw_label("Site/Signature"),
+    nrow = 4,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.2, 0.1, 1, 0.15)
+    # rel_widths = c(0.75, 1)
+  )
+
+p_right <- 
+  plot_grid(
+    ggdraw(),
+    get_legend(p_signature_anno),
+    ggdraw(),
+    nrow = 3,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.3, 1, 0.15)
+    # rel_widths = c(0.75, 1)
+  )
+
+p <- plot_grid(
+  plot_grid(
+    p_left,
+    p_middle,
+    ggdraw(),
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(0.8, 1, 0.05, 0.6)
+    ),
+  plot_grid(
+    # get_legend(p_site_anno),
+    ggdraw(),
+    get_legend(p_odds_ratio),
+    ggdraw(),
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(0.6, 1, 0.65)
+    ),
+    # nrow = 2,
+    # rel_widths = c(1, 1)),
+  ncol = 1,
+  rel_heights = c(1, 0.2)
+  )
+
+p
+
+ggsave_pdf("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_megasite_signature_portrait.pdf", p,
+           width = 6.9, height = 5.1)
+ggsave_png("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_megasite_signature_portrait.png", p,
+           width = 6.9, height = 5.1)
+
+```
+
+
+```{r}
+
+plot_data <- consensus_signature_site_odds %>% 
+  add_column(contrast_variable = "Site/Signature") %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  separate(contrast, c("mutational_signature_contrast", "tumor_megasite_contrast"), sep = " ", remove = FALSE)
+
+scrna_glm_table <- plot_data %>%
+  select(-c("df","null","contrast_variable","contrast"))
+
+glm_list <-
+  list(
+    "scRNA Cancer/Site/Signature" = scrna_glm_table
+  )
+
+```
+
+```{r}
+
+library(openxlsx)
+
+wb <- createWorkbook()
+lapply(seq_along(glm_list), function(i){
+  addWorksheet(wb=wb, sheetName = names(glm_list[i]))
+  writeData(wb, sheet = i, glm_list[[i]])
+})
+
+saveWorkbook(wb, "tables/330_cancer_cell_glm/001_cancer_cell_glm.xlsx", overwrite = TRUE)
+
+```
+
+## GLM with fixed effects (signature + megasite) {.tabset}
+
+```{r}
+
+data[["Ovarian cancer cell"]] <- scrna_cell_state_sample_tbl %>%
+  filter(str_detect(sort_parameters, "U|CD45-")) %>%
+  filter(str_detect(cell_type, "Ovarian cancer cell")) %>%
+  filter(!is.na(cluster_label))
+formulas[["Ovarian cancer cell"]] <-cbind(cell_state_count, other_cell_state_count) ~ cluster_label * consensus_signature + cluster_label * tumor_megasite #+ cluster_label * sort_parameters
+models[["Ovarian cancer cell"]] <- glm(formula = formulas[["Ovarian cancer cell"]], family = binomial(link = 'logit'), data = data[["Ovarian cancer cell"]])
+
+consensus_signature_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ consensus_signature | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
+consensus_signature_odds <- consensus_signature_emm[["Ovarian cancer cell"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+site_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ tumor_megasite | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
+site_odds <- site_emm[["Ovarian cancer cell"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+```
+
+### Site contrasts
+
+#### Landscape
+
+```{r, fig.width = 4.35, fig.height = 4.5, results = "asis"}
+
+plot_data <- bind_rows(site_odds %>% add_column(contrast_variable = "Site")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  # filter(!str_detect(contrast, "Other")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  # filter(p.value < 1E-20) %>%
+  # filter(SE < 0.15) %>%
+  ggplot(aes(x = cluster_label, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    # values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -0.5, 0, 0.5, max(plot_data$log2.odds.ratio, na.rm=T))),
+    limits = c(-1.5, 1.5),
+    # limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  # scale_color_gradientn(
+  #   colors = rev(brewer.pal(9, "RdBu")),
+  #   values = rescale(c(min(plot_data$log2.odds.ratio, na.rm=T), -1, 0, 1, max(plot_data$log2.odds.ratio, na.rm=T))),
+  #   limits = c(min(plot_data$log2.odds.ratio, na.rm=T), max(plot_data$log2.odds.ratio, na.rm=T)),
+  #   breaks = c(-2, 0, 2)
+  # ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_x_discrete(drop=FALSE) +
+  theme(
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.direction = "horizontal",
+    legend.position = "top",
+    legend.box = "horizontal",
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "plain", size = 14),
+    strip.background = element_blank()#,
+    # strip.text.x = element_blank()
+  ) +
+  guides(color = guide_colourbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  facet_grid(contrast_variable ~ ., scales = "free_y", space = "free")
+
+p_signature_site_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=0, y=forcats::fct_rev(contrast), fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = c(clrs$consensus_signature, clrs$tumor_supersite)) +
+  facet_grid(contrast_variable~., scales = "free", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  mutate(facet_helper = "") %>% 
+  distinct(cluster_label, facet_helper, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(cluster_label, facet_helper, fill = cluster_label)) +
+  geom_point(aes(cluster_label, facet_helper), color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(cluster_label, facet_helper, label = as.numeric(cluster_label))) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  scale_x_discrete(drop=FALSE) +
+  facet_grid(~facet_helper, scales = "free", space = "free") +
+  theme(axis.text.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    p_signature_site_anno + theme(plot.margin = margin(t = 6, r = 0, b = 20, l = 6)),
+    ggdraw(),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(1, 0.9),
+    rel_widths = c(0.75, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 0, r = 6, b = 0, l = 0)),
+    p_cluster_anno + theme(plot.margin = margin(t = 0, r = 6, b = 6, l = 6)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(1, 1.2),
+    rel_widths = c(0.75, 1)
+  )
+
+p <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(0.7, 1)
+    ),
+  get_legend(p_odds_ratio),
+  ncol = 1,
+  rel_heights = c(1, 0.15)
+  )
+
+p
+
+ggsave_pdf("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_site_landscape.pdf", p,
+           width = 4.35, height = 5.25)
+ggsave_png("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_site_landscape.png", p,
+           width = 4.35, height = 5.25)
+
+```
+
+
+#### Portrait
+
+```{r, fig.width = 3.8, fig.height = 5.95, results = "asis"}
+
+plot_data <- bind_rows(site_odds %>% add_column(contrast_variable = "Site")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  # filter(!str_detect(contrast, "(HRD-Other) effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = c(names(clrs$consensus_signature), names(clrs$tumor_supersite)))) %>%
+  mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super))) %>%
+  # filter(!str_detect(contrast, "Other")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  # filter(p.value < 1E-20) %>%
+  # filter(SE < 0.15) %>%
+  ggplot(aes(x = contrast, y = cluster_label, color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1.5, 1.5),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_y_discrete(drop=FALSE) +
+  theme(
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.direction = "horizontal",
+    legend.position = "top",
+    legend.box = "horizontal",
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "plain", size = 14),
+    strip.background = element_blank()#,
+    # strip.text.x = element_blank()
+  ) +
+  guides(color = guide_colorbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  facet_grid(. ~ contrast_variable, scales = "free", space = "free", switch = "x")
+
+p_site_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=contrast, y=0, fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$tumor_supersite) +
+  facet_grid(. ~ contrast_variable, scales = "free", space = "free") +
+  scale_x_discrete(position = "top") +
+  theme(#aspect.ratio = 1,
+        axis.text.x.top = element_text(hjust = 0, vjust = 0.5),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  mutate(facet_helper = "") %>% 
+  distinct(cluster_label, facet_helper, .keep_all = T) %>% 
+  ggplot(aes(x=facet_helper, y=cluster_label)) +
+  geom_tile(aes(fill = cluster_label)) +
+  geom_point(color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(label = as.numeric(cluster_label))) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  scale_x_discrete(drop = FALSE) +
+  facet_grid(facet_helper ~ ., scales = "free", space = "free") +
+  theme(#aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    ggdraw(),
+    p_cluster_anno + theme(plot.margin = margin(t = 5, r = 0, b = 22, l = 6)),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(0.57, 1)
+    # rel_widths = c(0.75, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_site_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 6, r = 0, b = 0, l = 0)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.57, 1)
+    # rel_widths = c(0.75, 1)
+  )
+
+p <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(1.55, 1)
+    ),
+  get_legend(p_odds_ratio),
+  ncol = 1,
+  rel_heights = c(1, 0.2)
+  )
+
+p
+
+ggsave_pdf("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_site_portrait.pdf", p,
+           width = 3.8, height = 5.95)
+ggsave_png("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_site_portrait.png", p,
+           width = 3.8, height = 5.95)
+
+```
+
+## GLM with fixed effects (signature + germline/somatic + site) {.tabset}
+
+```{r}
+
+data[["Ovarian cancer cell"]] <- scrna_cell_state_sample_tbl %>%
+  # mutate(BRCA_mutation_status = if_else(BRCA_mutation_status == "Germline", paste(consensus_signature_short, BRCA_mutation_status), consensus_signature_short)) %>%
+  # mutate(BRCA_mutation_status = glue::glue_collapse(na.omit(c(consensus_signature_short, BRCA_mutation_status)), sep = ", ")) %>%
+  unite(., col = "BRCA_mutation_status", consensus_signature, BRCA_mutation_status, na.rm=TRUE, sep = " ") %>%
+  mutate(BRCA_mutation_status = recode(BRCA_mutation_status, `HRD-Dup Germline` = "gHRD-Dup", `HRD-Del Germline` = "gHRD-Del", `HRD-Dup` = "ngHRD-Dup", `HRD-Del` = "ngHRD-Del")) %>%
+  # mutate(BRCA_mutation_status = ifelse(consensus_signature_short == "HRD" && BRCA_mutation_status != "Germline", "Somatic", BRCA_mutation_status)) %>%
+  filter(str_detect(sort_parameters, "U|CD45-")) %>%
+  filter(str_detect(cell_type, "Ovarian cancer cell")) %>%
+  filter(!is.na(cluster_label))
+formulas[["Ovarian cancer cell"]] <-cbind(cell_state_count, other_cell_state_count) ~ cluster_label * BRCA_mutation_status + cluster_label * tumor_supersite #+ cluster_label * sort_parameters
+models[["Ovarian cancer cell"]] <- glm(formula = formulas[["Ovarian cancer cell"]], family = binomial(link = 'logit'), data = data[["Ovarian cancer cell"]])
+
+# consensus_signature_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ consensus_signature | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
+# consensus_signature_odds <- consensus_signature_emm[["Ovarian cancer cell"]]$contrasts %>%
+#   rbind() %>%
+#   as.data.frame()
+
+BRCA_gene_mutation_status_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ BRCA_mutation_status | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
+BRCA_gene_mutation_status_odds <- BRCA_gene_mutation_status_emm[["Ovarian cancer cell"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+site_emm[["Ovarian cancer cell"]] <- emmeans(models[["Ovarian cancer cell"]], specs = eff ~ tumor_supersite | cluster_label, type = "response", tran = "logit", adjust = "bonferroni")
+site_odds <- site_emm[["Ovarian cancer cell"]]$contrasts %>%
+  rbind() %>%
+  as.data.frame()
+
+```
+
+### Germline/somatic contrasts
+
+#### Portrait
+
+```{r, fig.width = 4.3, fig.height = 5.7, results = "asis"}
+
+plot_data <- bind_rows(BRCA_gene_mutation_status_odds %>% add_column(contrast_variable = "")) %>%
+  mutate(p.value = ifelse(p.value < 1E-250, 1E-250, p.value)) %>%
+  # filter(!str_detect(contrast, "(HRD-Other) effect")) %>%
+  mutate(contrast = str_remove(contrast, " effect")) %>%
+  mutate(contrast = str_remove(contrast, "\\(")) %>%
+  mutate(contrast = str_remove(contrast, "\\)")) %>%
+  mutate(contrast = ordered(contrast, levels = names(clrs$consensus_signature_BRCA_mutation_status))) %>%
+  mutate(cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label$Ovarian.cancer.super))) %>%
+  # filter(!str_detect(contrast, "HRD-Other"),
+  #        !str_detect(contrast, "Undetermined")) %>%
+  mutate(log2.odds.ratio = log2(odds.ratio)) %>%
+  mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
+         log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
+
+p_odds_ratio <- plot_data %>%
+  # filter(p.value < 1E-20) %>%
+  filter(SE < 0.15) %>%
+  ggplot(aes(x = contrast, y = cluster_label, color = log2.odds.ratio, size = -log10(p.value))) +
+  geom_point() +
+  scale_color_gradientn(
+    colors = rev(brewer.pal(9, "RdBu")),
+    limits = c(-1.5, 1.5),
+    labels = c("≤-1.5", 0, "≥1.5"),
+    breaks = c(-1.5, 0, 1.5)
+  ) +
+  scale_size_continuous(
+    limits = c(0, 250),
+    breaks = c(0, 125, 250),
+    labels = c(0, 125, 250)
+  ) +
+  scale_y_discrete(drop=FALSE) +
+  theme(
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.direction = "horizontal",
+    legend.position = "top",
+    legend.box = "horizontal",
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "plain", size = 14),
+    strip.background = element_blank()#,
+    # strip.text.x = element_blank()
+  ) +
+  guides(color = guide_colorbar(title.position="top", title.hjust = 0.5, title.vjust = 0),
+         size = guide_legend(title.position="top", title.hjust = 0.5, title.vjust = 0)) +
+  labs(title = NULL, x = NULL, y = NULL, color = 'log2(odds ratio)', size = "\n-log10(p value)") +
+  facet_grid(. ~ contrast_variable, scales = "free", space = "free", switch = "x")
+
+p_signature_anno <- plot_data %>% 
+  distinct(contrast, contrast_variable, .keep_all = T) %>% 
+  ggplot() +
+  geom_tile(aes(x=contrast, y=0, fill = contrast)) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$consensus_signature_BRCA_mutation_status) +
+  facet_grid(. ~ contrast_variable, scales = "free", space = "free") +
+  scale_x_discrete(position = "top") +
+  theme(#aspect.ratio = 1,
+        axis.text.x.top = element_text(hjust = 0, vjust = 0.5),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_cluster_anno <- plot_data %>% 
+  mutate(facet_helper = "") %>% 
+  distinct(cluster_label, facet_helper, .keep_all = T) %>% 
+  ggplot(aes(x=facet_helper, y=cluster_label)) +
+  geom_tile(aes(fill = cluster_label)) +
+  geom_point(color = "white", alpha = 0.5, size = 5) +
+  geom_text(aes(label = as.numeric(cluster_label))) +
+  heatmap_layers + 
+  scale_fill_manual(values = clrs$cluster_label$Ovarian.cancer.super) +
+  scale_x_discrete(drop = FALSE) +
+  facet_grid(facet_helper ~ ., scales = "free", space = "free") +
+  theme(# aspect.ratio = 1,
+        axis.text.x = element_blank(),
+        strip.text = element_blank()) +
+  guides(fill = F)
+
+p_left <-
+  plot_grid(
+    ggdraw(),
+    p_cluster_anno + theme(plot.margin = margin(t = 5, r = 0, b = 22, l = 6)),
+    nrow = 2,
+    align = "hv",
+    axis = "tbr",
+    rel_heights = c(0.55, 1)
+    # rel_widths = c(0.75, 1)
+  )
+
+p_right <-
+  plot_grid(
+    p_signature_anno + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0)),
+    p_odds_ratio + theme(legend.position = "none", plot.margin = margin(t = 6, r = 0, b = 0, l = 0)),
+    nrow = 2,
+    align = "v",
+    axis = "lr",
+    rel_heights = c(0.55, 1)
+    # rel_widths = c(0.75, 1)
+  )
+
+p <- plot_grid(
+  plot_grid(
+    p_left,
+    p_right,
+    nrow = 1,
+    align = "hv",
+    axis = "tblr",
+    rel_widths = c(1.1, 1)
+    ),
+  get_legend(p_odds_ratio),
+  ncol = 1,
+  rel_heights = c(1, 0.2)
+  )
+
+p
+
+ggsave_pdf("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_signature_portrait.pdf", p,
+           width = 3.8, height = 5.5)
+ggsave_png("figures/330_cancer_cell_glm/330_cancer_cell_odds_ratio_signature_portrait.png", p,
+           width = 3.8, height = 5.5)
+
+```
+
