@@ -66,9 +66,9 @@ source("src/global_vars.R")
 
 myfeatures <- c("UMAP_1", "UMAP_2", "umapharmony_1", "umapharmony_2", "sample", "doublet", "nCount_RNA", "nFeature_RNA", "percent.mt", "doublet_score", "cell_type", "cluster_label_sub")
 
-seu_obj_sub <- read_rds("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/T.super_processed_filtered_annotated.rds")
+seu_obj_sub <- read_rds("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/T.super_processed_filtered_annotated.rds")
 
-marker_tbl <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/T.super_marker_table_annotated_full.tsv")
+marker_tbl <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/T.super_marker_table_annotated_full.tsv")
 
 marker_tbl_top <- marker_tbl %>% 
   filter(avg_logFC > 0.5,
@@ -80,7 +80,7 @@ marker_tbl_top <- marker_tbl %>%
   group_by(cluster_label_sub) %>% 
   slice(1:50)
 
-marker_sheet <- read_tsv("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/T.super_marker_sheet_full.tsv")
+marker_sheet <- read_tsv("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/T.super_marker_sheet_full.tsv")
 
 my_subtypes <- names(clrs$cluster_label_sub[[coi]])
 
@@ -389,16 +389,7 @@ comp_tbl_sample_sort <- plot_data_sub %>%
   mutate(tumor_supersite = ordered(tumor_supersite, levels = rev(names(clrs$tumor_supersite)))) %>% 
   ungroup %>% 
   mutate(cell_type_naive = ifelse(str_detect(cluster_label_sub, "mem"), "T naive/mem", "other")) %>% 
-  mutate(cell_type_dysfunc = ifelse(str_detect(cluster_label_sub, "dysfunc"), "T dysfunctional", "other"))# %>%
-  # # Pad cell type combinations with zero counts in the data
-  # complete(cell_type_naive,
-  #          nesting(sample, tumor_subsite, tumor_supersite, tumor_megasite,
-  #                  patient_id_short, therapy, sort_short_x, consensus_signature),
-  #          fill = list(n = 0)) %>%
-  # complete(cell_type_dysfunc,
-  #          nesting(sample, tumor_subsite, tumor_supersite, tumor_megasite,
-  #                  patient_id_short, therapy, sort_short_x, consensus_signature),
-  #          fill = list(n = 0))
+  mutate(cell_type_dysfunc = ifelse(str_detect(cluster_label_sub, "dysfunc"), "T dysfunctional", "other"))
 
 plist1 <- default_comp_grid_list(
   comp_tbl_sample_sort, cell_type_naive, "T naive/mem",

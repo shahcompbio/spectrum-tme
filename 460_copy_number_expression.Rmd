@@ -55,7 +55,7 @@ We first select a set of oncogenes of interest.
 keep_columns <- c("cell_id", "sample")
 
 # genes_of_interest <- c('PIK3CA', 'MAP3K1', 'MYC', 'KRAS', 'BRCA1', 'BRCA2', 'RB1', 'TP53', 'CCNE1')
-genes_of_interest <- c('PIK3CA', 'MYC', 'KRAS', 'CCNE1', "TGFBR2")
+genes_of_interest <- c('PIK3CA', 'MYC', 'KRAS', 'CCNE1')
 
 genes_of_interest
 
@@ -380,7 +380,7 @@ ggsave_png("figures/460_copy_number_expression/460_hlamp_expression_violin_scrna
 
 # Correlation
 
-## Gene copy number vs expression
+## Gene
 
 ### All samples
 
@@ -553,82 +553,3 @@ ggsave_png("figures/460_copy_number_expression/460_copy_number_expression_corr_b
 
 ```
 
-# Co-occurrence
-
-```{r}
-
-plot_data <- wgs_gene_cna_tbl %>%
-  filter(
-    gene_name %in% c("CCNE1", "TGFBR2")) %>%
-  pivot_wider(id_cols = "sample", names_from = "gene_name", values_from = "log_change")
-
-# plot_data_stats <- plot_data %>% 
-#   group_by(patient_id, gene_name) %>% 
-#   mutate(expression_mean = mean(expression),
-#          expression_min = quantile(expression, probs = c(0.4)),
-#          expression_max = quantile(expression, probs = c(0.6)),
-#          log_change = log_change) %>% 
-#   distinct(patient_id, gene_name, .keep_all = T)
-
-```
-
-```{r, fig.width=3, fig.height=3}
-
-hlamp_corr_plot_all_samples <- plot_data %>% 
-  ggplot(aes(CCNE1, TGFBR2)) +
-  geom_smooth(
-    method = "lm", 
-    col = "gray50", 
-    fill = "gray90", 
-    linetype = "dashed",
-    size = 0.5
-  ) +
-  stat_cor(
-    aes(CCNE1, TGFBR2),
-    method = "spearman",
-    color = "black",
-    # label.x = Inf,
-    # label.y = Inf
-    label.x.npc = 0.1,
-    label.y.npc = 0.8, 
-    label.sep = '\n',
-    hjust = 0,
-    position = "identity"
-  ) +
-  geom_vline(xintercept = 0, col = "black", linetype = "dashed") +
-  # geom_errorbar(
-  #   aes(
-  #     ymin=expression_min,
-  #     ymax=expression_max
-  #     ),
-  #   colour="gray80"
-  # ) +
-  geom_point() +
-  # geom_point(alpha = 1, aes(col = wgs_signature)) +
-  # geom_text_repel(
-  #   aes(label = patient_id_short),
-  #   segment.color = "gray50",
-  #   data = plot_data_stats %>%
-  #     filter(is_hlamp == TRUE)
-  # ) +
-  # facet_wrap(~gene_name, ncol = 4, scales = "free") +
-  # coord_cartesian(ylim = c(0, 2)) +
-  # scale_color_manual(
-  #   values = clrs$wgs_signature,
-  #   limits = force
-  # ) +
-  theme(strip.text = element_text(face = "italic")) +
-  labs(
-    x = "Log copy number change (WGS)",
-    y = "Mean expression (scRNA)", 
-    color = "Mutational\nsignature", 
-    fill = "Mutational\nsignature")
-
-hlamp_corr_plot_all_samples
-
-# ggsave_pdf("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_all_samples.pdf",
-#            hlamp_corr_plot_all_samples, width = 7, height = 3)
-# ggsave_png("figures/460_copy_number_expression/460_copy_number_expression_corr_by_patient_scrna_wgs_all_samples.png",
-#            hlamp_corr_plot_all_samples, width = 7, height = 3)
-
-```
