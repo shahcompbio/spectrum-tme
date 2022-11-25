@@ -3,7 +3,6 @@ get_sample_inventory <- function(inventory, unique = TRUE) {
     sample_inventory <- inventory %>%
       dplyr::select(
         patient_id,
-        sample_type,
         tumor_type,
         tumor_supersite,
         tumor_site,
@@ -15,7 +14,6 @@ get_sample_inventory <- function(inventory, unique = TRUE) {
       dplyr::mutate(technique_status = 1) %>%
       distinct(
         patient_id,
-        sample_type,
         tumor_supersite,
         tumor_site,
         tumor_subsite,
@@ -28,7 +26,6 @@ get_sample_inventory <- function(inventory, unique = TRUE) {
     sample_inventory <- inventory %>%
       dplyr::select(
         patient_id,
-        sample_type,
         tumor_type,
         tumor_supersite,
         tumor_site,
@@ -40,7 +37,6 @@ get_sample_inventory <- function(inventory, unique = TRUE) {
       dplyr::mutate(technique_status = 1) %>%
       group_by(
         patient_id,
-        sample_type,
         tumor_type,
         tumor_supersite,
         tumor_site,
@@ -131,62 +127,36 @@ plot_inventory_heatmap <-
       # na_col = "white", gp = gpar(col = "white")
     )
     
-    left_df <- left_annotation %>%
-      dplyr::select(tumor_supersite, sample_type) %>%
+    left_df = left_annotation %>%
+      dplyr::select(tumor_supersite) %>%
       as.data.frame
-    colnames(left_df) <- c("Site", "Sample type")
+    colnames(left_df) <- c("Site")
     
     left_annotation <- ComplexHeatmap::rowAnnotation(
-      # df = left_df,
-      # col = list("Site" = clrs$tumor_supersite[!names(clrs$tumor_supersite) %in% c("UQ","Unknown")]),
-      site_sample_type = anno_simple(
-        left_df$`Site`,
-        col = clrs$tumor_supersite[!names(clrs$tumor_supersite) %in% c("UQ","Unknown")],
-        # gp = gpar(col = site_colors, fill = site_colors),
-        pch = ifelse(left_df$`Sample type` == "Tumor", 1, 2),
-        # width = unit(0.35, "cm"),
-        pt_size = unit(0.25, "cm")
-      ),
-      # "Site" = left_df$`Site`,
-      # "Sample type" = left_df$`Sample type`,
-      # col = list(
-      #   "Site" = clrs$tumor_supersite[!names(clrs$tumor_supersite) %in% c("UQ","Unknown")]),
-      show_annotation_name = FALSE,
+      df = left_df,
+      col = list("Site" = clrs$tumor_supersite[!names(clrs$tumor_supersite) %in% c("UQ","Unknown")]),
+      show_annotation_name = TRUE,
       annotation_name_side = "bottom",
       annotation_name_gp = list(fontsize = 10),
-      # show_legend = TRUE,
-      # annotation_legend_param = list(
-      #   Site = list(
-      #     title_gp = gpar(fontsize = 16,
-      #                     fontface = "bold"),
-      #     labels_gp = gpar(fontsize = 16)))
-        # Sample = list( 
-        #   title_gp = gpar(fontsize = 16,
-        #                   fontface = "bold"), 
-        #   labels_gp = gpar(fontsize = 16))),
       simple_anno_size = unit(0.35, "cm")
     )
     
     site_count = rowSums(inventory_mat)
     
     right_annotation <- ComplexHeatmap::rowAnnotation(
-      "site_count" = anno_text(
+      "test" = anno_text(
         site_count, 
         gp = gpar(fontsize = 8)),
       "# samples\nper site" = anno_barplot(
         site_count,
         gp = gpar(col = site_colors, fill = site_colors),
         border = FALSE),
-      show_annotation_name = TRUE,
-      annotation_name_side = "bottom",
       annotation_name_gp = list(fontsize = 10)
     )
     
     at = seq(0, 2, by = 1)
-    col_fun = circlize::colorRamp2(
-      c(0, 1, 2),
-      c("grey90", "grey70", "grey50")
-    )
+    col_fun = circlize::colorRamp2(c(0, 1, 2),
+                                   c("grey90", "grey70", "grey50"))
     
     heatmap_legend_param = list(
       at = at,
@@ -206,7 +176,7 @@ plot_inventory_heatmap <-
       border = FALSE,
       # top_annotation = top_annotation,
       # bottom_annotation = bottom_annotation,
-      # left_annotation = left_annotation,
+      left_annotation = left_annotation,
       right_annotation = right_annotation,
       row_order = rownames(inventory_mat),
       column_title = "Patient",
@@ -226,28 +196,5 @@ plot_inventory_heatmap <-
       rect_gp = gpar(col = "white", lwd = 0.5)
     )
     
-    # ht <- draw(ht, annotation_legend_list = annotation_legend_list)
-    
     return(ht)
   }
-
-plot_inventory_annotation_legend_list <- 
-  function(...){
-  
-  # Legend for site
-  lgd1 <- Legend(
-    title = "Site", 
-    legend_gp = gpar(fill = clrs$tumor_supersite[!names(clrs$tumor_supersite) %in% c("UQ","Unknown")]), 
-    at = seq(0, length(clrs$tumor_supersite[!names(clrs$tumor_supersite) %in% c("UQ","Unknown")]) - 1), 
-    labels = names(clrs$tumor_supersite[!names(clrs$tumor_supersite) %in% c("UQ","Unknown")]))
-  # Legend for sample type
-  lgd2 <- Legend(
-    title = "Sample type",
-    pch = c(1, 2), 
-    type = "points", 
-    labels = c("Tumor","Normal"))
-  
-  inventory_lgd_list <- packLegend(lgd1, lgd2, direction = "vertical")
-
-  return(inventory_lgd_list)
-}

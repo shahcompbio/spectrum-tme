@@ -113,73 +113,52 @@ plot_oncoprint_heatmap <-
            top_annotation,
            bottom_annotation,
            right_annotation,
-           column_split,
-           column_order = NULL,
-           show_row_names = TRUE,
-           show_pct = TRUE,
-           row_names_side = "left",
-           pct_side = "right",
-           row_split = TRUE) {
+           column_split) {
     column_title <- "MSK SPECTRUM"
     
-    if(row_split == TRUE){
-
-      role_in_cancer <- list(
-        "TSG" = c(
-          "TP53",
-          "BRCA1",
-          "BRCA2",
-          "ATM",
-          "ATR",
-          "BAP1",
-          "BARD1",
-          "BLM",
-          "BRIP1",
-          "CHEK1",
-          "CHEK2",
-          "MRE11",
-          "MRE11A",
-          "MUTYH",
-          "NBN",
-          "POLD1",
-          "RAD21",
-          "RAD50",
-          "RAD51",
-          "RAD51B",
-          "RAD51C",
-          "RAD51D",
-          "RAD52",
-          "RAD54L",
-          "PALB2",
-          "NF1",
-          "PTEN",
-          "RB1",
-          "XRCC2",
-          "CDK12"
-        ),
-        "oncogene" = c(
-          "CCNE1", 
-          "ERBB2", 
-          "KRAS", 
-          "MECOM", 
-          "MYC", 
-          "PIK3CA"
-        )
-      ) %>%
-        enframe(name = "role_in_cancer", value = "hugo_symbol") %>%
-        unnest()
-      
-      row_split <- rownames(mat) %>%
-        enframe(value = "hugo_symbol") %>%
-        dplyr::left_join(role_in_cancer, by = "hugo_symbol") %>%
-        dplyr::mutate(role_in_cancer = factor(role_in_cancer, levels = c("TSG", "oncogene"))) %>%
-        pull(role_in_cancer)
-      
-    } else {
-      
-      row_split = NULL
-      
-    }
+    role_in_cancer <- list(
+      "TSG" = c(
+        "TP53",
+        "BRCA1",
+        "BRCA2",
+        "ATM",
+        "ATR",
+        "BAP1",
+        "BARD1",
+        "BLM",
+        "BRIP1",
+        "CHEK1",
+        "CHEK2",
+        "MRE11",
+        "MRE11A",
+        "MUTYH",
+        "NBN",
+        "POLD1",
+        "RAD21",
+        "RAD50",
+        "RAD51",
+        "RAD51B",
+        "RAD51C",
+        "RAD51D",
+        "RAD52",
+        "RAD54L",
+        "PALB2",
+        "NF1",
+        "PTEN",
+        "RB1",
+        "XRCC2",
+        "CDK12"
+      ),
+      "oncogene" = c("CCNE1", "ERBB2", "KRAS", "MECOM", "MYC", "PIK3CA")
+    ) %>%
+      enframe(name = "role_in_cancer", value = "hugo_symbol") %>%
+      unnest()
+    
+    row_split <- rownames(mat) %>%
+      enframe(value = "hugo_symbol") %>%
+      dplyr::left_join(role_in_cancer, by = "hugo_symbol") %>%
+      dplyr::mutate(role_in_cancer = factor(role_in_cancer, levels = c("TSG", "oncogene"))) %>%
+      pull(role_in_cancer)
     
     print(rownames(mat))
     
@@ -191,18 +170,16 @@ plot_oncoprint_heatmap <-
       col = clrs$mutation,
       row_split = row_split,
       column_split = column_split,
-      column_order = column_order,
       cluster_row_slices = FALSE,
       cluster_column_slices = FALSE,
       row_order = rownames(mat),
       show_column_names = TRUE,
-      show_row_names = show_row_names,
-      show_pct = show_pct,
+      show_row_names = TRUE,
       remove_empty_columns = FALSE,
       remove_empty_rows = FALSE,
-      row_names_side = row_names_side,
+      row_names_side = "left",
       pct_gp = gpar(fontsize = 8), 
-      pct_side = pct_side,
+      pct_side = "right",
       row_names_gp = gpar(fontface = "italic", fontsize = 8),
       row_title_gp = gpar(fontsize = 0),
       column_title = "",
@@ -218,12 +195,12 @@ plot_oncoprint_heatmap <-
 plot_oncoprint_legend <-
   function(...) {
     
-    lgd1 <- Legend(at = heatmap_legend_alteration_param$at,
+    lgd1 = Legend(at = heatmap_legend_alteration_param$at,
                   labels = heatmap_legend_alteration_param$labels,
                   title = heatmap_legend_alteration_param$title,
                   type = "grid",
                   legend_gp = gpar(fill = heatmap_legend_alteration_param$col_fun))
-    lgd2 <- Legend(at = heatmap_legend_mutation_type_param$at,
+    lgd2 = Legend(at = heatmap_legend_mutation_type_param$at,
                   labels = heatmap_legend_mutation_type_param$labels,
                   title = heatmap_legend_mutation_type_param$title,
                   type = "lines", 
@@ -231,6 +208,6 @@ plot_oncoprint_legend <-
                                    lwd = heatmap_legend_mutation_type_param$lwd), 
                   background = clrs$mutation["MUT"])
     
-    oncoprint_lgd_list <- packLegend(lgd1, lgd2, direction = "vertical")
+    oncoprint_lgd_list = packLegend(lgd1, lgd2, direction = "horizontal")
     
   }
