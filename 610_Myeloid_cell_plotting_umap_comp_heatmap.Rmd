@@ -64,7 +64,7 @@ source("src/global_vars.R")
 
 ```{r chunk_610_030}
 
-myfeatures <- c("UMAP_1", "UMAP_2", "umapharmony_1", "umapharmony_2", "sample", "doublet", "nCount_RNA", "nFeature_RNA", "percent.mt", "doublet_score", "cell_type", "cluster_label")
+myfeatures <- c("UMAP_1", "UMAP_2", "umapharmony_1", "umapharmony_2", "sample", "doublet", "nCount_RNA", "nFeature_RNA", "percent.mt", "doublet_score", "cell_type", "cluster_label", "cell_id")
 
 seu_obj_sub <- read_rds(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/", coi, "_processed_filtered_annotated.rds"))
 
@@ -99,11 +99,15 @@ plot_data_sub <- list(Macrophage = FetchData(seu_obj_sub_mp, c(myfeatures)),
                                "CD45+", ifelse(sort_short == "U" & cell_type_super == "Stromal", "CD45-", sort_short)),
          cluster_label = ordered(cluster_label, levels = names(clrs$cluster_label[[coi]])))
   
-plot_data_sub <- filter(plot_data_sub, sort_short_x == cell_sort, !is.na(tumor_supersite))
+plot_data_sub <- filter(plot_data_sub, sort_short_x == cell_sort, !is.na(tumor_supersite)) %>% 
+  group_by(cell_type_myeloid) %>% 
+  mutate(umapscaled_1 = scales::rescale(umapharmony_1),
+         umapscaled_2 = scales::rescale(umapharmony_2)) %>% 
+  ungroup
 
 ```
 
-## UMAP
+## UMAPs
 
 ```{r chunk_610_50, fig.width=7, fig.height=4}
 
@@ -153,8 +157,16 @@ add_umap_coord <- function(gg_obj, x = 0, y = 0, width = 0.3, height = 0.3, size
 plot_data_label <- plot_data_sub %>% 
   group_by(cluster_label, cell_type_myeloid) %>% 
   summarise(umapharmony_1 = median(umapharmony_1),
-            umapharmony_2 = median(umapharmony_2)) %>% 
+            umapharmony_2 = median(umapharmony_2),
+            umapscaled_1 = median(umapscaled_1),
+            umapscaled_2 = median(umapscaled_2)) %>% 
   mutate(cluster_number = as.numeric(cluster_label))
+
+plot_data_ncell <- plot_data_sub %>% 
+ group_by(cell_type_myeloid) %>% 
+  summarise(x = (max(umapharmony_1) + min(umapharmony_1))/2,
+            y = min(umapharmony_2),
+            label = paste0("n = ", length(cell_id)))
 
 umap_cell_type <- ggplot(plot_data_sub, aes(umapharmony_1, umapharmony_2, color = cluster_label)) + 
   common_layers_disc +
@@ -167,7 +179,8 @@ umap_cell_type <- ggplot(plot_data_sub, aes(umapharmony_1, umapharmony_2, color 
   geom_text(aes(umapharmony_1, umapharmony_2, label = cluster_number), color = "black",
              data = plot_data_label) +
   scale_color_manual(values = clrs$cluster_label[[coi]]) +
-  guides(color = guide_legend(override.aes = list(size = 2, alpha = 1)))
+  guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))) +
+  geom_text(aes(x, y, label = label), data = plot_data_ncell, color = "black")
 
 umap_site <- ggplot(plot_data_sub, aes(umapharmony_1, umapharmony_2, color = tumor_supersite)) + 
   common_layers_disc +
@@ -179,6 +192,135 @@ umap_site_void <- umap_site + guides(color = F)
 
 umap_cell_type_legend <- cowplot::get_legend(umap_cell_type)
 umap_site_legend <- cowplot::get_legend(umap_site)
+
+add_umap_coord(umap_cell_type_void, width = 0.3, height = 0.3, x_offset = -0.05) %>% 
+  add_umap_coord(width = 0.3, height = 0.3, x_offset = 0.4)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_cell_type_myeloid.pdf", width = 10, height = 5)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_cell_type_myeloid.png", width = 10, height = 5)
+
+
+```
+
+### mini umaps
+
+```{r chunk_610_61, fig.width=7, fig.height=4}
+
+
+umap_mini_cluster_label_mp <- ggplot() + 
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2),
+    data = select(plot_data_sub, -cluster_label) %>% filter(cell_type_myeloid == "Macrophage"),
+    alpha = 0.04, size = 0.01, color = "grey80",
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2, color = cluster_label), 
+    data = plot_data_sub %>% filter(cell_type_myeloid == "Macrophage"),
+    alpha = 0.04, size = 0.01, 
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
+    data = mutate(plot_data_sub, cluster_label_sub = cluster_label) %>% filter(cluster_label %in% c("M1.S100A8", "M2.SELENOP")),
+    alpha = 0.5, size = 0.01,
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  facet_grid(~cluster_label_sub) + 
+  theme_void() +
+  scale_color_manual(values = clrs$cluster_label$Myeloid.super) +
+  theme(aspect.ratio = 1, 
+        panel.spacing.x = unit(0.1, "npc"), 
+        strip.text = element_text(size = 12)) +
+  remove_guides 
+
+umap_mini_cluster_label_mp
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_macrophage.pdf", umap_mini_cluster_label_mp, width = 3, height = 1.5)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_macrophage.png", umap_mini_cluster_label_mp, width = 3, height = 1.5)
+
+umap_mini_cluster_label_dc <- ggplot() + 
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2),
+    data = select(plot_data_sub, -cluster_label) %>% filter(cell_type_myeloid == "DC"),
+    alpha = 0.04, size = 0.01, color = "grey80",
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2, color = cluster_label), 
+    data = plot_data_sub %>% filter(cell_type_myeloid == "DC"),
+    alpha = 0.04, size = 0.01, 
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  ggrastr::geom_point_rast(
+    aes(umapharmony_1, umapharmony_2, color = cluster_label_sub), 
+    data = mutate(plot_data_sub, cluster_label_sub = cluster_label) %>% 
+      filter(cell_type_myeloid == "DC"),
+    alpha = 0.5, size = 0.01,
+    raster.dpi = 15, raster.width = 40, raster.height = 40
+  ) +
+  # facet_grid(~cluster_label_sub) + 
+  theme_void() +
+  scale_color_manual(values = clrs$cluster_label$Myeloid.super) +
+  theme(aspect.ratio = 1,
+        plot.title = element_text(size = 12, hjust = 0.5),
+        panel.spacing.x = unit(0.1, "npc"), 
+        strip.text = element_text(size = 12)) +
+  remove_guides +
+  labs(title = "DC")
+
+umap_mini_cluster_label_dc
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_dc.pdf", umap_mini_cluster_label_dc, width = 1.5, height = 1.5)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_mini_dc.png", umap_mini_cluster_label_dc, width = 1.5, height = 1.5)
+
+
+```
+
+### kernel density
+
+```{r chunk_610_65, fig.width=7, fig.height=4}
+
+source("src/umap_kernel.R")
+
+kernel_tbl <- kde2d_contrast(
+  data_tbl = plot_data_sub %>% filter(cell_type_myeloid == "Macrophage"),
+  x = umapharmony_1, y = umapharmony_2, kernel_group = tumor_megasite,
+  kernel_subsets_a = c("Adnexa"), kernel_subsets_b = c("Other", "Ascites")
+) %>%
+  filter(value.x > 0.01 & value.y > 0.01)
+
+rdbu <- rev(RColorBrewer::brewer.pal(7, "RdBu"))
+
+kernel_umap <- ggplot() +
+  ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), color = "grey80", size = 0.01, alpha = 0.02,
+                           data = plot_data_sub %>% filter(cell_type_myeloid == "Macrophage"),
+                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
+  ggrastr::geom_point_rast(aes(x, y, color = value_quenched), data = kernel_tbl, size = 0.01, 
+                           raster.dpi = 50, raster.width = 10, raster.height = 10) +
+  geom_point(aes(umapscaled_1, umapscaled_2), color = "white",
+             data = plot_data_label %>% filter(cell_type_myeloid == "Macrophage"), alpha = 0.5, size = 6) +
+  geom_text(aes(umapscaled_1, umapscaled_2, label = cluster_number), color = "black",
+            data = plot_data_label %>% filter(cell_type_myeloid == "Macrophage")) +
+  scale_color_gradientn(colours = rdbu,
+                        values = scales::rescale(c(min(kernel_tbl$value_quenched), 0,
+                                                   max(kernel_tbl$value_quenched)))) +
+  guides(color = guide_colorbar(label.position = "right",
+                                title.position = "top",
+                                title.hjust = 0,
+                                title.vjust = 1,
+                                direction = "vertical")) +
+  theme(aspect.ratio = 1,
+        legend.key.height = unit(0.05, "npc"),
+        legend.key.width = unit(0.03, "npc"),
+        legend.position = c(-0.01, 1),
+        legend.justification = c("left", "top"),
+        plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)) + 
+  labs(color = "Enrichment\nin adnexa") +
+  remove_xaxis +
+  remove_yaxis
+
+add_umap_coord(kernel_umap, width = 0.3, height = 0.3)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_kernel.pdf", width = 5, height = 5)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_umap_kernel.png", width = 5, height = 5)
+
 
 ```
 
