@@ -66,13 +66,13 @@ source("src/global_vars.R")
 
 myfeatures <- c("UMAP_1", "UMAP_2", "umapharmony_1", "umapharmony_2", "sample", "doublet", "nCount_RNA", "nFeature_RNA", "percent.mt", "doublet_score", "cell_type", "cluster_label")
 
-seu_obj_sub <- read_rds(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/", coi, "_processed_filtered_annotated.rds"))
+seu_obj_sub <- read_rds(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/", coi, "_processed_filtered_annotated.rds"))
 
-seu_obj_sub_mp <- read_rds(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/Macrophages_processed.rds"))
+seu_obj_sub_mp <- read_rds(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Macrophages_processed.rds"))
 
-seu_obj_sub_dc <- read_rds(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/DCs_processed.rds"))
+seu_obj_sub_dc <- read_rds(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/DCs_processed.rds"))
 
-marker_tbl <- read_tsv(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", coi, "_marker_table_annotated.tsv"))
+marker_tbl <- read_tsv(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", coi, "_marker_table_annotated.tsv"))
 
 marker_tbl_top <- marker_tbl %>% 
   filter(avg_logFC > 0.5,
@@ -84,7 +84,7 @@ marker_tbl_top <- marker_tbl %>%
   group_by(cluster_label) %>% 
   slice(1:50)
 
-marker_sheet <- read_tsv(paste0("/work/shah/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", coi, "_marker_sheet.tsv"))
+marker_sheet <- read_tsv(paste0("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/supplementary_tables/", coi, "_marker_sheet.tsv"))
 
 my_subtypes <- names(clrs$cluster_label[[coi]])
 
@@ -282,7 +282,13 @@ comp_tbl_sample_sort <- plot_data_sub %>%
   filter(therapy == "pre-Rx") %>%
   group_by(sample, tumor_subsite, tumor_supersite, tumor_megasite, patient_id_short,
            therapy, sort_short_x, consensus_signature, cluster_label, cell_type_super_ml) %>%
-  tally %>%
+  tally() %>%
+  ungroup() %>%
+  # Pad cell type combinations with zero counts in the data
+  complete(cluster_label,
+           nesting(sample, tumor_subsite, tumor_supersite, tumor_megasite,
+                   patient_id_short, therapy, sort_short_x, consensus_signature),
+           fill = list(n = 0)) %>%
   group_by(sample, tumor_subsite, tumor_supersite, tumor_megasite, patient_id_short,
            therapy, sort_short_x, consensus_signature) %>%
   mutate(nrel = n/sum(n)*100,
@@ -295,7 +301,13 @@ comp_tbl_sample_sort_mp <- plot_data_sub %>%
   filter(therapy == "pre-Rx", cell_type_super_ml == "Macrophage", str_detect(cluster_label, "M[1-2]\\.|Cycling.M|Clearing.M")) %>%
   group_by(sample, tumor_subsite, tumor_supersite, tumor_megasite, patient_id_short,
            therapy, sort_short_x, consensus_signature, cluster_label, cell_type_super_ml) %>%
-  tally %>%
+  tally() %>%
+  ungroup() %>%
+  # Pad cell type combinations with zero counts in the data
+  complete(cluster_label,
+           nesting(sample, tumor_subsite, tumor_supersite, tumor_megasite,
+                   patient_id_short, therapy, sort_short_x, consensus_signature),
+           fill = list(n = 0)) %>%
   group_by(sample, tumor_subsite, tumor_supersite, tumor_megasite, patient_id_short,
            therapy, sort_short_x, consensus_signature) %>%
   mutate(nrel = n/sum(n)*100,
@@ -305,35 +317,27 @@ comp_tbl_sample_sort_mp <- plot_data_sub %>%
 
 plist1 <- default_comp_grid_list(
   comp_tbl_sample_sort_mp, cluster_label, "M1.S100A8",
-  cluster_label, super_type = "Myeloid.super", vec_plot = F)
-
-# plist2 <- default_comp_grid_list(
-#   comp_tbl_sample_sort_mp, cluster_label, "M1.CDKN1C",
-#   cluster_label, super_type = "Myeloid.super", vec_plot = F)
+  cluster_label, super_type = "Myeloid.super", nmax = 5000, highlight = T)
 
 plist2 <- default_comp_grid_list(
   comp_tbl_sample_sort_mp, cluster_label, "M2.CXCL10",
-  cluster_label, super_type = "Myeloid.super", vec_plot = F, nmax = 5000)
+  cluster_label, super_type = "Myeloid.super", nmax = 5000, highlight = T)
 
 plist3 <- default_comp_grid_list(
   comp_tbl_sample_sort_mp, cluster_label, "M2.SELENOP",
-  cluster_label, super_type = "Myeloid.super", vec_plot = F, nmax = 5000)
+  cluster_label, super_type = "Myeloid.super", nmax = 5000, highlight = T)
 
 plist4 <- default_comp_grid_list(
   comp_tbl_sample_sort_mp, cluster_label, "M2.MARCO",
-  cluster_label, super_type = "Myeloid.super", vec_plot = F, nmax = 5000)
-
-plist4_no_yaxis <- default_comp_grid_list(
-  comp_tbl_sample_sort_mp, cluster_label, "M2.MARCO",
-  cluster_label, super_type = "Myeloid.super", vec_plot = F, yaxis = F, nmax = 5000)
+  cluster_label, super_type = "Myeloid.super", nmax = 5000, highlight = T)
 
 plist5 <- default_comp_grid_list(
   comp_tbl_sample_sort_mp, cluster_label, "M2.COL1A1",
-  cluster_label, super_type = "Myeloid.super", vec_plot = F, nmax = 5000)
+  cluster_label, super_type = "Myeloid.super", nmax = 5000, highlight = T)
 
 plist6 <- default_comp_grid_list(
   comp_tbl_sample_sort_mp, cluster_label, "M2.MMP9",
-  cluster_label, super_type = "Myeloid.super", vec_plot = F, nmax = 5000)
+  cluster_label, super_type = "Myeloid.super", nmax = 5000, highlight = T)
 
 plist7 <- default_comp_grid_list(
   comp_tbl_sample_sort, cell_type_super_ml, "Dendritic cell",
@@ -344,74 +348,61 @@ plist8 <- default_comp_grid_list(
   cell_type_super_ml, "Dendritic cell",
   cluster_label, super_type = "Myeloid.super", nmax = 5000, highlight = T)
 
-comp_grid1 <- plot_grid(plotlist = plist1, ncol = 1, align = "v", rel_heights = c(0.2, 0.2, 0.18, 0.42))
+comp_grid1 <- plot_grid(plotlist = plist1[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
-comp_grid2 <- plot_grid(plotlist = plist2, ncol = 1, align = "v", rel_heights = c(0.2, 0.2, 0.18, 0.42))
+comp_grid2 <- plot_grid(plotlist = plist2[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
-comp_grid3 <- plot_grid(plotlist = plist3, ncol = 1, align = "v", rel_heights = c(0.2, 0.2, 0.18, 0.42))
+comp_grid3 <- plot_grid(plotlist = plist3[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
-comp_grid4 <- plot_grid(plotlist = plist4, ncol = 1, align = "v", rel_heights = c(0.2, 0.2, 0.18, 0.42))
+comp_grid4 <- plot_grid(plotlist = plist4[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
-comp_grid4_no_yaxis <- plot_grid(plotlist = plist4_no_yaxis, ncol = 1, align = "v", rel_heights = c(0.2, 0.2, 0.18, 0.42))
+comp_grid5 <- plot_grid(plotlist = plist5[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
-comp_grid5 <- plot_grid(plotlist = plist5, ncol = 1, align = "v", rel_heights = c(0.2, 0.2, 0.18, 0.42))
+comp_grid6 <- plot_grid(plotlist = plist6[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
-comp_grid6 <- plot_grid(plotlist = plist6, ncol = 1, align = "v", rel_heights = c(0.2, 0.2, 0.18, 0.42))
+comp_grid7 <- plot_grid(plotlist = plist7[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
-
-comp_grid7 <- plot_grid(plotlist = plist7, ncol = 1, align = "v", rel_heights = c(0.13, 0.13, 0.13, 0.17, 0.44))
-
-comp_grid8 <- plot_grid(plotlist = plist8, ncol = 1, align = "v", rel_heights = c(0.13, 0.13, 0.13, 0.17, 0.44))
+comp_grid8 <- plot_grid(plotlist = plist8[-3], ncol = 1, align = "v", rel_heights = c(0.15, 0.15, 0.2, 0.5))
 
 ```
 
-```{r chunk_610_090, fig.width=3, fig.height=6}
+```{r chunk_610_090, fig.width=3, fig.height=9}
 
 comp_grid1
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.pdf", comp_grid1, width = 3, height = 6)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.png", comp_grid1, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.pdf", comp_grid1, width = 3, height = 9)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_1.png", comp_grid1, width = 3, height = 9)
 
 comp_grid2
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.pdf", comp_grid2, width = 3, height = 6)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.png", comp_grid2, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.pdf", comp_grid2, width = 3, height = 9)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2.png", comp_grid2, width = 3, height = 9)
 
 comp_grid3
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.pdf", comp_grid3, width = 3, height = 6)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.png", comp_grid3, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.pdf", comp_grid3, width = 3, height = 9)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_3.png", comp_grid3, width = 3, height = 9)
 
 comp_grid4
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.pdf", comp_grid4, width = 3, height = 6)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.png", comp_grid4, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.pdf", comp_grid4, width = 3, height = 9)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_4.png", comp_grid4, width = 3, height = 9)
 
 comp_grid5
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.pdf", comp_grid5, width = 3, height = 6)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.png", comp_grid5, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.pdf", comp_grid5, width = 3, height = 9)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_5.png", comp_grid5, width = 3, height = 9)
 
 comp_grid6
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.pdf", comp_grid5, width = 3, height = 6)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.png", comp_grid5, width = 3, height = 6)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.pdf", comp_grid5, width = 3, height = 9)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_6.png", comp_grid5, width = 3, height = 9)
 
 ```
 
-```{r chunk_610_095, fig.width=4.5, fig.height=6}
-
-comp_grid2_4 <- plot_grid(comp_grid2, comp_grid4_no_yaxis, ncol = 2, rel_widths = c(0.64, 0.36))
-comp_grid2_4
-
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2_4.pdf", comp_grid2_4, width = 4.5, height = 6)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Macrophage.cell_comp_2_4.png", comp_grid2_4, width = 4.5, height = 6)
-
-```
-
-```{r chunk_610_100, fig.width=3, fig.height=10}
+```{r chunk_610_100, fig.width=3, fig.height=9}
 
 comp_grid7
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.pdf", comp_grid7, width = 3, height = 10)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.png", comp_grid7, width = 3, height = 10)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.pdf", comp_grid7, width = 3, height = 9)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp.png", comp_grid7, width = 3, height = 9)
 
 comp_grid8
-ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.pdf", comp_grid8, width = 3, height = 10)
-ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.png", comp_grid8, width = 3, height = 10)
+ggsave_pdf("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.pdf", comp_grid8, width = 3, height = 9)
+ggsave_png("figures/610_Myeloid_cell_plotting_umap_comp_heatmap/005_Myeloid.cell_comp_no_ascites.png", comp_grid8, width = 3, height = 9)
 
 ```
 
