@@ -1,7 +1,7 @@
 ## plotting themes --------------------------------
 
 theme_cowplot2 <- function(...) {
-  theme_cowplot(font_size = 16, font_family = "sans", ...) %+replace%
+  theme_cowplot(font_size = 16, ...) %+replace%
     theme(strip.background = element_blank(),
           panel.background = element_rect(fill = "transparent", color = NA),
           plot.background = element_rect(fill = "transparent", color = NA),
@@ -20,7 +20,6 @@ remove_yaxis <- theme(axis.title.y = element_blank(),
                       axis.line.y = element_blank())
 
 remove_guides <- guides(color = F, fill = F, shape = F, alpha = F, size = F)
-
 
 ## ggsave wrapper suppressing dingbats symbols 
 ## for adobe illustrator compatibility
@@ -43,22 +42,26 @@ ggsave_png <- function(filename, plot = last_plot(), device = NULL, path = NULL,
 
 ## umap helpers --------------------------------------
 
-arrow <- arrow(angle = 20, type = "closed", length = unit(0.1, "npc"))
-umap_coord_anno <- ggplot(tibble(group = c("UMAP1", "UMAP2"),
-                                 x = c(0, 0), xend = c(1, 0),
-                                 y = c(0, 0), yend = c(0, 1),
-                                 lx = c(0.5, -0.15), ly = c(-0.15, 0.5),
-                                 angle = c(0, 90))) +
-  geom_segment(aes(x, y, xend = xend, yend = yend, group = group),
-               arrow = arrow, size = 1, lineend = "round") +
-  geom_text(aes(lx, ly, label = group, angle = angle), size = 4) +
-  theme_void() +
-  coord_fixed(xlim = c(-0.3, 1), ylim = c(-0.3, 1))
+umap_coord_anno <- function(xlab, ylab, linesize, textsize) {
+  arrow <- arrow(angle = 20, type = "closed", length = unit(0.1, "npc"))
+  ggplot(tibble(group = c("UMAP1", "UMAP2"),
+                x = c(0, 0), xend = c(1, 0),
+                y = c(0, 0), yend = c(0, 1),
+                lx = c(0.5, -0.15), ly = c(-0.15, 0.5),
+                angle = c(0, 90))) +
+    geom_segment(aes(x, y, xend = xend, yend = yend, group = group),
+                 arrow = arrow, size = linesize, lineend = "round") +
+    geom_text(aes(lx, ly, label = group, angle = angle), size = textsize) +
+    theme_void() +
+    coord_fixed(xlim = c(-0.3, 1), ylim = c(-0.3, 1))
+}
 
-add_umap_coord <- function(gg_obj) {
+add_umap_coord <- function(gg_obj, x_offset = -0.015, y_offset = -0.02, width = 0.4, height = 0.4,
+                           xlab = "UMAP1", ylab = "UMAP2", linesize = 1, textsize = 4) {
   p <- ggdraw() + 
     draw_plot(gg_obj, x = 0, y = 0, width = 1, height = 1) +
-    draw_plot(umap_coord_anno, x = -0.015, y = -0.02, width = 0.4, height = 0.4)
+    draw_plot(umap_coord_anno(xlab = xlab, ylab = ylab, linesize = linesize, textsize = textsize), 
+              x = x_offset, y = y_offset, width = width, height = height)
   return(p)
 }
 

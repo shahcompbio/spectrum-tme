@@ -2,21 +2,20 @@
 title: "MSK SPECTRUM data freeze: major cell type embeddings"
 author: "Florian Uhlitz"
 date: "`r Sys.Date()`"
-output:
-  bookdown::html_document2:
-    includes:
-      in_header: header.html
-  bookdown::gitbook:
-    includes:
-      in_header: header.html
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
 editor_options: 
   chunk_output_type: console
 ---
 
-```{r, include=FALSE}
+```{r setup, include=FALSE}
 
-# knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
-# knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
 
 ```
 

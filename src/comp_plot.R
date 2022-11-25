@@ -252,7 +252,7 @@ plot_comp_box <- function(comp_tbl_rank, x, y, color, rank_column, rank_value, p
 
 
 plot_comp_vector <- function(comp_tbl_rank, x, y, shape,
-                             vector_column, vector_value,
+                             vector_column, vector_value_start, vector_value_end,
                              rank_column, rank_value) {
   x <- enquo(x)
   y <- enquo(y)
@@ -261,8 +261,10 @@ plot_comp_vector <- function(comp_tbl_rank, x, y, shape,
   rank_column <- enquo(rank_column)
   
   comp_tbl_rank <- filter(comp_tbl_rank, !!rank_column == rank_value) %>% 
-    mutate(vector_group = !!vector_column == vector_value) %>% 
-    mutate(vector_group = ifelse(vector_group, "xstart", "xend")) %>% 
+    mutate(vector_group = case_when(
+      !!vector_column %in% vector_value_start ~ "xstart",
+      !!vector_column %in% vector_value_end ~ "xend",
+      T ~ "exclude")) %>% 
     distinct(sample_id_lvl, .keep_all = T)
   
   comp_tbl_vector <- group_by(comp_tbl_rank, !!y) %>% 
@@ -271,7 +273,7 @@ plot_comp_vector <- function(comp_tbl_rank, x, y, shape,
     summarise(median_group_rank = median(!!x)) %>% 
     ungroup %>% 
     spread(vector_group, median_group_rank) %>% 
-    mutate(vector_color = ifelse(xend > xstart, vector_value, "Other")) %>% 
+    mutate(vector_color = ifelse(xend > xstart, vector_value_start[1], vector_value_end[1])) %>% 
     arrange(median_rank) %>% 
     mutate(!!y := ordered(!!y, levels = unique(!!y)))
   
@@ -318,7 +320,7 @@ plot_comp_vector <- function(comp_tbl_rank, x, y, shape,
 # plot_comp_vector(rank_by(filter(comp_tbl_sample, sort_short_x == "CD45+"), 
 #                          cell_type, "T cell", cell_type), 
 #                  sample_id_rank, patient_id_short,
-#                  tumor_megasite, tumor_megasite, "Adnexa", 
+#                  tumor_megasite, tumor_megasite, "Adnexa", "Other",
 #                  cell_type, "T cell")
 
 default_comp_grid_list <- function(
@@ -393,7 +395,7 @@ default_comp_grid_list <- function(
   }
   if (vec_plot) {
     plist$pvec <- plot_comp_vector(comp_tbl_rank, sample_id_rank, patient_id_short,
-                                   tumor_megasite, tumor_megasite, "Adnexa", 
+                                   tumor_megasite, tumor_megasite, "Adnexa", "Other",
                                    !!rank_column, rank_value) +
       remove_guides
   }

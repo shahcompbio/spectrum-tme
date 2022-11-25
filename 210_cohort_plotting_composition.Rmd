@@ -1,4 +1,5 @@
 ---
+<<<<<<< HEAD
 title: "Cell type compositions"
 subtitle: "MSK SPECTRUM"
 author:
@@ -12,12 +13,30 @@ output:
   bookdown::gitbook:
     includes:
       in_header: header.html
+=======
+title: "MSK SPECTRUM data freeze: cell type compositions"
+author: "Florian Uhlitz"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    df_print: kable
+    number_sections: yes
+    toc: yes
+    code_folding: hide
+>>>>>>> 3b877a7c59812e1ad259a7239a3b4b8e355e7ff4
 editor_options: 
   chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
+<<<<<<< HEAD
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+=======
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = F)
+
+>>>>>>> 3b877a7c59812e1ad259a7239a3b4b8e355e7ff4
 ```
 
 ```{r chunk_210_010}
@@ -876,8 +895,8 @@ source("src/global_vars.R")
 names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "\\.", " ")
 names(clrs$cell_type) <- str_replace_all(names(clrs$cell_type), "Ovarian", "Ov")
 
-# mpif_pixel <- read_tsv("/work/shah/vazquezi/data/transfers/spectrum/results/mpif/v10/integrate/outputs/cohort_merge/patient/SPECTRUM/all/detection.tsv") %>%
-#   select(cell_id, compartment = Parent)
+mpif_pixel <- read_tsv("/work/shah/vazquezi/data/transfers/spectrum/results/mpif/v10/integrate/outputs/cohort_merge/patient/SPECTRUM/all/detection.tsv") %>%
+  select(cell_id, compartment = Parent)
 # 
 # mpif_cell_type <- read_tsv("/work/shah/vazquezi/data/transfers/spectrum/results/mpif/v10/integrate/outputs/cohort_merge/patient/SPECTRUM/all/cell_type_manual.tsv") %>%
 #   left_join(mpif_pixel, by = "cell_id") %>%
