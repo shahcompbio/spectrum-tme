@@ -9,13 +9,13 @@ Table of Contents
 
   - [Code](#code)
   - [Data](#data)
-        * [Overview](#overview)
+        - [Overview](#overview)
         * [Data availability](#data-availability)
-              + [scRNA-seq](#scrna-seq)
-              + [H&E](#hne)
-              + [mpIF](#mpif)
-              + [Bulk WGS](#bulk-wgs)
-              + [MSK-IMPACT](#msk-impact)
+              - [scRNA-seq](#scrna-seq)
+              - [H&E](#hne)
+              - [mpIF](#mpif)
+              - [Bulk WGS](#bulk-wgs)
+              - [MSK-IMPACT](#msk-impact)
               
 <!-- toc -->
 
