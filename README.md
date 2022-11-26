@@ -4,8 +4,7 @@ This repository contains supporting material for the manuscript:
 
 > "Ovarian cancer mutational processes drive site-specific immune phenotypes"
 
-Table of Contents
-=================
+## Table of Contents
 
   - [Code](#code)
   - [Data](#data)
