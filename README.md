@@ -6,18 +6,16 @@ This repository contains supporting material for the manuscript:
 
 ## Table of Contents
 
-  - [Code](#code)
-  - [Data](#data)
-        - [Overview](#overview)
-        * [Data availability](#data-availability)
-              - [scRNA-seq](#scrna-seq)
-              - [H&E](#hne)
-              - [mpIF](#mpif)
-              - [Bulk WGS](#bulk-wgs)
-              - [MSK-IMPACT](#msk-impact)
+- [Code](#code)
+- [Data](#data)
+  - [Overview](#overview)
+  - [Data availability](#data-availability)
+    - [scRNA-seq](#scrna-seq)
+    - [H&E](#hne)
+    - [mpIF](#mpif)
+    - [Bulk WGS](#bulk-wgs)
+    - [MSK-IMPACT](#msk-impact)
               
-<!-- toc -->
-
 ## Code
 
 The source code contains RMarkdown notebooks to reproduce the manuscript figures and tables.
