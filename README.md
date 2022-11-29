@@ -1,8 +1,8 @@
-# Ovarian cancer mutational processes drive site-specific immune phenotypes
+# Ovarian cancer mutational processes drive site-specific immune evasion
 
 This repository contains supporting material for the manuscript:
 
-> "Ovarian cancer mutational processes drive site-specific immune phenotypes"
+> "Ovarian cancer mutational processes drive site-specific immune evasion"
 
 ## Table of Contents
 
