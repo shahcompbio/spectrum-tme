@@ -1,0 +1,24 @@
+---
+title: "CellXgene data"
+author: "Matthew Zatzman"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(Seurat)
+library(SeuratDisk)
+```
+
+Load normalized counts
+```{r}
+srt <- readRDS("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/integrated_seurat.rds")
+```
+
+Convert to anndata and go to python
+```{r}
+SaveH5Seurat(srt, filename = "integrated_seurat.h5Seurat")
+Convert("integrated_seurat.h5Seurat", dest = "h5ad")
+```
