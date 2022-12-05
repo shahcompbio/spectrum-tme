@@ -231,8 +231,8 @@ names(cna) <- tolower(names(cna))
 # Filter samples and variants
 cna <- cna %>%
   # Add custom IMPACT annotations
-  dplyr::rename("isabl_id" = "sample_id") %>%
-  dplyr::left_join(db$sequencing_bulk_dna, by = "isabl_id") %>%
+  dplyr::rename("spectrum_sample_id" = "sample_id") %>%
+  dplyr::left_join(db$sequencing_bulk_dna, by = "spectrum_sample_id") %>%
   # Keep included patients
   filter(patient_id %in% included_patients) %>%
   # Convert to factor
@@ -246,14 +246,14 @@ cna
 
 ```{r}
 
-snv_tbl <- snv %>%
-  complete(patient_id, nesting(hugo_symbol))
+snv_tbl <- snv #%>%
+  # complete(patient_id, nesting(hugo_symbol))
 
-cna_tbl <- cna %>%
-  complete(patient_id, nesting(hugo_symbol))
+cna_tbl <- cna# %>%
+  # complete(patient_id, nesting(hugo_symbol))
 
-fusions_tbl <- fusions %>%
-  complete(patient_id, nesting(hugo_symbol))
+fusions_tbl <- fusions #%>%
+  # complete(patient_id, nesting(hugo_symbol))
 
 snv_cna_fusions_tbl <- bind_rows(snv_tbl, cna_tbl, fusions_tbl) %>%
   unite("type", c("variant_type_short","variant_classification_short","cna_type","fusion_type","mutation_status"), sep=",", na.rm = TRUE, remove = FALSE)
@@ -294,6 +294,11 @@ db$mpif_slide <- db$mpif_slide %>%
   #        qc_status == "Pass",
   #        tumor_type != "Unknown",
   #        therapy == "pre-Rx")
+
+# Remove mpIF FOVs that are not included
+db$mpif_fov <- db$mpif_fov %>% 
+  mutate(sample_type = "Tumor") %>%
+  filter(tme_inclusion_status == "Yes")
 
 # Remove normal WGS samples and failed samples
 db$sequencing_bulk_dna <- db$sequencing_bulk_dna %>% 
@@ -351,12 +356,13 @@ gyn_diagnosis <- db$gyn_diagnosis %>%
 ```{r merge_sample_inventory}
 inventory_list <-
   list(
-    "scRNA" = db$sequencing_scrna,
-    "H&E" = db$he_slide,
-    "mpIF"= db$mpif_slide,
-    "Bulk WGS" = db$sequencing_bulk_dna,
-    "Myriad" = db$sequencing_myriad,
-    "MSK-IMPACT" = db$sequencing_msk_impact_custom
+    "scRNA - Sample metadata" = db$sequencing_scrna,
+    "H&E - Sample metadata" = db$he_slide,
+    "mpIF - Sample metadata"= db$mpif_slide,
+    # "mpIF - FOV metadata"= db$mpif_fov,
+    "Bulk WGS - Sample metadata" = db$sequencing_bulk_dna,
+    "Myriad - Sample metadata" = db$sequencing_myriad,
+    "MSK-IMPACT - Sample metadata" = db$sequencing_msk_impact_custom
   )
 
 inventory <- plyr::join_all(
@@ -377,6 +383,44 @@ inventory
 ```
 
 ```{r}
+
+data_clinical_sample <- readr::read_tsv("/work/shah/vazquezi/projects/dmp-2022/mskimpact/data_clinical_sample.txt", skip = 4)
+
+```
+
+```{r}
+inventory_list <-
+  list(
+    "scRNA - Sample metadata" = db$sequencing_scrna %>%
+      select(-c("technique","aliquot_id","sample_id","submission_status","qc_status","tme_inclusion_status")),
+    "H&E - Sample metadata" = db$he_slide %>%
+      select(-c("technique","image_hid","case_hid","is_site_matched","is_adjacent","submission_status","qc_status","tme_inclusion_status")),
+    "mpIF - Sample metadata"= db$mpif_slide %>%
+      select(-c("technique","pici_id","elab_id","aliquot_id","sample_id","submission_status","qc_status","tme_inclusion_status")),
+    "mpIF - FOV metadata"= db$mpif_fov %>%
+      select(-c("pici_id","fov_status","fov_qc")) %>%
+      left_join(
+        db$mpif_slide %>%
+          select(-c("technique","project","pici_id","elab_id","isabl_experiment_system_id","aliquot_id","sample_id","patient_id","sample_type","submission_status","qc_status","tme_inclusion_status","panel","batch")),
+        by = "spectrum_sample_id"),
+    "Bulk WGS - Sample metadata" = db$sequencing_bulk_dna %>%
+      select(-c("technique","aliquot_id","sample_id","submission_status","qc_status","tme_inclusion_status")),
+      # arrange(-c("sample_type")),
+    "Myriad - Sample metadata" = db$sequencing_myriad %>%
+      select(-c("technique","aliquot_id","sample_id","submission_status","qc_status","tme_inclusion_status")),
+    "MSK-IMPACT - Sample metadata" = db$sequencing_msk_impact_custom %>%
+      select(-c("technique","aliquot_id","sample_id","submission_status","qc_status","tme_inclusion_status"))  %>%
+      left_join(
+        data_clinical_sample %>%
+          select(c("SAMPLE_ID","GENE_PANEL")),
+        by = c("impact_dmp_sample_id"="SAMPLE_ID")
+      )
+      # arrange(-sample_type)
+  )
+
+inventory_list <- inventory_list %>% 
+  map(~.x %>% arrange(desc(sample_type), patient_id, tumor_megasite, tumor_supersite, tumor_site, tumor_subsite, procedure))
+
 wb <- createWorkbook()
 lapply(seq_along(inventory_list), function(i){
   addWorksheet(wb=wb, sheetName = names(inventory_list[i]))
@@ -513,8 +557,8 @@ top_df <- db$mutational_signatures %>%
   filter(patient_id %in% colnames(oncoprint_main_mat)) %>%
   distinct(patient_id, .keep_all = TRUE) %>% # HACK
   arrange(match(patient_id, colnames(oncoprint_main_mat))) %>%
-  mutate(wgs_signature = ordered(wgs_signature, levels = names(clrs$wgs_signature))) %>%
-  dplyr::select(wgs_signature,
+  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>%
+  dplyr::select(consensus_signature,
                 patient_age,
                 gyn_diagnosis_figo_stage,
                 gyn_diagnosis_procedure_description) %>%
@@ -648,8 +692,8 @@ top_df <- patients %>%
   filter(patient_id %in% colnames(oncoprint_supp_mat)) %>%
   distinct(patient_id, .keep_all = TRUE) %>% # HACK
   arrange(match(patient_id, colnames(oncoprint_supp_mat))) %>%
-  mutate(wgs_signature = ordered(wgs_signature, levels = names(clrs$wgs_signature))) %>%
-  dplyr::select(wgs_signature,
+  mutate(consensus_signature = ordered(consensus_signature, levels = names(clrs$consensus_signature))) %>%
+  dplyr::select(consensus_signature,
                 patient_age,
                 gyn_diagnosis_figo_stage,
                 gyn_diagnosis_procedure_description) %>%
@@ -1933,5 +1977,5 @@ patient_inventory_filtered <- inventory_filtered %>%
 # Session
 
 ```{r}
-sessionInfo()
+devtools::session_info()
 ```

@@ -15,7 +15,7 @@ myriad	SPECTRUM	SPECTRUM-OV-073_S1_OMENTUM_R1	OV-073-Om-S1	OV-073-Om	SPECTRUM-OV
 myriad	SPECTRUM	SPECTRUM-OV-077_S1_OVARY_MASS_R1	OV-077-ROv-S1	OV-077-ROv	SPECTRUM-OV-077	hgsoc	Adnexa	Adnexa	Right Adnexa	Ovary Mass	Primary	pre-Rx	S1	Primary Debulking	Delivered	Pass	Yes
 myriad	SPECTRUM	NA	NA	NA	SPECTRUM-OV-080	hgsoc	NA	NA	NA	NA	NA	NA	NA	NA	Submitted	NA	No
 myriad	SPECTRUM	SPECTRUM-OV-081_S1_RIGHT_FALLOPIAN_TUBE_R1	OV-081-RFT-S1	OV-081-RFT	SPECTRUM-OV-081	hgsoc	Adnexa	Adnexa	Right Adnexa	Right Fallopian Tube	Primary	pre-Rx	S1	Primary Debulking	Delivered	Pass	Yes
-myriad	SPECTRUM	NA	NA	NA	SPECTRUM-OV-083	hgsoc	NA	NA	NA	NA	NA	NA	NA	NA	Submitted	NA	No
+myriad	SPECTRUM	SPECTRUM-OV-083_S1_LEFT_TUBE_AND_OVARY_R1	OV-083-LAdnx-S1	OV-083-LAdnx	SPECTRUM-OV-083	hgsoc	Adnexa	Adnexa	Left Adnexa	Left Tube and Ovary	Primary	pre-Rx	S1	Primary Debulking	Delivered	Pass	Yes
 myriad	SPECTRUM	SPECTRUM-OV-085_S1_OMENTUM_R1	OV-085-Om-S1	OV-085-Om	SPECTRUM-OV-085	hgsoc	Non-Adnexa	Omentum	Omentum	Omentum	Metastasis	pre-Rx	S1	Primary Debulking	Delivered	Pass	No
 myriad	SPECTRUM	NA	NA	NA	SPECTRUM-OV-090	hgsoc	NA	NA	NA	NA	NA	NA	NA	NA	Submitted	NA	No
 myriad	SPECTRUM	SPECTRUM-OV-094_S2_CUL_DE_SAC_R1	OV-094-CS-S2	OV-094-CS	SPECTRUM-OV-094	hgsoc	Non-Adnexa	Peritoneum	Peritoneum	Cul de Sac	Metastasis	post-Rx	S2	Interval Debulking	Delivered	Pass	No
