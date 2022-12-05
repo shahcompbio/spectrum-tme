@@ -1,0 +1,81 @@
+---
+title: "Convert celltype specific objs"
+author: "Matthew Zatzman"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(Seurat)
+library(SeuratDisk)
+library(glue)
+```
+
+
+Load global object metadata 
+```{r}
+metadata <- read.csv(file = "./spectrum_scrna_metadata.csv.gz")
+
+metadata <- metadata %>%
+  mutate(across(where(is.character), factor))
+```
+
+
+List of celltype specific objects
+```{r}
+ct_objs <- list(
+  "ovarian_cancer" = "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Ovarian.cancer.super_processed_filtered_annotated.rds",
+  "T_cell" = "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/T.super_processed_filtered_annotated.rds",
+  "myeloid" = "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Myeloid.super_processed_filtered_annotated.rds", 
+  "CD8_T" = "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/CD8.T_processed_filtered.rds",
+  "DCs" = "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/DCs_processed.rds",
+  "macrophages" = "/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/Macrophages_processed.rds"
+)
+```
+
+
+Loop over and extract, append/merge global metadata.
+
+Need to do as follows: Counts matrix needs raw counts. Data matrix needs normalized counts plus zeroes for all genes which are non-variable. The var column needs a `feature_is_filtered` column to denote all genes which are non-variable.
+```{r}
+overwrite = TRUE
+for (i in seq_along(ct_objs)) {
+  ct = names(ct_objs)[i]
+  logger::log_info("{i}: {ct}")
+  
+  final_out = glue("{ct}.h5ad")
+  
+  if (file.exists(final_out) & !overwrite) {
+    logger::log_info("final out exists for {ct}: {final_out}")
+  } else {
+    logger::log_info("Converting {ct}")
+    obj <- readRDS(ct_objs[[i]])
+    
+    # Metadata columns to merge
+    cols_to_merge <- setdiff(colnames(metadata), colnames(obj@meta.data))
+  
+    new_meta <- data.frame(cbind(obj[[]], metadata[match(colnames(obj), metadata$cell_id), cols_to_merge]))
+    
+    obj@meta.data <- new_meta
+    
+    # Set 'is_primary_data' to false
+    obj$is_primary_data <- FALSE
+    
+    # Set variable genes with the 'feature_is_filtered' flag
+    obj@assays$RNA@meta.features$vst.variable
+    
+    obj@assays$RNA@meta.features$feautre_is_filtered <- !obj@assays$RNA@meta.features$vst.variable
+    
+    # Want to get rid of scale data
+    obj_diet <- DietSeurat(obj, counts = TRUE, data = TRUE, dimreducs = Reductions(obj), graphs = Graphs(obj))
+    
+    # Convert to h5ads for final processing within python
+    SaveH5Seurat(obj_diet, filename = glue("{ct}.h5Seurat"), overwrite = TRUE)
+    Convert(glue("{ct}.h5Seurat"), dest = "h5ad", overwrite = TRUE, counts = TRUE)
+  }
+}
+```
+
+
