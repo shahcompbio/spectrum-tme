@@ -19,6 +19,6 @@ srt <- readRDS("/work/shah/users/uhlitzf/data/SPECTRUM/freeze/v7/outs_pre/integr
 
 Convert to anndata and go to python
 ```{r}
-SaveH5Seurat(srt, filename = "integrated_seurat.h5Seurat")
-Convert("integrated_seurat.h5Seurat", dest = "h5ad")
+SaveH5Seurat(srt, filename = "objects/integrated_seurat.h5Seurat")
+Convert("objects/integrated_seurat.h5Seurat", dest = "h5ad")
 ```
