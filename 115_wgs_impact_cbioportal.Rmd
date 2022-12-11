@@ -1,0 +1,266 @@
+---
+title: "cBioPortal"
+subtitle: "MSK SPECTRUM"
+author:
+  - "Ignacio Vazquez-Garcia"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    highlight: tango
+    df_print: paged
+    code_folding: hide
+    fig_align: center
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: yes
+params:
+   rmd: "115_wgs_impact_cbioportal.Rmd"
+---
+
+# cBioPortal
+
+```{r setup, include=FALSE}
+# Global knit options
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+# Global chunk options
+knitr::opts_chunk$set(echo=FALSE, tidy=TRUE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(gdata)
+library(stringr)
+library(data.table)
+library(openxlsx)
+library(gtable)
+library(cowplot)
+```
+
+## Database
+
+```{r}
+
+source("src/global_vars.R")
+
+db_all <- db
+db_filtered <- db
+
+```
+
+### Filtering
+
+```{r}
+
+# Separate bulk normal and bulk tumor WGS samples
+db_filtered$sequencing_bulk_dna <- db_filtered$sequencing_bulk_dna %>%
+  filter(tme_inclusion_status == "Yes")
+
+db_filtered$sequencing_bulk_dna_tumor <- db_filtered$sequencing_bulk_dna %>%
+  filter(!is.na(tumor_site))
+
+db_filtered$sequencing_bulk_dna_normal <- db_filtered$sequencing_bulk_dna %>%
+  filter(is.na(tumor_site))
+
+# Separate bulk normal and bulk tumor IMPACT samples
+db_filtered$sequencing_msk_impact_custom <- db_filtered$sequencing_msk_impact_custom %>%
+  filter(tme_inclusion_status == "Yes")
+
+db_filtered$sequencing_msk_impact_custom_tumor <- db_filtered$sequencing_msk_impact_custom %>%
+  filter(!is.na(tumor_site))
+
+db_filtered$sequencing_msk_impact_custom_normal <- db_filtered$sequencing_msk_impact_custom %>%
+  filter(is.na(tumor_site))
+
+# Separate bulk normal and bulk tumor IMPACT samples
+db_filtered$he_slide <- db_filtered$he_slide %>%
+  filter(tme_inclusion_status == "Yes")
+
+```
+
+## Patient metadata
+
+```{r}
+
+url <- "tables/patient_metadata_edits.xlsx"
+data_clinical_patient <- read.xlsx(url)
+
+# url <- "/work/shah/vazquezi/projects/datahub_shahlab/msk_spectrum/data_clinical_patient.txt"
+# data_clinical_patient <- read_tsv(url, skip = 4)
+
+data_clinical_patient <- data_clinical_patient %>%
+  rename(
+    "PATIENT_ID" = "patient_dmp_id",
+    "PATIENT_DISPLAY_NAME" = "patient_id"
+    ) %>%
+  rename_with(toupper) %>%
+  relocate(PATIENT_ID, PATIENT_DISPLAY_NAME)
+
+data_clinical_patient
+
+```
+
+```{r}
+
+write_tsv(data_clinical_patient, "tables/115_wgs_impact_cbioportal/data_clinical_patient.txt", na = "")
+
+```
+
+## Sample metadata
+
+### WGS
+
+```{r}
+
+data_clinical_sample_wgs <- db_filtered$sequencing_bulk_dna_tumor %>%
+  left_join(
+    db$patients %>%
+      select(patient_id, patient_dmp_id),
+    by = "patient_id"
+  ) %>%
+  select(
+    "SAMPLE_ID" = "isabl_experiment_system_id",
+    "PATIENT_ID" = "patient_dmp_id",
+    "SAMPLE_TYPE" = "tumor_type",
+    "PATIENT_DISPLAY_NAME" = "patient_id",
+    "TUMOR_MEGASITE" = "tumor_megasite",
+    "TUMOR_SUPERSITE" = "tumor_supersite",
+    "TUMOR_SITE" = "tumor_site",
+    "TUMOR_SUBSITE" = "tumor_subsite",
+    "THERAPY"="therapy",
+    "PROCEDURE"="procedure",
+    "PROCEDURE_TYPE"="procedure_type"
+  ) %>%
+  mutate(
+    INSTITUTE = "MSKCC",
+    SOMATIC_STATUS = "Matched",
+    SAMPLE_CLASS = "Tumor",
+    GENE_PANEL = "WGS"
+  ) %>%
+  mutate(
+    METASTATIC_SITE = ifelse(SAMPLE_TYPE == "Metastasis", TUMOR_SUBSITE, "Not Applicable"),
+    PRIMARY_SITE = ifelse(SAMPLE_TYPE == "Primary", TUMOR_SUBSITE, "Adnexa")
+  )
+
+data_clinical_sample_wgs
+
+```
+
+### IMPACT
+
+```{r}
+
+url <- "/work/shah/vazquezi/projects/datahub_shahlab/msk_spectrum/data_clinical_sample.txt"
+data_clinical_sample_impact <- read_tsv(url, skip = 4)
+data_clinical_sample_impact_header <- read_tsv(url, n_max = 4)
+
+data_clinical_sample_impact <- data_clinical_sample_impact %>%
+  filter(SAMPLE_ID %in% db_filtered$sequencing_msk_impact_custom_tumor$impact_dmp_sample_id) %>%
+  select(
+    -c("DATE_ADDED","MONTH_ADDED","WEEK_ADDED","CRDB_SURVEY_COMMENTS","MGMT_STATUS","WHO_GRADE","MSK_SLIDE_ID","SAMPLE_TYPE"),
+    -contains("CVR_TMB")
+    ) %>%
+  left_join(
+    db_filtered$sequencing_msk_impact_custom %>%
+      select(
+        "impact_dmp_sample_id",
+        "PATIENT_DISPLAY_NAME"="patient_id",
+        "TUMOR_MEGASITE"="tumor_megasite",
+        "TUMOR_SUPERSITE"="tumor_supersite",
+        "TUMOR_SITE"="tumor_site",
+        "TUMOR_SUBSITE"="tumor_subsite",
+        "SAMPLE_TYPE"="tumor_type",
+        "THERAPY"="therapy",
+        "PROCEDURE"="procedure",
+        "PROCEDURE_TYPE"="procedure_type"
+      ),
+    by = c("SAMPLE_ID"="impact_dmp_sample_id")
+  ) %>%
+  mutate(
+    METASTATIC_SITE = ifelse(SAMPLE_TYPE == "Metastasis", TUMOR_SUBSITE, "Not Applicable"),
+    PRIMARY_SITE = ifelse(SAMPLE_TYPE == "Primary", TUMOR_SUBSITE, "Adnexa")
+  )
+
+data_clinical_sample_impact
+
+```
+
+### Merged
+
+```{r}
+
+data_clinical_sample <- bind_rows(
+  data_clinical_sample_impact,
+  data_clinical_sample_wgs
+) %>%
+  # Sort by WGS/IMPACT and patient
+  arrange(desc(GENE_PANEL),PATIENT_ID) %>%
+  # # Fill missing WGS metadata using IMPACT metadata
+  # group_by(PATIENT_DISPLAY_NAME) %>% 
+  # fill(CANCER_TYPE, CANCER_TYPE_DETAILED, ONCOTREE_CODE, .direction = "updown") %>%
+  # ungroup %>%
+  # Homogenise WGS/IMPACT metadata for diagnosis
+  mutate(
+    CANCER_TYPE = "Ovarian Cancer",
+    CANCER_TYPE_DETAILED = "High-Grade Serous Ovarian Cancer",
+    ONCOTREE_CODE = "HGSOC"
+  ) %>%
+  # Add metadata about site-matched H&E images
+  left_join(
+    db_filtered$he_slide %>%
+      select(
+        "MSK_SLIDE_ID"="image_id",
+        "PATIENT_DISPLAY_NAME"="patient_id",
+        "TUMOR_SITE"="tumor_site",
+        "PROCEDURE"="procedure"
+        ),
+    by = c("PATIENT_DISPLAY_NAME","TUMOR_SITE","PROCEDURE")
+  ) %>%
+  mutate(
+    PATH_SLIDE_EXISTS = ifelse(!is.na(MSK_SLIDE_ID), "YES", "NO")
+  ) %>%
+  relocate(MSK_SLIDE_ID, .after = PATH_SLIDE_EXISTS)
+
+data_clinical_sample
+
+```
+
+```{r}
+
+write_tsv(data_clinical_sample, "tables/115_wgs_impact_cbioportal/data_clinical_sample.txt", na = "")
+
+```
+
+## Mutational signatures
+
+```{r}
+
+url <- "tables/mutational_signatures.xlsx"
+data_clinical_supp <- read.xlsx(url)
+
+data_clinical_supp <- data_clinical_supp %>%
+  rename(
+    "PATIENT_DISPLAY_NAME" = "patient_id"
+  ) %>%
+  rename_with(toupper) %>%
+  left_join(
+    db$patients %>%
+      select(
+        "PATIENT_ID" = "patient_dmp_id",
+        "PATIENT_DISPLAY_NAME" = "patient_id"
+      ),
+    by = "PATIENT_DISPLAY_NAME"
+  ) %>%
+  # filter(PATIENT_DISPLAY_NAME %in% tme_patients) %>%
+  relocate(PATIENT_ID, PATIENT_DISPLAY_NAME)
+
+data_clinical_supp
+
+```
+
+```{r}
+
+write_tsv(data_clinical_supp, "tables/115_wgs_impact_cbioportal/data_clinical_supp.txt", na = "")
+
+```
