@@ -1,0 +1,51 @@
+CD8.Naive:
+- TCF7
+- CCR7
+- SELL
+- LEF1
+- IL7R
+- LTB
+CD8.Predysfunctional:
+- GZMK
+- PDCD1
+- ZNF683
+- ITGAE
+- CD28
+- FYN
+- KLRG1
+- LYAR
+- GZMM
+- TXNIP
+- FCRL6
+- EOMES
+- CXCR3
+- CXCR4
+- CD44
+CD8.Dysfunctional:
+- HAVCR2
+- GZMB
+- IFNG
+- CXCL13
+- PDCD1
+- ITGAE
+- LAYN
+- LAG3
+- TIGIT
+- CTLA4
+- ENTPD1
+CD8.Cytotoxic:
+- CX3CR1
+- PRF1
+- GZMA
+- GZMB
+- GZMH
+- GNLY
+- FGFBP2
+- KLRG1
+- FCGR3A
+- LYAR
+- TXNIP
+- FCRL6
+- PRF1
+- NKG7
+- KLRD1
